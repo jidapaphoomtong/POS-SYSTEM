@@ -1,6 +1,4 @@
-
-
-//เชื่อม firebase
+//เชื่อม base ob client
 // import { initializeApp } from "firebase/app";
 
 // const firebaseConfig = {
