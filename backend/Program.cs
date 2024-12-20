@@ -1,31 +1,71 @@
-using System;
-using System.Threading.Tasks;
+using backend.Services;
+using Microsoft.Extensions.Options;
 
-class Program
+var builder = WebApplication.CreateBuilder(args);
+
+// โหลดค่าการตั้งค่า Firestore จาก appsettings.json
+builder.Services.Configure<FirestoreSettings>(builder.Configuration.GetSection("FirestoreSettings"));
+
+// ลงทะเบียน FirestoreDB เป็น Service ด้วย DI
+builder.Services.AddSingleton<FirestoreDB>(sp =>
 {
-    static async Task Main(string[] args)
-    {
-        Console.WriteLine("Select an option:");
-        Console.WriteLine("1. Test Realtime Database");
-        Console.WriteLine("2. Test Firestore Database");
+    var settings = sp.GetRequiredService<IOptions<FirestoreSettings>>().Value;
+    return new FirestoreDB(settings);
+});
 
-        string choice = Console.ReadLine();
+// Add services to the container.
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
 
-        if (choice == "1")
-        {
-            Console.WriteLine("Testing Realtime Database...");
-            await RealtimeDatabaseTest.TestDatabase();
-            // after test 19-12-2024 : Firebase error. Please ensure that you have the URL of your Firebase Realtime Database instance configured correctly.
-        }
-        else if (choice == "2")
-        {
-            Console.WriteLine("Testing Firestore Database...");
-            await FirestoreTest.TestDatabase();
-            // after test 19-12-2024 : Cannot find Default Credentials
-        }
-        else
-        {
-            Console.WriteLine("Invalid choice. Exiting...");
-        }
-    }
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
+
+app.UseHttpsRedirection();
+app.UseAuthorization();
+
+app.MapControllers(); // เปิดใช้งาน Controller ที่มีในโปรเจกต์
+
+var summaries = new[]
+{
+    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
+};
+
+
+app.MapGet("/weatherforecast", () =>
+{
+    var forecast =  Enumerable.Range(1, 5).Select(index =>
+        new WeatherForecast
+        (
+            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+            Random.Shared.Next(-20, 55),
+            summaries[Random.Shared.Next(summaries.Length)]
+        ))
+        .ToArray();
+    return forecast;
+})
+.WithName("GetWeatherForecast")
+.WithOpenApi();
+
+// Firestore endpoint: ดึงข้อมูลจาก Firestore
+// app.MapGet("/document/request", async (FirestoreDB db) =>
+// {
+//     var data = await db.GetCollectionAsync("etax_bill");
+//     return data;
+// }).WithName("GetFirestoreDB");
+
+
+
+app.Run();
+
+record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+{
+    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
 }
