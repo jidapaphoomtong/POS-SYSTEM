@@ -8,12 +8,9 @@ namespace backend.Models
 {
     public class Register
     {
-        [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
-        [Required, StringLength(100, MinimumLength = 6)]
         public string Password { get; set; } = string.Empty;
-        
-        // [Compare("Password", ErrorMessage = "The passwords do not match.")]
-        // public string ConfirmPassword { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string UserRole { get; set; } = string.Empty;
     }
 }
