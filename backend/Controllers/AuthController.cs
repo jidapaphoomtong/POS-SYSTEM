@@ -38,16 +38,39 @@ namespace backend.Controllers
                     return Conflict(new { Success = false, Message = "Email already registered." });
                 }
 
+                // ---- เริ่มส่วนการจัดการ Id อัตโนมัติ ----
+                var settingsCollection = _firestoreDb.Collection("settings"); // คอลเลกชันสำหรับเก็บค่า Id ล่าสุด
+                var idDocRef = settingsCollection.Document("userIdTracking");
+                var idSnapshot = await idDocRef.GetSnapshotAsync();
+
+                int newId;
+                if (idSnapshot.Exists)
+                {
+                    // ดึงค่า Id ล่าสุด
+                    var currentId = idSnapshot.GetValue<int>("lastUserId");
+                    newId = currentId + 1;
+                }
+                else
+                {
+                    // กำหนดค่าเริ่มต้นของ Id
+                    newId = 1;
+                }
+
+                // อัปเดตค่า Id ล่าสุดกลับไปที่ Firestore
+                await idDocRef.SetAsync(new { lastUserId = newId });
+                // ---- จบส่วนการจัดการ Id อัตโนมัติ ----
+
                 // เพิ่มผู้ใช้ใหม่
                 var newUser = await userCollection.AddAsync(new
                 {
+                    id = newId, // ใช้ค่า Id ที่รันอัตโนมัติ
                     fullName = userRegister.FullName,
                     userRole = userRegister.UserRole,
                     email = userRegister.Email,
                     password = userRegister.Password, // ในโปรเจกต์จริงควรเข้ารหัสรหัสผ่าน (เช่น Hash)
                 });
 
-                return Ok(new { Success = true, Message = "User registered successfully!", UserId = newUser.Id });
+                return Ok(new { Success = true, Message = "User registered successfully!", UserId = newId, DocumentId = newUser.Id });
             }
             catch (Exception ex)
             {
