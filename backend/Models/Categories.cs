@@ -5,7 +5,7 @@
 
 // namespace backend.Models
 // {
-//     public class UserRole
+//     public class Categories
 //     {
         
 //     }
