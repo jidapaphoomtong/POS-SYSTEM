@@ -13,13 +13,28 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
     return new FirestoreDB(settings);
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins",
+        builder => builder.AllowAnyOrigin() // อนุญาตทุก Origin
+                          .AllowAnyMethod() // อนุญาตทุก HTTP Method
+                          .AllowAnyHeader() // อนุญาตทุก Header
+    );
+});
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
+
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers();
 
+// Explicitly configure URLs to listen on
+builder.WebHost.UseUrls("http://*:5293");
+
 var app = builder.Build();
+
+app.UseCors("AllowAllOrigins");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -54,13 +69,12 @@ app.MapGet("/weatherforecast", () =>
 .WithName("GetWeatherForecast")
 .WithOpenApi();
 
-// Firestore endpoint: ดึงข้อมูลจาก Firestore
+// // Firestore endpoint: ดึงข้อมูลจาก Firestore
 // app.MapGet("/document/request", async (FirestoreDB db) =>
 // {
 //     var data = await db.GetCollectionAsync("etax_bill");
 //     return data;
 // }).WithName("GetFirestoreDB");
-
 
 
 app.Run();

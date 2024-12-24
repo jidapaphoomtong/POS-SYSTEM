@@ -7,9 +7,9 @@ namespace backend.Services
 {
     public class FirestoreSettings
     {
-        public string ProjectId { get; set; }
-        public string DatabaseId { get; set; }
-        public string PrivateKey { get; set; }
-        public string ClientEmail { get; set; }
+        public string ProjectId { get; set; } = string.Empty;
+        public string DatabaseId { get; set; } = string.Empty;
+        public string PrivateKey { get; set; } = string.Empty;
+        public string ClientEmail { get; set; } = string.Empty;
     }
 }

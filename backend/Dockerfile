@@ -1,24 +1,27 @@
-# Stage 1: Base image for runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-EXPOSE 5293
-
-# Stage 2: Build and publish the application
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Use .NET SDK for build environment
+FROM mcr.microsoft.com/dotnet/sdk:8.0-jammy AS build-env
 WORKDIR /src
 
-# Copy only the csproj and restore dependencies first
+# Copy only the required files for restoring dependencies
 COPY *.csproj ./
-# RUN dotnet restore
 
-# Copy the rest of the files
-COPY . . 
+# Restore dependencies
+RUN dotnet restore
 
-# Publish the application
-RUN dotnet publish -c Release -o /app
+# Copy the rest of the application files
+COPY . .
 
-# Stage 3: Final runtime image
-FROM base AS final
+# Build and publish the application
+RUN dotnet publish -c Release -o /app --no-restore
+
+# Use runtime image for the running application
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-jammy AS base
 WORKDIR /app
-COPY --from=build /app .
+COPY --from=build-env /app .
+
+# Copy the published application from build-env
+EXPOSE 5293
+ENV ASPNETCORE_URLS=http://+:5293
+
+# Start the application
 ENTRYPOINT ["dotnet", "backend.dll"]

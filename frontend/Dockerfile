@@ -1,26 +1,23 @@
-# ใช้ Node.js เวอร์ชัน 16
-FROM node:16
+# Start your image with a node base image
+FROM node:18-alpine
 
-# ตั้งค่า working directory
+# The /app directory should act as the main application directory
 WORKDIR /app
 
-# คัดลอก package.json และ package-lock.json เข้าไปใน container
+# Copy the app package and package-lock.json file
 COPY package*.json ./
 
-# ติดตั้ง dependencies
-RUN npm install
+# Copy local directories to the current local directory of our docker image (/app)
+COPY ./src ./src
+COPY ./public ./public
 
-# ติดตั้ง serve (ตัวช่วยสำหรับเสิร์ฟไฟล์ build)
-RUN npm install -g serve
+# Install node packages, install serve, build the app, and remove dependencies at the end
+RUN npm install \
+    && npm install -g serve \
+    && npm run build \
+    && rm -fr node_modules
 
-# คัดลอกไฟล์ทั้งหมดจากโปรเจกต์เข้าไปใน container
-COPY . .
-
-# สร้าง production build
-RUN npm run build
-
-# เปิดพอร์ต 3000 สำหรับ container
 EXPOSE 3000
 
-# ตั้งค่า entrypoint ให้ใช้ serve เสิร์ฟไฟล์ในโฟลเดอร์ build
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Start the app using serve command
+CMD [ "serve", "-s", "build" ]

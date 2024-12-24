@@ -127,3 +127,9 @@ C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\runtimes\win\li
 C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\FireSharp.dll
 C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\FireSharp.Serialization.JsonNet.dll
 C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\RestSharp.dll
+C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\out\web.config
+C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\out\appsettings.Development.json
+C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\out\appsettings.json
+C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\out\backend.deps.json
+C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\out\backend.runtimeconfig.json
+C:\Users\Programmer2\Desktop\POS-SYSTEM\backend\bin\Debug\net8.0\out\backend.staticwebassets.endpoints.json
