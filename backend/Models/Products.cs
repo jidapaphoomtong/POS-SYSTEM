@@ -10,8 +10,7 @@ namespace backend.Models
     {
         public int Id { get; set; }
         public string Title{ get; set; } = string.Empty;
-        public int Quantity { get; set; } = 20;
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal Price { get; set; }
+        public int Quantity { get; set; }
+        public double Price { get; set; }
     }
 }
