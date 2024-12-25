@@ -10,7 +10,8 @@ using Microsoft.Extensions.Logging;
 
 namespace backend.Controllers
 {
-    [Route("[controller]")]
+    [ApiController]
+    [Route("api/[controller]")]
     public class ProductController : Controller
     {
         private readonly FirestoreDB _firestoreDb;
@@ -18,7 +19,8 @@ namespace backend.Controllers
         {
             _firestoreDb = firestoreDB;
         }
-        [HttpPost("add")]
+
+        [HttpPost("add-product")]
         public async Task<IActionResult> AddProduct([FromBody] Products product)
         {
             if (!ModelState.IsValid)
@@ -29,9 +31,10 @@ namespace backend.Controllers
             try
             {
                 var productCollection = _firestoreDb.Collection("products");
-                
+                string newId = await GenerateNewProductId();
                 var newProduct = new
                 {
+                    Id = newId,
                     product.Title,
                     product.Quantity,
                     Price = (double)product.Price
@@ -39,14 +42,37 @@ namespace backend.Controllers
                 
                 var addedProduct = await productCollection.AddAsync(newProduct);
 
-                return Ok(new { Success = true, Message = "Product added successfully!", ProductId = addedProduct.Id });
+                return Ok(new { Success = true, Message = "Product added successfully!", ProductId = newId });
             }
             catch (Exception ex)
             {
                 return StatusCode(500, new { Success = false, Message = "An error occurred while adding the product. " + ex.Message });
             }
         }
-        [HttpGet("all")]
+
+        private async Task<string> GenerateNewProductId()
+        {
+            var settingsCollection = _firestoreDb.Collection("settings");
+            var idDocRef = settingsCollection.Document("productIdTracking");
+            var idSnapshot = await idDocRef.GetSnapshotAsync();
+
+            int newId = 1; // เริ่มต้นที่ 1
+
+            // หากมีค่า `lastBranchId` ใน Firestore จะใช้ค่านั้นเพิ่มหนึ่ง
+            if (idSnapshot.Exists)
+            {
+                var currentId = idSnapshot.GetValue<int>("lastProductId");
+                newId = currentId + 1;
+            }
+
+            // อัปเดตค่า `lastBranchId` กลับไปยัง Firestore
+            await idDocRef.SetAsync(new { lastProductId = newId });
+
+            // คืนค่าเลข ID ในรูปแบบ 3 หลัก เช่น 001, 002, ...
+            return newId.ToString("D3");
+        }
+
+        [HttpGet("get-product")]
         public async Task<IActionResult> GetAllProducts()
         {
             try

@@ -1,7 +1,26 @@
+using System.Text;
 using backend.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// **ตั้งค่า JWT Authentication**
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true, // ตรวจสอบว่าผู้สร้าง Token คือใคร
+            ValidateAudience = true, // ตรวจสอบผู้ใช้งาน Audience
+            ValidateLifetime = true, // ตรวจสอบว่าหมดอายุหรือยัง
+            ValidateIssuerSigningKey = true, // ตรวจสอบ Signature
+            ValidIssuer = "localhost", // Issuer ที่เราเชื่อถือ
+            ValidAudience = "localhost", // Audience ที่เราเชื่อถือ
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("wrZzjoEgLiypg53ojlxG")) // Secret Key
+        };
+    });
 
 // โหลดค่าการตั้งค่า Firestore จาก appsettings.json
 builder.Services.Configure<FirestoreSettings>(builder.Configuration.GetSection("FirestoreSettings"));
@@ -44,42 +63,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers(); // เปิดใช้งาน Controller ที่มีในโปรเจกต์
-
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast =  Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast")
-.WithOpenApi();
-
-// // Firestore endpoint: ดึงข้อมูลจาก Firestore
-// app.MapGet("/document/request", async (FirestoreDB db) =>
-// {
-//     var data = await db.GetCollectionAsync("etax_bill");
-//     return data;
-// }).WithName("GetFirestoreDB");
-
-
 app.Run();
-
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}

@@ -19,6 +19,7 @@ namespace backend.Controllers
             _firestoreDb = firestoreDb;
         }
 
+        //ตรวจสอบการเข้าระบบ
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] Register userRegister)
         {
@@ -65,7 +66,6 @@ namespace backend.Controllers
                 {
                     id = newId, // ใช้ค่า Id ที่รันอัตโนมัติ
                     fullName = userRegister.FullName,
-                    userRole = userRegister.UserRole,
                     email = userRegister.Email,
                     password = userRegister.Password, // ในโปรเจกต์จริงควรเข้ารหัสรหัสผ่าน (เช่น Hash)
                 });
@@ -78,6 +78,7 @@ namespace backend.Controllers
             }
         }
 
+        //ตรวจสอบการเข้าสู่ระบบ
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Login userLogin)
         {
@@ -102,6 +103,9 @@ namespace backend.Controllers
 
             return Ok("Login successful!");
         }
+
+        // [HttpPost("add-user")]
+        // public async 
 
         [HttpGet("get-user")]
         public async Task<IActionResult> GetUser()
@@ -139,84 +143,88 @@ namespace backend.Controllers
             }
         }
 
-        [HttpPut("update")]
-        public async Task<IActionResult> UpdateUser([FromBody] UpdateUser updateUser)
+        [HttpPut("update/{documentId}")]
+        public async Task<IActionResult> UpdateUser(string documentId, [FromBody] UpdateUser updateUser)
         {
             try
             {
-                // ตรวจสอบว่ามีอีเมลที่ต้องการอัปเดตอยู่ในระบบหรือไม่
-                var userCollection = _firestoreDb.Collection("users");
-                var snapshot = await userCollection.WhereEqualTo("email", updateUser.Email).GetSnapshotAsync();
+                // อ้างถึง document ที่ต้องการอัปเดตด้วย documentId
+                var docRef = _firestoreDb.Collection("users").Document(documentId);
+                var snapshot = await docRef.GetSnapshotAsync();
 
-                if (!snapshot.Documents.Any())
+                // ตรวจสอบว่าผู้ใช้ที่ต้องการแก้ไขมีอยู่หรือไม่
+                if (!snapshot.Exists)
                 {
-                    return NotFound(new { Success = false, Message = "User not found." });
+                    return NotFound(new
+                    {
+                        Success = false,
+                        Message = "User not found."
+                    });
                 }
 
-                // อ้างถึงผู้ใช้งานที่ต้องการอัปเดต
-                var doc = snapshot.Documents.First();
-
-                // เตรียมตัวข้อมูลที่อัปเดต
-                var updates = new Dictionary<string, object>();
+                // สร้าง Dictionary สำหรับเก็บข้อมูลที่จะอัปเดต
+                var updateData = new Dictionary<string, object>();
 
                 if (!string.IsNullOrWhiteSpace(updateUser.FullName))
-                {
-                    updates["fullName"] = updateUser.FullName;
-                }
-
-                if (!string.IsNullOrWhiteSpace(updateUser.UserRole))
-                {
-                    updates["userRole"] = updateUser.UserRole;
-                }
+                    updateData["fullName"] = updateUser.FullName;
 
                 if (!string.IsNullOrWhiteSpace(updateUser.Email))
-                {
-                    updates["email"] = updateUser.Email;
-                }
+                    updateData["email"] = updateUser.Email;
 
                 if (!string.IsNullOrWhiteSpace(updateUser.Password))
+                    updateData["password"] = updateUser.Password;
+
+                // ตรวจสอบว่ามีข้อมูลที่จะอัปเดตหรือไม่
+                if (updateData.Count == 0)
                 {
-                    updates["password"] = updateUser.Password;
+                    return BadRequest(new
+                    {
+                        Success = false,
+                        Message = "No valid fields specified for update."
+                    });
                 }
 
-                if (updates.Count == 0)
+                // อัปเดตข้อมูลใน Firestore
+                await docRef.UpdateAsync(updateData);
+
+                return Ok(new
                 {
-                    return BadRequest(new { Success = false, Message = "No valid fields specified for update." });
-                }
-
-                // อัปเดตผู้ใช้ใน Firestore
-                await doc.Reference.UpdateAsync(updates);
-
-                return Ok(new { Success = true, Message = "User updated successfully!" });
+                    Success = true,
+                    Message = "User updated successfully!"
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Success = false, Message = $"An error occurred while updating the user: {ex.Message}" });
+                return StatusCode(500, new
+                {
+                    Success = false,
+                    Message = $"An error occurred while updating the user: {ex.Message}"
+                });
             }
         }
 
-        [HttpDelete("delete")]
-        public async Task<IActionResult> DeleteUser([FromQuery] string email)
+        [HttpDelete("delete/{documentId}")]
+        public async Task<IActionResult> DeleteUser(string documentId)
         {
-            if (string.IsNullOrWhiteSpace(email))
-            {
-                return BadRequest(new { Success = false, Message = "Email is required for deleting a user." });
-            }
-
             try
             {
-                // ตรวจสอบว่ามีผู้ใช้หรือไม่
-                var userCollection = _firestoreDb.Collection("users");
-                var snapshot = await userCollection.WhereEqualTo("email", email).GetSnapshotAsync();
+                if (string.IsNullOrWhiteSpace(documentId))
+                {
+                    return BadRequest(new { Success = false, Message = "Document ID is required for deleting a user." });
+                }
 
-                if (!snapshot.Documents.Any())
+                // อ้างถึงเอกสารใน Firestore ด้วย documentId
+                var docRef = _firestoreDb.Collection("users").Document(documentId);
+                var snapshot = await docRef.GetSnapshotAsync();
+
+                // ตรวจสอบว่ามีเอกสารที่ตรงกับ documentId หรือไม่
+                if (!snapshot.Exists)
                 {
                     return NotFound(new { Success = false, Message = "User not found." });
                 }
 
-                // ลบผู้ใช้
-                var doc = snapshot.Documents.First();
-                await doc.Reference.DeleteAsync();
+                // ลบเอกสารจาก Firestore
+                await docRef.DeleteAsync();
 
                 return Ok(new { Success = true, Message = "User deleted successfully!" });
             }
@@ -227,3 +235,5 @@ namespace backend.Controllers
         }
     }
 }
+
+//ตอนนี้ไม่ปลอดภัย!!!!!
