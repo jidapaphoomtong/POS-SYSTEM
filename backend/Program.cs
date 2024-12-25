@@ -7,18 +7,31 @@ using Microsoft.IdentityModel.Tokens;
 var builder = WebApplication.CreateBuilder(args);
 
 // **ตั้งค่า JWT Authentication**
+var SecretKey = builder.Configuration["JwtSettings:SecretKey"];
+
+if (string.IsNullOrEmpty(SecretKey))
+{
+    throw new NullReferenceException("SecretKey is missing.");
+}
+
+// ถ้า Key สั้นกว่า 32 ตัวอักษร ให้เติมจนยาวเพียงพอ
+if (SecretKey.Length < 32)
+{
+    SecretKey = SecretKey.PadRight(32, 'X'); // เติม 'X' ให้ครบ 32 ตัว
+}
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true, // ตรวจสอบว่าผู้สร้าง Token คือใคร
-            ValidateAudience = true, // ตรวจสอบผู้ใช้งาน Audience
-            ValidateLifetime = true, // ตรวจสอบว่าหมดอายุหรือยัง
-            ValidateIssuerSigningKey = true, // ตรวจสอบ Signature
-            ValidIssuer = "localhost", // Issuer ที่เราเชื่อถือ
-            ValidAudience = "localhost", // Audience ที่เราเชื่อถือ
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes("wrZzjoEgLiypg53ojlxG")) // Secret Key
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "localhost",
+            ValidAudience = "localhost",
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey))
         };
     });
 
@@ -45,7 +58,34 @@ builder.Services.AddCors(options =>
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\n\nExample: \"Bearer eyJhbG...\""
+    });
+
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] {}
+        }
+    });
+});
+
 builder.Services.AddControllers();
 
 // Explicitly configure URLs to listen on
