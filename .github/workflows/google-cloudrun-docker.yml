@@ -1,42 +1,41 @@
-name: 'Build and Deploy to Cloud Run'
+name: 'Build and Deploy to Cloud Run (2 services with Docker Compose)'
 
 on:
-  workflow_dispatch:
+  # สั่งรัน workflow เมื่อมี push ไป branch main หรือกด manual
   push:
-    branches:
-      - '"main"'
+    branches: [ "main" ]
+  workflow_dispatch:
 
 env:
-  PROJECT_ID: 'etaxth'          # แก้ให้ตรงกับ Google Cloud project ID ของคุณ
-  REGION: 'asia-southeast1'     # แก้ให้ตรงกับ region ของคุณ
-  SERVICE: 'trainee-jidapa'     # ชื่อ Cloud Run service
+  PROJECT_ID: "etaxth"    # ใส่ Project ID ของ Google Cloud
+  REGION: "asia-southeast1"              # Region ที่ใช้
+  REPO_NAME: "trainee-jidapa"                    # ชื่อ repo ใน Artifact Registry (ปรับตามจริง)
+
+  BACKEND_SERVICE: "jidapa-backend-service"   # ชื่อ Cloud Run Service ของฝั่ง backend
+  FRONTEND_SERVICE: "jidapa-frontend-service" # ชื่อ Cloud Run Service ของฝั่ง frontend
 
 jobs:
   deploy:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
 
     permissions:
       contents: 'read'
       id-token: 'write'
 
     steps:
-      - name: 'Checkout'
-        uses: 'actions/checkout@v4'
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      # ----------------------------
-      # 1) เพิ่ม token_format: 'access_token'
-      # ----------------------------
-      - id: 'auth'
+      # 1) Authenticate to Google Cloud
+      - id: auth
         name: 'Authenticate to Google Cloud'
         uses: 'google-github-actions/auth@v2'
         with:
+          # ใช้ json credentials หรือ Workload Identity
           credentials_json: '${{ secrets.GOOGLE_CREDENTIALS }}'
-          token_format: 'access_token'
+          token_format: 'access_token'  # สำคัญ ถ้าจะใช้ docker login ต้องใช้ access_token
 
-      # BEGIN - Docker auth and build
-      # ----------------------------
-      # 2) เปลี่ยน password: จาก auth_token เป็น access_token
-      # ----------------------------
+      # 2) Docker login ไปยัง Artifact Registry
       - name: 'Docker Auth'
         uses: 'docker/login-action@v3'
         with:
@@ -44,21 +43,38 @@ jobs:
           password: '${{ steps.auth.outputs.access_token }}'
           registry: '${{ env.REGION }}-docker.pkg.dev'
 
-      - name: 'Build and Push Container'
-        run: |-
-          DOCKER_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}"
-          docker build --tag "${DOCKER_TAG}" .
-          docker push "${DOCKER_TAG}"
-
-      - name: 'Deploy to Cloud Run'
-        uses: 'google-github-actions/deploy-cloudrun@v2'
-        id: deploy
-        with:
-          service: '${{ env.SERVICE }}'
-          region: '${{ env.REGION }}'
-          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}'
-      # END - Docker auth and build
-
-      - name: 'Show output'
+      # 3) Build & Push image สำหรับ 2 service ด้วย Docker Compose
+      - name: 'Build and Push container images'
         run: |
-          echo "Cloud Run URL: ${{ steps.deploy.outputs.url }}"
+          # ส่งตัวแปรเข้า docker compose แบบชั่วคราว
+          export PROJECT_ID="${{ env.PROJECT_ID }}"
+          export REGION="${{ env.REGION }}"
+          export GITHUB_SHA="${{ github.sha }}"
+          
+          # สั่ง build + push ตามที่ระบุใน docker-compose.yml
+          docker compose build
+          docker compose push
+
+      # 4) Deploy Backend service
+      - name: 'Deploy to Cloud Run (Backend)'
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        id: deploy_backend
+        with:
+          service: '${{ env.BACKEND_SERVICE }}'
+          region: '${{ env.REGION }}'
+          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/backend:${{ github.sha }}'
+
+      # 5) Deploy Frontend service
+      - name: 'Deploy to Cloud Run (Frontend)'
+        uses: 'google-github-actions/deploy-cloudrun@v2'
+        id: deploy_frontend
+        with:
+          service: '${{ env.FRONTEND_SERVICE }}'
+          region: '${{ env.REGION }}'
+          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPO_NAME }}/frontend:${{ github.sha }}'
+
+      # 6) (Optional) Show outputs เช่น URLs ของแต่ละ service
+      - name: 'Show output URLs'
+        run: |
+          echo "Backend URL: ${{ steps.deploy_backend.outputs.url }}"
+          echo "Frontend URL: ${{ steps.deploy_frontend.outputs.url }}"
