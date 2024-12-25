@@ -1,9 +1,9 @@
 services:
   backend:
-    image: backend
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/backend:${GITHUB_SHA}"
     ports:
       - "5293:5293"
 
@@ -11,5 +11,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/frontend:${GITHUB_SHA}"
     ports:
       - "3000:3000"
