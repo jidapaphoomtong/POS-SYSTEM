@@ -51,4 +51,26 @@ public class JwtTokenHelper
 
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+    
+    //กำหนด role ใน token
+    // private string GenerateJwtToken(string role)
+    // {
+    //     var claims = new[]
+    //     {
+    //         new Claim(ClaimTypes.Name, "Username"),
+    //         new Claim(ClaimTypes.Role, role), // เพิ่ม Role
+    //     };
+
+    //     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
+    //     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+    //     var token = new JwtSecurityToken(
+    //         issuer: "localhost",
+    //         audience: "localhost",
+    //         claims: claims,
+    //         expires: DateTime.Now.AddHours(1),
+    //         signingCredentials: creds);
+
+    //     return new JwtSecurityTokenHandler().WriteToken(token);
+    // }
 }
