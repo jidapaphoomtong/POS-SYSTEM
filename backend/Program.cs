@@ -1,6 +1,8 @@
 using System.Text;
 using backend.Services;
+using backend.Services.AuthService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
@@ -86,7 +88,24 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-builder.Services.AddControllers();
+// builder.Services.AddAuthorization(options =>
+// {
+//     // กำหนด Policy สำหรับ Role ต่าง ๆ
+//     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("admin"));
+//     options.AddPolicy("ManagerPolicy", policy => policy.RequireRole("manager"));
+//     options.AddPolicy("EmployeePolicy", policy => policy.RequireRole("employee"));
+// });
+
+// Add services to the DI container.
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddControllers(options =>
+{
+    // บังคับใช้ Policy Global (ยกเว้นเฉพาะ [AllowAnonymous])
+    var policy = new AuthorizationPolicyBuilder()
+                    .RequireAuthenticatedUser()
+                    .Build();
+    options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
+});
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");

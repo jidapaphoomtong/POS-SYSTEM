@@ -3,16 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace backend.Services
+namespace backend.Services.ManagerService
 {
-    public class AuthService
+    public class ManagerService : IManagerService
     {
         private readonly FirestoreDB _firestoreDb;
 
-        public AuthService(FirestoreDB firestoreDb)
+        public ManagerService(FirestoreDB firestoreDb)
         {
             _firestoreDb = firestoreDb;
         }
-
     }
 }

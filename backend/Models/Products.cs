@@ -9,7 +9,7 @@ namespace backend.Models
     public class Products
     {
         public int Id { get; set; }
-        public string Title{ get; set; } = string.Empty;
+        public string Name{ get; set; } = string.Empty;
         public int Quantity { get; set; }
         public double Price { get; set; }
     }
