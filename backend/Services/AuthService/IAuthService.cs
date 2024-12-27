@@ -12,5 +12,6 @@ namespace backend.Services.AuthService
         Task<string> GetNextUserId();
         Task<DocumentSnapshot> GetUserByEmail(string email);
         Task<DocumentReference> RegisterUserAsync(string userId, string firstName, string lastName, string email, string salt, string hashedPassword);
+        
     }
 }

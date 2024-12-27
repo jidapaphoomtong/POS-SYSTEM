@@ -18,7 +18,7 @@ public class JwtTokenHelper
         _audience = audience;
     }
 
-    public string GenerateJwtToken(string id,string email, string subject, List<string> roles)
+    public string GenerateJwtToken(string id,string email, string firstName, string role)
     {
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha512);
@@ -26,18 +26,14 @@ public class JwtTokenHelper
         // Claims (ข้อมูลใน Payload)
         var claims = new List<Claim>
         {
-            new Claim(JwtRegisteredClaimNames.Sub, subject), // sub
+            // new Claim(JwtRegisteredClaimNames.Sub, subject), // sub
             new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()), // jti
             new Claim("id", id), // id
+            new Claim("name", firstName),
             new Claim("email", email),
+            new Claim("role",role),
             new Claim(JwtRegisteredClaimNames.Iat, DateTime.UtcNow.ToString(), ClaimValueTypes.Integer64) // iat
         };
-
-        // เพิ่ม Role Claim
-        foreach (var role in roles)
-        {
-            claims.Add(new Claim(ClaimTypes.Role, role));
-        }
 
         // สร้าง Token
         var token = new JwtSecurityToken(
@@ -61,7 +57,7 @@ public class JwtTokenHelper
     //         new Claim(ClaimTypes.Role, role), // เพิ่ม Role
     //     };
 
-    //     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey));
+    //     var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_secretKey));
     //     var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
     //     var token = new JwtSecurityToken(

@@ -1,5 +1,6 @@
 using System.Text;
 using backend.Services;
+using backend.Services.AdminService;
 using backend.Services.AuthService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
@@ -88,16 +89,9 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
-// builder.Services.AddAuthorization(options =>
-// {
-//     // กำหนด Policy สำหรับ Role ต่าง ๆ
-//     options.AddPolicy("AdminPolicy", policy => policy.RequireRole("admin"));
-//     options.AddPolicy("ManagerPolicy", policy => policy.RequireRole("manager"));
-//     options.AddPolicy("EmployeePolicy", policy => policy.RequireRole("employee"));
-// });
-
 // Add services to the DI container.
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddControllers(options =>
 {
     // บังคับใช้ Policy Global (ยกเว้นเฉพาะ [AllowAnonymous])
@@ -106,6 +100,15 @@ builder.Services.AddControllers(options =>
                     .Build();
     options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
 });
+
+builder.Services.AddAuthorization(options =>
+{
+    // กำหนด Policy สำหรับ Role ต่าง ๆ
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("admin"));
+    options.AddPolicy("ManagerPolicy", policy => policy.RequireRole("manager"));
+    options.AddPolicy("EmployeePolicy", policy => policy.RequireRole("employee"));
+});
+
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");
