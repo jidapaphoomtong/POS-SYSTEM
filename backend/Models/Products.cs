@@ -3,14 +3,20 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Google.Cloud.Firestore;
 
 namespace backend.Models
 {
+    [FirestoreData]
     public class Products
     {
-        public int Id { get; set; }
-        public string Name{ get; set; } = string.Empty;
-        public int Quantity { get; set; }
-        public double Price { get; set; }
+        [FirestoreProperty]
+        public string Id { get; set; }
+        [FirestoreProperty]
+        public string productName{ get; set; } = string.Empty;
+        [FirestoreProperty]
+        public int quantity { get; set; }
+        [FirestoreProperty]
+        public double price { get; set; }
     }
 }

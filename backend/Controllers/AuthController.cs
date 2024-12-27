@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using backend.Services.AuthService;
+using Google.Cloud.Firestore;
 
 namespace backend.Controllers
 {
@@ -25,6 +26,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("register")]
+        [Authorize(Policy = "AdminPolicy")]
         public async Task<IActionResult> Register([FromBody] Register userRegister)
         {
             if (!ModelState.IsValid)
@@ -43,7 +45,8 @@ namespace backend.Controllers
                 var salt = _authService.GenerateSalt();
                 var hashedPassword = _authService.HashPassword(userRegister.password, salt);
 
-                // var newUserRef = await _authService.RegisterUserAsync(newId, userRegister.FullName, userRegister.Email, salt, hashedPassword);
+                // CollectionReference user = _firestoreDb.Collection("users");
+                // DocumentReference newUserRef = await user.AddAsync(userRegister);
                 var newUserRef = await _authService.RegisterUserAsync(newId, userRegister.firstName, userRegister.lastName ,userRegister.email, salt, hashedPassword);
 
                 return Ok(new { Success = true, Message = "User registered successfully!", UserId = newId, DocumentId = newUserRef.Id });
@@ -73,12 +76,14 @@ namespace backend.Controllers
             var user = userSnapshot.ToDictionary();
             var salt = (string)user["salt"];
             var passwordHash = (string)user["passwordHash"];
+            var role = (string)user["role"]; // Get role from Firestore
 
             if (!_authService.VerifyPassword(userLogin.Password, passwordHash, salt))
             {
                 return Unauthorized(new { Success = false, Message = "Invalid credentials" });
             }
 
+            // Generate JWT Token
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes("5MZHydfAoWBsruaAXLex4omTno0zhkX9zMGRXUTZ");
 
@@ -87,7 +92,8 @@ namespace backend.Controllers
                 Subject = new ClaimsIdentity(new[]
                 {
                     new Claim(ClaimTypes.NameIdentifier, userSnapshot.Id),
-                    new Claim(ClaimTypes.Email, (string)user["email"])
+                    new Claim(ClaimTypes.Email, (string)user["email"]),
+                    new Claim(ClaimTypes.Role, role) // Add role claim to token
                 }),
                 Expires = DateTime.UtcNow.AddDays(30),
                 Issuer = "localhost",
@@ -105,7 +111,6 @@ namespace backend.Controllers
                 Token = tokenString
             });
         }
-    }
 
         // [HttpGet("get-user")]
         // public async Task<IActionResult> GetUser()
@@ -277,4 +282,5 @@ namespace backend.Controllers
         //         });
         //     }
         // }
+    }
 }
