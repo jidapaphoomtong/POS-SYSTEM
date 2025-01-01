@@ -8,17 +8,20 @@ namespace backend.Services.AdminService
 {
     public interface IAdminService
     {
-        Task<string> AddBranch(Branch branch);
-        Task<string> AddEmployee(string branchId, Employee employee);
-        Task<string> AddProduct(string branchId, Products product);
-        Task<List<object>> GetBranches();
-        Task UpdateBranch(string branchId, Dictionary<string, object> updatedData);
-        Task DeleteBranch(string branchId);
-        Task<List<object>> GetEmployees(string branchId);
-        Task UpdateEmployee(string branchId, string employeeId, Employee updatedEmployee);
-        Task DeleteEmployee(string branchId, string employeeId);
-        Task<List<object>> GetProducts(string branchId);
-        Task UpdateProduct(string branchId, string productId, Products updatedProduct);
-        Task DeleteProduct(string branchId, string productId);
+        Task<ServiceResponse<string>> AddBranch(Branch branch);
+        Task<ServiceResponse<string>> AddEmployee(string branchId, Employee employee);
+        Task<ServiceResponse<string>> AddProduct(string branchId, Products product);
+
+        Task<ServiceResponse<List<BranchResponse>>> GetBranches();
+        Task<ServiceResponse<string>> UpdateBranch(string branchId, Dictionary<string, object> updatedData);
+        Task<ServiceResponse<string>> DeleteBranch(string branchId);
+
+        Task<ServiceResponse<List<object>>> GetEmployees(string branchId);
+        Task<ServiceResponse<string>> UpdateEmployee(string branchId, string employeeId, Employee updatedEmployee);
+        Task<ServiceResponse<string>> DeleteEmployee(string branchId, string employeeId);
+
+        Task<ServiceResponse<List<object>>> GetProducts(string branchId);
+        Task<ServiceResponse<string>> UpdateProduct(string branchId, string productId, Products updatedProduct);
+        Task<ServiceResponse<string>> DeleteProduct(string branchId, string productId);
     }
 }

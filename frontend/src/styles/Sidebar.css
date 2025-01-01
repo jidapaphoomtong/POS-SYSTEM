@@ -1,0 +1,72 @@
+/* Sidebar */
+.sidebar {
+    background-color: #cdeff7; /* สีฟ้าอ่อน */
+    width: 80px;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-right: 2px solid #64bbd9; /* กรอบด้านขวา */
+    position: fixed;
+  }
+  
+  .sidebar-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 90%;
+    text-align: center;
+  }
+  
+  /* Sidebar Item */
+  .sidebar-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    cursor: pointer;
+    color: #68b5d8; /* สีไอคอน */
+    font-size: 14px;
+    transition: all 0.3s;
+  }
+  
+  .sidebar-item:hover {
+    color: #1481a8; /* สีเปลี่ยนเมื่อ hover */
+    transform: scale(1.1);
+  }
+  
+  .sidebar-icon {
+    font-size: 24px;
+  }
+  
+  /* Logout */
+  .logout {
+    margin-top: auto;
+    color: #77b8d5;
+  }
+  
+  .logout:hover {
+    color: #1481a8;
+  }
+
+  .sidebar-logout {
+    cursor: pointer;
+    color: #ff6b6b; /* สีแดงอ่อน */
+    font-weight: bold;
+    transition: color 0.2s;
+}
+
+.sidebar-logout:hover {
+    color: #ff4c4c; /* สีแดงเข้มเมื่อ hover */
+}
+
+.sidebar-item.logout {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* ระยะห่างระหว่างไอคอนกับข้อความ */
+}
+
+.sidebar-icon {
+    font-size: 20px; /* เปลี่ยนได้ตามต้องการ */
+}

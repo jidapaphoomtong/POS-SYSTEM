@@ -48,13 +48,23 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
     return new FirestoreDB(settings);
 });
 
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("AllowAllOrigins",
+//         builder => builder.AllowAnyOrigin() // อนุญาตทุก Origin
+//                           .AllowAnyMethod() // อนุญาตทุก HTTP Method
+//                           .AllowAnyHeader() // อนุญาตทุก Header
+//     );
+// });
+
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAllOrigins",
-        builder => builder.AllowAnyOrigin() // อนุญาตทุก Origin
-                          .AllowAnyMethod() // อนุญาตทุก HTTP Method
-                          .AllowAnyHeader() // อนุญาตทุก Header
-    );
+    options.AddPolicy("AllowReactApp", builder =>
+    {
+        builder.WithOrigins("http://localhost:3000") // URL จาก React
+               .AllowAnyHeader()
+               .AllowAnyMethod();
+    });
 });
 
 // Add services to the container.
@@ -115,7 +125,8 @@ builder.WebHost.UseUrls("http://*:5293");
 
 var app = builder.Build();
 
-app.UseCors("AllowAllOrigins");
+// app.UseCors("AllowAllOrigins");
+app.UseCors("AllowReactApp");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

@@ -16,7 +16,6 @@ namespace backend.Models
         [FirestoreProperty]
         public string emailName { get; set; } = string.Empty;
         [FirestoreProperty]
-        public string Role { get; set; } = "employee";
-
+        public string Role { get; set; } = string.Empty;
     }
 }

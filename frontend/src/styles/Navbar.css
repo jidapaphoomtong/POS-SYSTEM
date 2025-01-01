@@ -1,0 +1,80 @@
+/* Navbar Background */
+.navbar {
+    background-color: #7ccfe8; /* สีฟ้า */
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Container */
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 1200px;
+  }
+  
+  /* Search Bar */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #cdeff7; /* สีฟ้าจาง */
+    border-radius: 20px;
+    padding: 5px 15px;
+    flex-grow: 1;
+    max-width: 600px;
+  }
+  
+  .search-bar input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .search-icon {
+    color: #1d75cc; /* สีไอคอน */
+    font-size: 16px;
+    margin-left: 10px;
+  }
+  
+  /* Navbar Icons */
+  .navbar-icons {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .icon {
+    font-size: 22px;
+    cursor: pointer;
+  }
+  
+  .bell-icon {
+    color: #1d1dff; /* สีฟ้าไอคอนกระดิ่ง */
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .user-icon {
+    color: #2a83cf; /* สีฟ้าอวาตาร์ */
+  }
+  
+  .user-info span {
+    font-size: 16px;
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .menu-icon {
+    color: #2a83cf; /* สีฟ้าไอคอนเมนู */
+  }
