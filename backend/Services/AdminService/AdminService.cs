@@ -17,134 +17,258 @@ namespace backend.Services.AdminService
         }
         
         //admin only
-        public async Task<string> AddBranch(Branch branch)
+        public async Task<ServiceResponse<string>> AddBranch(Branch branch)
         {
-            CollectionReference branches = _firestoreDb.Collection("branches");
-            DocumentReference newBranch = await branches.AddAsync(branch);
-            return newBranch.Id;
+            try
+            {
+                CollectionReference branches = _firestoreDb.Collection("branches");
+                DocumentReference newBranch = await branches.AddAsync(branch);
+
+                return ServiceResponse<string>.CreateSuccess(newBranch.Id, "Branch added successfully!");
+            }
+            catch (Exception ex)
+            {
+                // หากเกิดข้อผิดพลาด
+                return ServiceResponse<string>.CreateFailure($"Failed to add branch: {ex.Message}");
+            }
         }
 
         //admin and manager
-        public async Task<string> AddEmployee(string branchId, Employee employee)
+        public async Task<ServiceResponse<string>> AddEmployee(string branchId, Employee employee)
         {
-            CollectionReference employees = _firestoreDb
-                .Collection("branches")
-                .Document(branchId)
-                .Collection("employees");
-            DocumentReference newEmployee = await employees.AddAsync(employee);
-            return newEmployee.Id;
+            try
+            {
+                CollectionReference employees = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("employees");
+
+                DocumentReference newEmployee = await employees.AddAsync(employee);
+                return ServiceResponse<string>.CreateSuccess(newEmployee.Id, "Employee added successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to add employee: {ex.Message}");
+            }
         }
         
         //manager
-        public async Task<string> AddProduct(string branchId, Products product)
+        public async Task<ServiceResponse<string>> AddProduct(string branchId, Products product)
         {
-            CollectionReference products = _firestoreDb
-                .Collection("branches")
-                .Document(branchId)
-                .Collection("products");
-            DocumentReference newProduct = await products.AddAsync(product);
-            return newProduct.Id;
-        }
-
-        public async Task DeleteBranch(string branchId)
-        {
-            DocumentReference branchDoc = _firestoreDb
-                .Collection("branches")
-                .Document(branchId);
-            await branchDoc.DeleteAsync();
-        }
-
-        public async Task DeleteEmployee(string branchId, string employeeId)
-        {
-            DocumentReference employeeDoc = _firestoreDb
-                .Collection("branches")
-                .Document(branchId)
-                .Collection("employees")
-                .Document(employeeId);
-            await employeeDoc.DeleteAsync();
-        }
-
-        public async Task DeleteProduct(string branchId, string productId)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<object>> GetBranches()
-        {
-            CollectionReference branches = _firestoreDb.Collection("branches");
-            QuerySnapshot snapshot = await branches.GetSnapshotAsync();
-            return snapshot.Documents.Select(doc => new
+            try
             {
-                Id = doc.Id,
-                Data = doc.ToDictionary()
-            }).Cast<object>().ToList();
-        }
+                CollectionReference products = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("products");
 
-        public async Task<List<object>> GetEmployees(string branchId)
-        {
-            CollectionReference employees = _firestoreDb
-                .Collection("branches")
-                .Document(branchId)
-                .Collection("employees");
-            QuerySnapshot snapshot = await employees.GetSnapshotAsync();
-            return snapshot.Documents.Select(doc => new
+                DocumentReference newProduct = await products.AddAsync(product);
+                return ServiceResponse<string>.CreateSuccess(newProduct.Id, "Product added successfully!");
+            }
+            catch (Exception ex)
             {
-                Id = doc.Id,
-                Data = doc.ToDictionary()
-            }).Cast<object>().ToList();
+                return ServiceResponse<string>.CreateFailure($"Failed to add product: {ex.Message}");
+            }
         }
 
-        public async Task<List<object>> GetProducts(string branchId)
+        public async Task<ServiceResponse<string>> DeleteBranch(string branchId)
         {
-            CollectionReference products = _firestoreDb
-                .Collection("branches")
-                .Document(branchId)
-                .Collection("products");
-            QuerySnapshot snapshot = await products.GetSnapshotAsync();
-            return snapshot.Documents.Select(doc => new
+            try
             {
-                Id = doc.Id,
-                Data = doc.ToDictionary()
-            }).Cast<object>().ToList();
-        }
+                DocumentReference branch = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId);
 
-        public async Task UpdateBranch(string branchId, Dictionary<string, object> updatedData)
-        {
-            DocumentReference branchDoc = _firestoreDb
-                .Collection("branches")
-                .Document(branchId);
-            await branchDoc.UpdateAsync(updatedData);
-        }
-
-        public async Task UpdateEmployee(string branchId, string employeeId, Employee updatedEmployee)
-        {
-            DocumentReference employeeDoc = _firestoreDb
-                .Collection("branches")
-                .Document(branchId)
-                .Collection("employees")
-                .Document(employeeId);
-            await employeeDoc.UpdateAsync(new Dictionary<string, object>
+                await branch.DeleteAsync();
+                return ServiceResponse<string>.CreateSuccess(branchId, "Branch deleted successfully!");
+            }
+            catch (Exception ex)
             {
-                { "firstName", updatedEmployee.firstName },
-                { "lastName", updatedEmployee.lastName },
-                { "emailName", updatedEmployee.emailName },
-                { "Role", updatedEmployee.Role }
-            });
+                return ServiceResponse<string>.CreateFailure($"Failed to delete branch: {ex.Message}");
+            }
         }
 
-        public async Task UpdateProduct(string branchId, string productId, Products updatedProduct)
+        public async Task<ServiceResponse<string>> DeleteEmployee(string branchId, string employeeId)
         {
-            DocumentReference productDoc = _firestoreDb
-                .Collection("branches")
-                .Document(branchId)
-                .Collection("products")
-                .Document(productId);
-            await productDoc.UpdateAsync(new Dictionary<string, object>
+            try
             {
-                { "productName", updatedProduct.productName },
-                { "price", updatedProduct.price },
-                { "quantity", updatedProduct.quantity }
-            });
+                DocumentReference employeeDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("employees")
+                    .Document(employeeId);
+
+                await employeeDoc.DeleteAsync();
+
+                return ServiceResponse<string>.CreateSuccess(employeeId, "Employee deleted successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to delete employee: {ex.Message}");
+            }
         }
+
+        public async Task<ServiceResponse<string>> DeleteProduct(string branchId, string productId)
+        {
+            try
+            {
+                DocumentReference productDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("products")
+                    .Document(productId);
+
+                await productDoc.DeleteAsync();
+
+                return ServiceResponse<string>.CreateSuccess(productId, "Product deleted successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to delete product: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<List<BranchResponse>>> GetBranches()
+        {
+            try
+            {
+                CollectionReference branches = _firestoreDb.Collection("branches");
+                QuerySnapshot snapshot = await branches.GetSnapshotAsync();
+
+                var branchesList = snapshot.Documents.Select(doc => new BranchResponse
+                {
+                    Id = doc.Id,
+                    Name = doc.GetValue<string>("Name"),
+                    IconUrl = doc.GetValue<string>("IconUrl"),
+                    Location = doc.GetValue<string>("Location")
+                }).ToList();
+
+                return ServiceResponse<List<BranchResponse>>.CreateSuccess(branchesList, "Branches fetched successfully.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<List<BranchResponse>>.CreateFailure($"Failed to fetch branches: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<List<object>>> GetEmployees(string branchId)
+        {
+            try
+            {
+                CollectionReference employees = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("employees");
+
+                QuerySnapshot snapshot = await employees.GetSnapshotAsync();
+
+                var employeesList = snapshot.Documents.Select(doc => new
+                {
+                    Id = doc.Id,
+                    Data = doc.ToDictionary()
+                }).Cast<object>().ToList();
+
+                return ServiceResponse<List<object>>.CreateSuccess(employeesList, "Employees fetched successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<List<object>>.CreateFailure($"Failed to fetch employees: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<List<object>>> GetProducts(string branchId)
+        {
+            try
+            {
+                CollectionReference products = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("products");
+
+                QuerySnapshot snapshot = await products.GetSnapshotAsync();
+
+                var productsList = snapshot.Documents.Select(doc => new
+                {
+                    Id = doc.Id,
+                    Data = doc.ToDictionary()
+                }).Cast<object>().ToList();
+
+                return ServiceResponse<List<object>>.CreateSuccess(productsList, "Products fetched successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<List<object>>.CreateFailure($"Failed to fetch products: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<string>> UpdateBranch(string branchId, Dictionary<string, object> updatedData)
+        {
+            try
+            {
+                DocumentReference branchDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId);
+
+                await branchDoc.UpdateAsync(updatedData);
+
+                return ServiceResponse<string>.CreateSuccess(branchId, "Branch updated successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to update branch: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<string>> UpdateEmployee(string branchId, string employeeId, Employee updatedEmployee)
+        {
+            try
+            {
+                DocumentReference employeeDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("employees")
+                    .Document(employeeId);
+
+                await employeeDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "firstName", updatedEmployee.firstName },
+                    { "lastName", updatedEmployee.lastName },
+                    { "emailName", updatedEmployee.emailName },
+                    { "Role", updatedEmployee.Role }
+                });
+
+                return ServiceResponse<string>.CreateSuccess(employeeId, "Employee updated successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to update employee: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<string>> UpdateProduct(string branchId, string productId, Products updatedProduct)
+        {
+            try
+            {
+                DocumentReference productDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("products")
+                    .Document(productId);
+
+                await productDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "productName", updatedProduct.productName },
+                    { "price", updatedProduct.price },
+                    { "quantity", updatedProduct.quantity }
+                });
+
+                return ServiceResponse<string>.CreateSuccess(productId, "Product updated successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to update product: {ex.Message}");
+            }
+        }
+
     }
 }
