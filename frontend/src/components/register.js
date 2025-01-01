@@ -1,42 +1,45 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import logo from '../Images/food.png';
-import admin from '../Images/Admin.png';
-import { toast } from 'react-toastify';
-import { Link } from 'react-router-dom';
+import React, { useState } from "react";
+import axios from "axios";
+import logo from "../Images/food.png";
+import admin from "../Images/Admin.png";
+import { toast } from "react-toastify";
+import { Link } from "react-router-dom";
 
 const Register = () => {
     const [fullName, setFullName] = useState("");
-    const [userRole, setUserRole] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
-    const [responseMessage, setResponseMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
     const handleRegister = async (e) => {
         e.preventDefault();
-
+        setIsLoading(true);
         try {
-            const response = await axios.post(
+        const response = await axios.post(
             "http://localhost:5293/api/Auth/register",
-            { fullName, userRole, email, password },
             {
-                headers: {
-                "Content-Type": "application/json", // ระบุ Header สำหรับ JSON
-                },
+            firstName: fullName.split(" ")[0], // แยก Firstname
+            lastName: fullName.split(" ")[1] || "", // แยก Lastname หรือกำหนด Default เป็นค่าว่าง
+            email,
+            password,
+            },
+            {
+            headers: {
+                "Content-Type": "application/json",
+            },
             }
-            );
-            console.log("Success:", response.data);
-            toast.success("Registration Successful! 🎉");
+        );
+        console.log("Success:", response.data);
+        toast.success("Registration Successful! 🎉");
         } catch (error) {
-            console.error("Error:", error.response?.data || error.message);
-            toast.error(
-                error.response?.data?.Message || "Unable to register. Please try again."
-            );
+        console.error("Error:", error.response?.data || error.message);
+        toast.error(
+            error.response?.data?.Message || "Unable to register. Please try again."
+        );
         } finally {
-            setIsLoading(false);
+        setIsLoading(false);
         }
-    }
+    };
 
     return (
         <div className="login-register-container">
@@ -47,28 +50,21 @@ const Register = () => {
             <img src={admin} className="avatar" alt="Admin Avatar" />
             <form onSubmit={handleRegister}>
             <input
-                type="fullName"
-                placeholder="Full Name..."
+                type="text-form"
+                placeholder="Full Name... (e.g. John Doe)"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
             />
             <input
-                type="userRole"
-                placeholder="Role..."
-                value={userRole}
-                onChange={(e) => setUserRole(e.target.value)}
-                required
-            />
-            <input
-                type="email"
-                placeholder="Email..."
+                type="text-form"
+                placeholder="Email Address..."
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
             />
             <input
-                type="password"
+                type="text-form"
                 placeholder="Password..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -78,7 +74,9 @@ const Register = () => {
                 {isLoading ? "Processing..." : "Register"}
             </button>
             </form>
-            <p>Already have an account? <Link to="/">Login here</Link></p>
+            <p>
+            Already have an account? <Link to="/">Login here</Link>
+            </p>
         </div>
         </div>
     );

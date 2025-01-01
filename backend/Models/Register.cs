@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -20,6 +21,8 @@ namespace backend.Models
         [FirestoreProperty]
         public string password { get; set; } = string.Empty;
         [FirestoreProperty]
+        // ค่า Default Role = "admin"
+        [DefaultValue("admin")]
         public string Role { get; set; } = "admin";
     }
 }

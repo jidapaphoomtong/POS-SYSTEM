@@ -26,7 +26,8 @@ namespace backend.Controllers
         }
 
         [HttpPost("register")]
-        [Authorize(Policy = "AdminPolicy")]
+        // [Authorize(Policy = "AdminPolicy")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] Register userRegister)
         {
             if (!ModelState.IsValid)
@@ -76,7 +77,7 @@ namespace backend.Controllers
             var user = userSnapshot.ToDictionary();
             var salt = (string)user["salt"];
             var passwordHash = (string)user["passwordHash"];
-            var role = (string)user["role"]; // Get role from Firestore
+            // var role = (string)user["role"]; // Get role from Firestore
 
             if (!_authService.VerifyPassword(userLogin.Password, passwordHash, salt))
             {
@@ -93,7 +94,7 @@ namespace backend.Controllers
                 {
                     new Claim(ClaimTypes.NameIdentifier, userSnapshot.Id),
                     new Claim(ClaimTypes.Email, (string)user["email"]),
-                    new Claim(ClaimTypes.Role, role) // Add role claim to token
+                    // new Claim(ClaimTypes.Role, role) // Add role claim to token
                 }),
                 Expires = DateTime.UtcNow.AddDays(30),
                 Issuer = "localhost",
