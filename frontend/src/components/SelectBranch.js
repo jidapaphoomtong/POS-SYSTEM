@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/SelectBranch.css";
-import { FaTh, FaList } from "react-icons/fa";
+import { FaTh, FaList, FaStore } from "react-icons/fa";
 
 export default function SelectBranch() {
     const [branches, setBranches] = useState([]);

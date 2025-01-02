@@ -103,6 +103,7 @@ const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -147,20 +148,34 @@ const Login = () => {
         <div className="form-container">
             <img src={admin} className="avatar" alt="Admin Avatar" />
             <form onSubmit={handleLogin}>
+            {/* ช่อง Email */}
             <input
-                type="text-form"
-                placeholder="Email..."
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+            type="text-form"
+            placeholder="Email..."
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            className="form-input"
             />
+
+            {/* ช่อง Password */}
+            <div className="input-group">
             <input
-                type="text-form"
+                type={showPassword ? "text" : "password"} // ซ่อนหรือแสดงรหัสผ่าน
                 placeholder="Password..."
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="form-input"
             />
+            <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)} // สลับสถานะ Show/Hide
+                className="show-password-btn"
+            >
+                {showPassword ? "Hide" : "Show"}
+            </button>
+            </div>
             <button type="submit" className="btn" disabled={isLoading}>
                 {isLoading ? "Processing..." : "Login"}
             </button>

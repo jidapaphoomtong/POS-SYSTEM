@@ -53,8 +53,8 @@ const Sidebar = () => {
 
                 {/* Logout */}
                 <div className="sidebar-item logout">
-                    <FaSignOutAlt className="sidebar-icon" />
-                    <span onClick={handleLogout} className="sidebar-logout">
+                    <FaSignOutAlt onClick={handleLogout} className="sidebar-icon" />
+                    <span className="sidebar-logout">
                         Logout
                     </span>
                 </div>

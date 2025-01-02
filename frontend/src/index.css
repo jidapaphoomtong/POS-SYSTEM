@@ -41,13 +41,17 @@ form {
   width: 80%;
 }
 
-input[type="text-form"]
-{
+/* ฟอร์ม Input */
+input[type="text-form"], 
+input[type="password"],
+.input-group .form-input {
+  width: 100%;
   padding: 10px;
   margin: 10px 0;
+  font-size: 1rem;
   border: 2px solid lightblue;
   border-radius: 10px;
-  font-size: 1rem;
+  box-sizing: border-box; /* ทำให้ padding ไม่กระทบกับขนาด */
 }
 
 input::placeholder {
@@ -177,4 +181,34 @@ button:hover {
   align-items: center;
   margin-bottom: 20px;
   color: #5995fd;
+}
+
+/* กลุ่มของช่อง Password และปุ่ม */
+.input-group {
+  position: relative; /* เพื่อให้ปุ่ม Show/Hide วางอยู่ข้างใน */
+}
+
+.form-input {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.show-password-btn {
+  position: absolute;
+  right: 10px;
+  top: 43.5%;
+  transform: translateY(-50%); /* จัดศูนย์กลางในแนวตั้ง */
+  background-color: transparent;
+  border: none;
+  color: #007bff;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 5px;
+}
+
+.show-password-btn:hover {
+  color: #0056b3;
 }
