@@ -1,5 +1,4 @@
-@backend_HostAddress = http://localhost:5293
-
+@backend_HostAddress = https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/
 GET {{backend_HostAddress}}/weatherforecast/
 Accept: application/json
 

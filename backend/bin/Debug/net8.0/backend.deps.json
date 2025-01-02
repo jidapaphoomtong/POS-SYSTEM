@@ -8,6 +8,7 @@
     ".NETCoreApp,Version=v8.0": {
       "backend/1.0.0": {
         "dependencies": {
+          "AspNetCoreRateLimit": "5.0.0",
           "DotNetEnv": "3.1.0",
           "FireSharp.Serialization.JsonNet": "1.1.0",
           "Firebase.Database": "1.0.0",
@@ -20,6 +21,20 @@
         },
         "runtime": {
           "backend.dll": {}
+        }
+      },
+      "AspNetCoreRateLimit/5.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Caching.Abstractions": "6.0.0",
+          "Microsoft.Extensions.Logging.Abstractions": "8.0.0",
+          "Microsoft.Extensions.Options": "8.0.0",
+          "Newtonsoft.Json": "13.0.3"
+        },
+        "runtime": {
+          "lib/net6.0/AspNetCoreRateLimit.dll": {
+            "assemblyVersion": "4.0.2.0",
+            "fileVersion": "4.0.2.0"
+          }
         }
       },
       "DotNetEnv/3.1.0": {
@@ -315,6 +330,11 @@
         }
       },
       "Microsoft.Extensions.ApiDescription.Server/6.0.5": {},
+      "Microsoft.Extensions.Caching.Abstractions/6.0.0": {
+        "dependencies": {
+          "Microsoft.Extensions.Primitives": "8.0.0"
+        }
+      },
       "Microsoft.Extensions.Configuration/1.1.2": {
         "dependencies": {
           "Microsoft.Extensions.Configuration.Abstractions": "2.2.0",
@@ -1272,6 +1292,13 @@
       "serviceable": false,
       "sha512": ""
     },
+    "AspNetCoreRateLimit/5.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-6fq9+o1maGADUmpK/PvcF0DtXW2+7bSkIL7MDIo/agbIHKN8XkMQF4oze60DO731WaQmHmK260hB30FwPzCmEg==",
+      "path": "aspnetcoreratelimit/5.0.0",
+      "hashPath": "aspnetcoreratelimit.5.0.0.nupkg.sha512"
+    },
     "DotNetEnv/3.1.0": {
       "type": "package",
       "serviceable": true,
@@ -1474,6 +1501,13 @@
       "sha512": "sha512-Ckb5EDBUNJdFWyajfXzUIMRkhf52fHZOQuuZg/oiu8y7zDCVwD0iHhew6MnThjHmevanpxL3f5ci2TtHQEN6bw==",
       "path": "microsoft.extensions.apidescription.server/6.0.5",
       "hashPath": "microsoft.extensions.apidescription.server.6.0.5.nupkg.sha512"
+    },
+    "Microsoft.Extensions.Caching.Abstractions/6.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-bcz5sSFJbganH0+YrfvIjJDIcKNW7TL07C4d1eTmXy/wOt52iz4LVogJb6pazs7W0+74j0YpXFErvp++Aq5Bsw==",
+      "path": "microsoft.extensions.caching.abstractions/6.0.0",
+      "hashPath": "microsoft.extensions.caching.abstractions.6.0.0.nupkg.sha512"
     },
     "Microsoft.Extensions.Configuration/1.1.2": {
       "type": "package",

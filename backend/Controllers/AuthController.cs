@@ -64,27 +64,39 @@ namespace backend.Controllers
         {
             if (!ModelState.IsValid)
             {
-                return BadRequest(ModelState);
+                return BadRequest(new { Success = false, Message = "Invalid input data." });
             }
 
+            // ดึงข้อมูลผู้ใช้จาก Firestore โดยใช้ email
             var userSnapshot = await _authService.GetUserByEmail(userLogin.Email);
-
             if (userSnapshot == null)
             {
-                return NotFound(new { Success = false, Message = "User not found" });
+                return NotFound(new { Success = false, Message = "User not found." });
             }
 
+            // แปลงข้อมูลจาก Firestore เป็น Dictionary
             var user = userSnapshot.ToDictionary();
+
+            // ตรวจสอบว่า fields ที่จำเป็นทั้งหมดมีอยู่ในเอกสาร
+            if (!user.ContainsKey("salt") || !user.ContainsKey("passwordHash"))
+            {
+                return StatusCode(500, new { Success = false, Message = "User data is incomplete or corrupted." });
+            }
+
+            // ตรวจสอบ password
             var salt = (string)user["salt"];
             var passwordHash = (string)user["passwordHash"];
-            // var role = (string)user["role"]; // Get role from Firestore
-
             if (!_authService.VerifyPassword(userLogin.Password, passwordHash, salt))
             {
-                return Unauthorized(new { Success = false, Message = "Invalid credentials" });
+                return Unauthorized(new { Success = false, Message = "Invalid credentials." });
             }
 
-            // Generate JWT Token
+            // ดึงข้อมูลเพิ่มเติม (firstname, lastname, role)
+            // var firstName = user.ContainsKey("firstname") ? user["firstname"].ToString() : string.Empty;
+            // var lastName = user.ContainsKey("lastname") ? user["lastname"].ToString() : string.Empty;
+            // var role = user.ContainsKey("role") ? user["role"].ToString() : "User";
+
+            // สร้าง JWT Token
             var tokenHandler = new JwtSecurityTokenHandler();
             var key = Encoding.UTF8.GetBytes("5MZHydfAoWBsruaAXLex4omTno0zhkX9zMGRXUTZ");
 
@@ -92,19 +104,23 @@ namespace backend.Controllers
             {
                 Subject = new ClaimsIdentity(new[]
                 {
-                    new Claim(ClaimTypes.NameIdentifier, userSnapshot.Id),
-                    new Claim(ClaimTypes.Email, (string)user["email"]),
-                    // new Claim(ClaimTypes.Role, role) // Add role claim to token
+                    new Claim(ClaimTypes.NameIdentifier, userSnapshot.Id), // ใส่ UserId
+                    new Claim(ClaimTypes.Email, userLogin.Email),          // ใส่ Email
+                    // new Claim(ClaimTypes.GivenName, firstName),            // ใส่ Firstname
+                    // new Claim("lastname", lastName),                      // ใส่ Lastname เป็น Custom Claim
+                    // new Claim(ClaimTypes.Role, role)                      // ใส่ Role
                 }),
                 Expires = DateTime.UtcNow.AddDays(30),
                 Issuer = "localhost",
                 Audience = "localhost",
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = new SigningCredentials(
+                    new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
+            // ส่ง JWT Token กลับไปยัง Client
             return Ok(new
             {
                 Success = true,
@@ -113,175 +129,106 @@ namespace backend.Controllers
             });
         }
 
-        // [HttpGet("get-user")]
-        // public async Task<IActionResult> GetUser()
-        // {
-        //     try
-        //     {
-        //         // สร้างอ้างอิงถึง collection "users"
-        //         var userCollection = _firestoreDb.Collection("users");
+        [HttpGet("get-user-data")]
+        [Authorize] // Require JWT Token
+        public IActionResult GetUserData()
+        {
+            var identity = HttpContext.User.Identity as ClaimsIdentity;
+            if (identity != null)
+            {
+                var claims = identity.Claims;
+                var userId = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+                var email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+                var firstname = claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
+                var lastname = claims.FirstOrDefault(c => c.Type == "lastname")?.Value;
+                var role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
 
-        //         // ดึงข้อมูลจาก collection
-        //         var snapshot = await userCollection.GetSnapshotAsync();
+                return Ok(new
+                {
+                    Success = true,
+                    Data = new
+                    {
+                        UserId = userId,
+                        Email = email,
+                        FirstName = firstname,
+                        LastName = lastname,
+                        Role = role
+                    }
+                });
+            }
 
-        //         // ตรวจสอบว่ามีข้อมูลหรือไม่
-        //         if (!snapshot.Documents.Any())
-        //         {
-        //             return NotFound(new { Success = false, Message = "No users found in Firestore." });
-        //         }
+            return Unauthorized(new { Success = false, Message = "Unauthorized" });
+        }
 
-        //         // แปลง snapshot เป็นข้อมูลที่ต้องการส่งออก (List ของ users)
-        //         var users = snapshot.Documents
-        //             .Select(doc => new 
-        //             { 
-        //                 Id = doc.Id, 
-        //                 Fields = doc.ToDictionary() 
-        //             })
-        //             .ToList();
+        [HttpGet("users")]
+        [Authorize] // Optional: Only authorized users can view this
+        public async Task<IActionResult> GetAllUsers()
+        {
+            try
+            {
+                // ดึงข้อมูลจาก Firestore
+                var users = await _authService.GetAllUsers();
+                return Ok(new { Success = true, Users = users });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Unable to retrieve users: " + ex.Message });
+            }
+        }
 
-        //         // ส่งข้อมูลสำเร็จพร้อมรายละเอียด
-        //         return Ok(new { Success = true, Documents = users });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         // ในกรณีที่มีปัญหาอื่นๆ
-        //         return BadRequest(new { Success = false, Message = ex.Message });
-        //     }
-        // }
+        [HttpPut("update/{id}")]
+        [Authorize]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUser updateUser)
+        {
+            try
+            {
+                var updated = await _authService.UpdateUserAsync(id, updateUser);
+                if (!updated)
+                {
+                    return NotFound(new { Success = false, Message = "User not found." });
+                }
 
-        // [HttpPut("update/{documentId}")]
-        // public async Task<IActionResult> UpdateUser(string documentId, [FromBody] UpdateUser updateUser)
-        // {
-        //     try
-        //     {
-        //         var docRef = _firestoreDb.Collection("users").Document(documentId);
-        //         var snapshot = await docRef.GetSnapshotAsync();
+                return Ok(new { Success = true, Message = "User updated successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Unable to update user: " + ex.Message });
+            }
+        }
 
-        //         if (!snapshot.Exists)
-        //         {
-        //             return NotFound(new
-        //             {
-        //                 Success = false,
-        //                 Message = "User not found."
-        //             });
-        //         }
+        [HttpDelete("delete/{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            try
+            {
+                var deleted = await _authService.DeleteUserAsync(id);
+                if (!deleted)
+                {
+                    return NotFound(new { Success = false, Message = "User not found." });
+                }
 
-        //         var updateData = new Dictionary<string, object>();
+                return Ok(new { Success = true, Message = "User deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Unable to delete user: " + ex.Message });
+            }
+        }
 
-        //         if (!string.IsNullOrWhiteSpace(updateUser.FullName))
-        //             updateData["fullName"] = updateUser.FullName;
-
-        //         if (!string.IsNullOrWhiteSpace(updateUser.Email))
-        //             updateData["email"] = updateUser.Email;
-
-        //         if (!string.IsNullOrWhiteSpace(updateUser.Password))
-        //         {
-        //             var newSalt = GenerateSalt();
-        //             var newHashedPassword = HashPassword(updateUser.Password, newSalt);
-        //             updateData["salt"] = newSalt;
-        //             updateData["passwordHash"] = newHashedPassword;
-        //         }
-
-        //         if (updateData.Count == 0)
-        //         {
-        //             return BadRequest(new
-        //             {
-        //                 Success = false,
-        //                 Message = "No valid fields specified for update."
-        //             });
-        //         }
-
-        //         await docRef.UpdateAsync(updateData);
-
-        //         return Ok(new
-        //         {
-        //             Success = true,
-        //             Message = "User updated successfully!"
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             Success = false,
-        //             Message = $"An error occurred while updating the user: {ex.Message}"
-        //         });
-        //     }
-        // }
-
-        // [HttpDelete("delete/{documentId}")]
-        // public async Task<IActionResult> DeleteUser(string documentId)
-        // {
-        //     try
-        //     {
-        //         if (string.IsNullOrWhiteSpace(documentId))
-        //         {
-        //             return BadRequest(new { Success = false, Message = "Document ID is required for deleting a user." });
-        //         }
-
-        //         // อ้างถึงเอกสารใน Firestore ด้วย documentId
-        //         var docRef = _firestoreDb.Collection("users").Document(documentId);
-        //         var snapshot = await docRef.GetSnapshotAsync();
-
-        //         // ตรวจสอบว่ามีเอกสารที่ตรงกับ documentId หรือไม่
-        //         if (!snapshot.Exists)
-        //         {
-        //             return NotFound(new { Success = false, Message = "User not found." });
-        //         }
-
-        //         // ลบเอกสารจาก Firestore
-        //         await docRef.DeleteAsync();
-
-        //         return Ok(new { Success = true, Message = "User deleted successfully!" });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new { Success = false, Message = $"An error occurred while deleting the user: {ex.Message}" });
-        //     }
-        // }
-
-        // //ลบข้อมูลทั้งหมด และรีเซ็ท id !becarefull!
-        // [HttpDelete("reset-user")]
-        // public async Task<IActionResult> ResetUser([FromQuery] bool confirm = false)
-        // {
-        //     if (!confirm)
-        //     {
-        //         return BadRequest(new
-        //         {
-        //             Success = false,
-        //             Message = "Confirmation is required to reset user!"
-        //         });
-        //     }
-        //     try
-        //     {
-        //         // ลบข้อมูลทั้งหมดใน Collection "users"
-        //         var branchCollection = _firestoreDb.Collection("users");
-        //         var snapshot = await branchCollection.GetSnapshotAsync();
-        //         foreach (var doc in snapshot.Documents)
-        //         {
-        //             await doc.Reference.DeleteAsync();
-        //         }
-
-        //         // รีเซ็ตค่า lastUserId ใน Collection "settings"
-        //         var settingsCollection = _firestoreDb.Collection("settings");
-        //         var idDocRef = settingsCollection.Document("userIdTracking");
-
-        //         await idDocRef.SetAsync(new { lastUserId = 0 }); // รีค่าเป็น 0
-
-        //         return Ok(new
-        //         {
-        //             Success = true,
-        //             Message = "All user deleted and ID reset successfully!"
-        //         });
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return StatusCode(500, new
-        //         {
-        //             Success = false,
-        //             Message = "An error occurred while resetting user: " + ex.Message
-        //         });
-        //     }
-        // }
+        [HttpDelete("reset-all")]
+        [Authorize]
+        public async Task<IActionResult> ResetAll()
+        {
+            try
+            {
+                var deleted = await _authService.DeleteAllUsersAsync();
+                return Ok(new { Success = true, Message = "All users have been deleted." });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "Unable to reset users: " + ex.Message });
+            }
+        }
     }
 }

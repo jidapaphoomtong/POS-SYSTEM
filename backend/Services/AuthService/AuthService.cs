@@ -93,5 +93,80 @@ namespace backend.Services.AuthService
                 passwordHash = hashedPassword
             });
         }
+
+        public async Task<List<Dictionary<string, object>>> GetAllUsers()
+        {
+            var userCollection = _firestoreDb.Collection("users");
+            var snapshot = await userCollection.GetSnapshotAsync();
+            
+            var users = snapshot.Documents.Select(doc =>
+            {
+                var user = doc.ToDictionary();
+
+                if (!user.ContainsKey("role"))
+                {
+                    user["role"] = "Admin"; // Default role
+                }
+
+                return user;
+            }).ToList();
+
+            return users;
+        }
+
+        public async Task<bool> UpdateUserAsync(string id, UpdateUser updateUser)
+        {
+            var userRef = _firestoreDb.Collection("users").Document(id);
+            var snapshot = await userRef.GetSnapshotAsync();
+
+            if (!snapshot.Exists)
+            {
+                return false;
+            }
+
+            var updateData = new Dictionary<string, object>
+            {
+                { "firstname", updateUser.FirstName },
+                { "lastname", updateUser.LastName },
+                { "email", updateUser.Email },
+                { "role", updateUser.Role }
+            };
+
+            await userRef.UpdateAsync(updateData);
+            return true;
+        }
+
+        public async Task<bool> DeleteUserAsync(string id)
+        {
+            var userRef = _firestoreDb.Collection("users").Document(id);
+            var snapshot = await userRef.GetSnapshotAsync();
+
+            if (!snapshot.Exists)
+            {
+                return false;
+            }
+
+            await userRef.DeleteAsync();
+            return true;
+        }
+
+        public async Task<bool> DeleteAllUsersAsync()
+        {
+            var usersRef = _firestoreDb.Collection("users");
+            var snapshot = await usersRef.GetSnapshotAsync();
+
+            // ลบเอกสารทั้งหมดในคอลเลกชัน users
+            foreach (var doc in snapshot.Documents)
+            {
+                await doc.Reference.DeleteAsync();
+            }
+
+            // รีเซ็ต lastUserId เป็น 0
+            var settingsCollection = _firestoreDb.Collection("settings");
+            var idDocRef = settingsCollection.Document("userIdTracking");
+            await idDocRef.SetAsync(new { lastUserId = 0 });
+
+            return true;
+        }
     }
 }

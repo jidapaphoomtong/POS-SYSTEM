@@ -26,3 +26,5 @@ namespace backend.Models
         public string Role { get; set; } = "admin";
     }
 }
+
+//อาจจะต้องเปลี่ยนเป็น User
