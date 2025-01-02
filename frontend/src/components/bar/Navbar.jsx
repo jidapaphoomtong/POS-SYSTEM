@@ -6,10 +6,10 @@ const Navbar = () => {
     return (
         <nav className="navbar">
         <div className="navbar-container">
-            <div className="search-bar">
+            {/* <div className="search-bar">
             <input type="text" placeholder="Search..." />
             <FaSearch className="search-icon" />
-            </div>
+            </div> */}
 
             <div className="navbar-icons">
             <FaBell className="icon bell-icon" />

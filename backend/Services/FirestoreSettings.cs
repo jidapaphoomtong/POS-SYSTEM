@@ -12,4 +12,6 @@ namespace backend.Services
         public string PrivateKey { get; set; } = string.Empty;
         public string ClientEmail { get; set; } = string.Empty;
     }
+
+    
 }

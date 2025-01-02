@@ -25,38 +25,10 @@ namespace backend.Controllers
             _authService = authService;
         }
 
-        [HttpPost("register")]
-        // [Authorize(Policy = "AdminPolicy")]
-        [AllowAnonymous]
-        public async Task<IActionResult> Register([FromBody] Register userRegister)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(new { Success = false, Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
-            }
-
-            try
-            {
-                if (await _authService.IsEmailRegistered(userRegister.email))
-                {
-                    return Conflict(new { Success = false, Message = "Email already registered." });
-                }
-
-                var newId = await _authService.GetNextUserId();
-                var salt = _authService.GenerateSalt();
-                var hashedPassword = _authService.HashPassword(userRegister.password, salt);
-
-                // CollectionReference user = _firestoreDb.Collection("users");
-                // DocumentReference newUserRef = await user.AddAsync(userRegister);
-                var newUserRef = await _authService.RegisterUserAsync(newId, userRegister.firstName, userRegister.lastName ,userRegister.email, salt, hashedPassword);
-
-                return Ok(new { Success = true, Message = "User registered successfully!", UserId = newId, DocumentId = newUserRef.Id });
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, new { Success = false, Message = "An error occurred during registration. " + ex.Message });
-            }
-        }
+        // // Cookies
+        // [AllowAnonymous]
+        // [HttpGet("~/login")]
+        // public IActionResult Index() => View("_Login");
 
         [HttpPost("login")]
         [AllowAnonymous]
@@ -127,6 +99,39 @@ namespace backend.Controllers
                 Message = "Login successful!",
                 Token = tokenString
             });
+        }
+
+        [HttpPost("register")]
+        // [Authorize(Policy = "AdminPolicy")]
+        [Authorize]
+        public async Task<IActionResult> Register([FromBody] Register userRegister)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(new { Success = false, Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+            }
+
+            try
+            {
+                if (await _authService.IsEmailRegistered(userRegister.email))
+                {
+                    return Conflict(new { Success = false, Message = "Email already registered." });
+                }
+
+                var newId = await _authService.GetNextUserId();
+                var salt = _authService.GenerateSalt();
+                var hashedPassword = _authService.HashPassword(userRegister.password, salt);
+
+                // CollectionReference user = _firestoreDb.Collection("users");
+                // DocumentReference newUserRef = await user.AddAsync(userRegister);
+                var newUserRef = await _authService.RegisterUserAsync(newId, userRegister.firstName, userRegister.lastName ,userRegister.email, salt, hashedPassword);
+
+                return Ok(new { Success = true, Message = "User registered successfully!", UserId = newId, DocumentId = newUserRef.Id });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "An error occurred during registration. " + ex.Message });
+            }
         }
 
         [HttpGet("get-user-data")]

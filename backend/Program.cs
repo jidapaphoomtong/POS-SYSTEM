@@ -32,8 +32,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/",
-            ValidAudience = "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/",
+            ValidIssuer = "localhost",
+            ValidAudience = "localhost",
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey))
         };
     });
@@ -121,7 +121,7 @@ builder.Services.AddAuthorization(options =>
 
 
 // Explicitly configure URLs to listen on
-builder.WebHost.UseUrls("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/");
+builder.WebHost.UseUrls("http://*:5293");
 
 var app = builder.Build();
 
