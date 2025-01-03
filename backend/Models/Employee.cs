@@ -16,6 +16,6 @@ namespace backend.Models
         [FirestoreProperty]
         public string emailName { get; set; } = string.Empty;
         [FirestoreProperty]
-        public string Role { get; set; } = string.Empty;
+        public IList<Role> role { get; set; } = new List<Role>(); // กำหนดค่า Role นับตั้งแต่เริ่ม
     }
 }

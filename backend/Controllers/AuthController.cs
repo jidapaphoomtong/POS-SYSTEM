@@ -11,6 +11,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using backend.Services.AuthService;
 using Google.Cloud.Firestore;
+using backend.Services.Tokenservice;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Google.Apis.Auth.OAuth2.Requests;
 
 namespace backend.Controllers
 {
@@ -19,150 +23,121 @@ namespace backend.Controllers
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
+        private readonly ITokenService _tokenService;
 
-        public AuthController(IAuthService authService)
+        public AuthController(IAuthService authService, ITokenService tokenService)
         {
             _authService = authService;
+            _tokenService = tokenService;
         }
 
-        // // Cookies
-        // [AllowAnonymous]
-        // [HttpGet("~/login")]
-        // public IActionResult Index() => View("_Login");
-
+        // Login (JWT-based)
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] Login userLogin)
         {
             if (!ModelState.IsValid)
-            {
                 return BadRequest(new { Success = false, Message = "Invalid input data." });
-            }
 
-            // ดึงข้อมูลผู้ใช้จาก Firestore โดยใช้ email
+            // ตรวจสอบข้อมูลผู้ใช้
             var userSnapshot = await _authService.GetUserByEmail(userLogin.Email);
             if (userSnapshot == null)
-            {
-                return NotFound(new { Success = false, Message = "User not found." });
-            }
+                return Unauthorized(new { Success = false, Message = "User not found." });
 
-            // แปลงข้อมูลจาก Firestore เป็น Dictionary
             var user = userSnapshot.ToDictionary();
-
-            // ตรวจสอบว่า fields ที่จำเป็นทั้งหมดมีอยู่ในเอกสาร
-            if (!user.ContainsKey("salt") || !user.ContainsKey("passwordHash"))
-            {
-                return StatusCode(500, new { Success = false, Message = "User data is incomplete or corrupted." });
-            }
-
-            // ตรวจสอบ password
-            var salt = (string)user["salt"];
-            var passwordHash = (string)user["passwordHash"];
-            if (!_authService.VerifyPassword(userLogin.Password, passwordHash, salt))
-            {
+            if (!_authService.VerifyPassword(userLogin.Password, user["passwordHash"].ToString(), user["salt"].ToString()))
                 return Unauthorized(new { Success = false, Message = "Invalid credentials." });
-            }
 
-            // ดึงข้อมูลเพิ่มเติม (firstname, lastname, role)
-            // var firstName = user.ContainsKey("firstname") ? user["firstname"].ToString() : string.Empty;
-            // var lastName = user.ContainsKey("lastname") ? user["lastname"].ToString() : string.Empty;
-            // var role = user.ContainsKey("role") ? user["role"].ToString() : "User";
+            // ตรวจสอบ Role ของผู้ใช้
+            string role = user.ContainsKey("role") ? user["role"].ToString() : RoleName.Employee;
 
-            // สร้าง JWT Token
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.UTF8.GetBytes("5MZHydfAoWBsruaAXLex4omTno0zhkX9zMGRXUTZ");
-
-            var tokenDescriptor = new SecurityTokenDescriptor
+            // สร้าง Claims
+            var claims = new List<Claim>
             {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, userSnapshot.Id), // ใส่ UserId
-                    new Claim(ClaimTypes.Email, userLogin.Email),          // ใส่ Email
-                    // new Claim(ClaimTypes.GivenName, firstName),            // ใส่ Firstname
-                    // new Claim("lastname", lastName),                      // ใส่ Lastname เป็น Custom Claim
-                    // new Claim(ClaimTypes.Role, role)                      // ใส่ Role
-                }),
-                Expires = DateTime.UtcNow.AddDays(30),
-                Issuer = "localhost",
-                Audience = "localhost",
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                new Claim(ClaimTypes.Name, user["firstName"].ToString()),
+                new Claim(ClaimTypes.Email, userLogin.Email),
+                new Claim(ClaimTypes.NameIdentifier, userSnapshot.Id),
+                new Claim(ClaimTypes.Role, role) // เพิ่ม Role
             };
 
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
+            // สร้าง Access Token
+            var accessToken = _tokenService.GenerateAccessToken(claims);
 
-            // ส่ง JWT Token กลับไปยัง Client
-            return Ok(new
+            // ตั้งค่าสำหรับ Cookies
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+            var authProperties = new AuthenticationProperties
             {
-                Success = true,
-                Message = "Login successful!",
-                Token = tokenString
-            });
+                IsPersistent = true, // ให้ Cookies มีอายุใช้งาน
+                ExpiresUtc = DateTime.UtcNow.AddDays(7) // อายุ Cookies
+            };
+
+            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+
+            return Ok(new { Token = accessToken });
         }
 
         [HttpPost("register")]
-        // [Authorize(Policy = "AdminPolicy")]
-        [Authorize]
-        public async Task<IActionResult> Register([FromBody] Register userRegister)
+        [AllowAnonymous]
+        public async Task<IActionResult> Register([FromBody] User userRegister)
         {
             if (!ModelState.IsValid)
-            {
-                return BadRequest(new { Success = false, Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
-            }
+                return BadRequest(new { Errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage) });
+
+            // ตรวจสอบว่ามี Email ซ้ำหรือไม่
+            if (await _authService.IsEmailRegistered(userRegister.email))
+                return Conflict(new { Success = false, Message = "Email already exists." });
 
             try
             {
-                if (await _authService.IsEmailRegistered(userRegister.email))
-                {
-                    return Conflict(new { Success = false, Message = "Email already registered." });
-                }
-
+                // สร้างข้อมูลผู้ใช้ใหม่
                 var newId = await _authService.GetNextUserId();
                 var salt = _authService.GenerateSalt();
                 var hashedPassword = _authService.HashPassword(userRegister.password, salt);
 
-                // CollectionReference user = _firestoreDb.Collection("users");
-                // DocumentReference newUserRef = await user.AddAsync(userRegister);
-                var newUserRef = await _authService.RegisterUserAsync(newId, userRegister.firstName, userRegister.lastName ,userRegister.email, salt, hashedPassword);
+                var defaultRole = new List<Role>(); // เพิ่ม Role ให้ Default เป็น Employee
 
-                return Ok(new { Success = true, Message = "User registered successfully!", UserId = newId, DocumentId = newUserRef.Id });
+                var userRef = await _authService.RegisterUserAsync(
+                    newId,
+                    userRegister.firstName,
+                    userRegister.lastName,
+                    userRegister.email,
+                    salt,
+                    hashedPassword,
+                    defaultRole // เพิ่ม Role
+                );
+
+                return Ok(new { Success = true, Message = "User registered successfully!" });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Success = false, Message = "An error occurred during registration. " + ex.Message });
+                return StatusCode(500, new { Success = false, Message = "Registration failed.", Details = ex.Message });
             }
         }
 
+        // Logout (Cookies-based)
+        [Authorize]
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            return Ok(new { Message = "Logged out successfully!" });
+        }
+
+        // Get User Data from JWT Claims
+        [Authorize]
         [HttpGet("get-user-data")]
-        [Authorize] // Require JWT Token
         public IActionResult GetUserData()
         {
-            var identity = HttpContext.User.Identity as ClaimsIdentity;
-            if (identity != null)
-            {
-                var claims = identity.Claims;
-                var userId = claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
-                var email = claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
-                var firstname = claims.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
-                var lastname = claims.FirstOrDefault(c => c.Type == "lastname")?.Value;
-                var role = claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)?.Value;
-
-                return Ok(new
-                {
-                    Success = true,
-                    Data = new
-                    {
-                        UserId = userId,
-                        Email = email,
-                        FirstName = firstname,
-                        LastName = lastname,
-                        Role = role
-                    }
-                });
-            }
-
+            var claims = HttpContext.User.Identity as ClaimsIdentity;
+            if (claims == null)
             return Unauthorized(new { Success = false, Message = "Unauthorized" });
+
+            var email = claims.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
+            var name = claims.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
+            var role = claims.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+
+            return Ok(new { Success = true, Data = new { Name = name, Email = email, Role = role } });
         }
 
         [HttpGet("users")]
@@ -181,32 +156,49 @@ namespace backend.Controllers
             }
         }
 
+        // Admin และ Manager สามารถแก้ไขข้อมูลผู้ใช้
         [HttpPut("update/{id}")]
-        [Authorize]
-        public async Task<IActionResult> UpdateUser(string id, [FromBody] UpdateUser updateUser)
+        // [Authorize(Roles = "admin")] // Admin เท่านั้นที่สามารถอัปเดตข้อมูลได้
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
         {
             try
             {
-                var updated = await _authService.UpdateUserAsync(id, updateUser);
-                if (!updated)
+                // ตรวจสอบ Role ที่ส่งมาว่าไม่เป็นค่าว่าง
+                if (updatedUser.roles.Any(r => string.IsNullOrWhiteSpace(r.Name)))
                 {
-                    return NotFound(new { Success = false, Message = "User not found." });
+                    return BadRequest(new { Success = false, Message = "Invalid Role detected." });
+                }
+
+                // ตรวจสอบ Email ว่าซ้ำหรือไม่
+                var userWithSameEmail = await _authService.IsEmailRegistered(updatedUser.email);
+                if (userWithSameEmail && id != updatedUser.email)
+                {
+                    return Conflict(new { Success = false, Message = "Email already exists." });
+                }
+
+                // เรียก AuthService เพื่ออัปเดตข้อมูล
+                var success = await _authService.UpdateUserAsync(id, updatedUser);
+                if (!success)
+                {
+                    return NotFound(new { Success = false, Message = "User not found or cannot update." });
                 }
 
                 return Ok(new { Success = true, Message = "User updated successfully." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { Success = false, Message = "Unable to update user: " + ex.Message });
+                Console.WriteLine($"Error while updating user: {ex.Message}");
+                return StatusCode(500, new { Success = false, Message = ex.Message });
             }
         }
 
+        // เฉพาะ Admin เท่านั้นที่ลบผู้ใช้ได้
         [HttpDelete("delete/{id}")]
-        [Authorize]
         public async Task<IActionResult> DeleteUser(string id)
         {
             try
             {
+                // ลบข้อมูลผู้ใช้ใน Firestore
                 var deleted = await _authService.DeleteUserAsync(id);
                 if (!deleted)
                 {
@@ -221,12 +213,13 @@ namespace backend.Controllers
             }
         }
 
+        // รีเซ็ตผู้ใช้ทั้งหมด (เฉพาะ Admin)
         [HttpDelete("reset-all")]
-        [Authorize]
         public async Task<IActionResult> ResetAll()
         {
             try
             {
+                // ลบผู้ใช้ทั้งหมดใน Firestore
                 var deleted = await _authService.DeleteAllUsersAsync();
                 return Ok(new { Success = true, Message = "All users have been deleted." });
             }

@@ -9,7 +9,7 @@ using Google.Cloud.Firestore;
 namespace backend.Models
 {
     [FirestoreData]
-    public class Register
+    public class User
     {
         // public string userId { get; set; } = string.Empty;
         [FirestoreProperty]
@@ -20,11 +20,9 @@ namespace backend.Models
         public string email { get; set; } = string.Empty;
         [FirestoreProperty]
         public string password { get; set; } = string.Empty;
+        // [FirestoreProperty]
+        // public string RefreshToken { get; set; }
         [FirestoreProperty]
-        // ค่า Default Role = "admin"
-        [DefaultValue("admin")]
-        public string Role { get; set; } = "admin";
+        public IList<Role> roles { get; set; } = new List<Role>();
     }
 }
-
-//อาจจะต้องเปลี่ยนเป็น User
