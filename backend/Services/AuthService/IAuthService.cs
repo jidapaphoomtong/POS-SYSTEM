@@ -12,10 +12,11 @@ namespace backend.Services.AuthService
         Task<bool> IsEmailRegistered(string email);
         Task<string> GetNextUserId();
         Task<DocumentSnapshot> GetUserByEmail(string email);
-        Task<DocumentReference> RegisterUserAsync(string userId, string firstName, string lastName, string email, string salt, string hashedPassword);
+        Task<DocumentSnapshot> GetUserById(string userId);
+        Task<DocumentReference> RegisterUserAsync(string userId, string firstName, string lastName, string email, string salt, string hashedPassword, IList<Role> roles);
         Task<List<Dictionary<string, object>>> GetAllUsers();
-        Task<bool> UpdateUserAsync(string id, UpdateUser updateUser);
-        Task<bool> DeleteUserAsync(string id);
+        Task<bool> UpdateUserAsync(string userId, User updatedUser);
+        Task<bool> DeleteUserAsync(string userId);
         Task<bool> DeleteAllUsersAsync();
     }
 }

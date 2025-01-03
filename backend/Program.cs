@@ -1,42 +1,29 @@
 using System.Text;
+using backend;
 using backend.Services;
 using backend.Services.AdminService;
 using backend.Services.AuthService;
+using backend.Services.Tokenservice;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// **ตั้งค่า JWT Authentication**
-var SecretKey = builder.Configuration["JwtSettings:SecretKey"];
+var configuration = new ConfigurationBuilder()
+  .AddJsonFile("appsettings.json")
+  .Build();
 
-if (string.IsNullOrEmpty(SecretKey))
-{
-    throw new NullReferenceException("SecretKey is missing.");
-}
+builder.WebHost.UseConfiguration(configuration);
+var configSection = configuration.GetSection(nameof(JwtSettings));
+var settings = new JwtSettings();
 
-// ถ้า Key สั้นกว่า 32 ตัวอักษร ให้เติมจนยาวเพียงพอ
-if (SecretKey.Length < 32)
-{
-    SecretKey = SecretKey.PadRight(32, 'X'); // เติม 'X' ให้ครบ 32 ตัว
-}
+configSection.Bind(settings);
 
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = "localhost",
-            ValidAudience = "localhost",
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(SecretKey))
-        };
-    });
+builder.Services.AddSingleton<IConfiguration>(_ => configuration);
 
 // โหลดค่าการตั้งค่า Firestore จาก appsettings.json
 builder.Services.Configure<FirestoreSettings>(builder.Configuration.GetSection("FirestoreSettings"));
@@ -48,15 +35,7 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
     return new FirestoreDB(settings);
 });
 
-// builder.Services.AddCors(options =>
-// {
-//     options.AddPolicy("AllowAllOrigins",
-//         builder => builder.AllowAnyOrigin() // อนุญาตทุก Origin
-//                           .AllowAnyMethod() // อนุญาตทุก HTTP Method
-//                           .AllowAnyHeader() // อนุญาตทุก Header
-//     );
-// });
-
+// ตรวจสอบ url
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", builder =>
@@ -67,58 +46,103 @@ builder.Services.AddCors(options =>
     });
 });
 
-// Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+//ตรวจสอบ domain
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("AllowedSpecificDomain", builder =>
+//     {
+//         builder.WithOrigins("https://trusted-domain.com", "https://another-trusted-domain.com") // ระบุ Domain ที่อนุญาต
+//                 .AllowAnyHeader()
+//                 .AllowAnyMethod(); // เปิดเฉพาะ HTTP Method (GET, POST, PUT, DELETE) ที่ต้องการ
+//     });
+// });
+
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSwaggerGen(c =>
-{
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+builder.Services.AddSwaggerGen(options =>
     {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\n\nExample: \"Bearer eyJhbG...\""
-    });
-
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
+        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
-        }
-    });
-});
+            Name = "Authorization", // Header field name สำหรับ JWT Token
+            Type = SecuritySchemeType.Http,
+            Scheme = "bearer",       // ต้องใช้ "bearer" เพื่อรองรับ Authorization Header
+            In = ParameterLocation.Header,
+            Description = "Enter 'Bearer' [space] and then your valid token in the text input below.\n\nExample: \"Bearer eyJhb...\""
+        });
 
-// Add services to the DI container.
+        options.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>() // No specific scopes required
+            }
+        });
+    });
+
+builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
+
+
+builder.Services.AddOptions();
+builder.Services.Configure<JwtSettings>(configSection);
+builder.Services.AddMvc();
+builder.Services.AddAuthentication(options =>
+{
+    // ตั้งค่า Default Scheme
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+{
+    options.RequireHttpsMetadata = false;
+    options.SaveToken = true;
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(settings.SecretKey)),
+        ValidateIssuer = true,
+        ValidIssuer = settings.Issuer,
+        ValidateAudience = true,
+        ValidAudience = settings.Audience,
+        ValidateLifetime = true,
+        ClockSkew = TimeSpan.Zero // ลดเวลา Clock Skew เพื่อป้องกัน Token หมดอายุช้ากว่าเวลาจริง
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnAuthenticationFailed = context =>
+        {
+            if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+            {
+                context.Response.Headers.Add("Token-Expired", "true");
+                context.Response.StatusCode = 401; // Unauthorized
+                context.Response.ContentType = "application/json";
+                var response = new { Success = false, Message = "Token has expired. Please re-authenticate." };
+                var json = System.Text.Json.JsonSerializer.Serialize(response);
+                return context.Response.WriteAsync(json);
+            }
+            return Task.CompletedTask;
+        }
+    };
+})
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme); // ใช้งาน Cookies Authentication
+
 builder.Services.AddControllers(options =>
-{
-    // บังคับใช้ Policy Global (ยกเว้นเฉพาะ [AllowAnonymous])
-    var policy = new AuthorizationPolicyBuilder()
-                    .RequireAuthenticatedUser()
-                    .Build();
-    options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
-});
-
-builder.Services.AddAuthorization(options =>
-{
-    // กำหนด Policy สำหรับ Role ต่าง ๆ
-    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("admin"));
-    options.AddPolicy("ManagerPolicy", policy => policy.RequireRole("manager"));
-    options.AddPolicy("EmployeePolicy", policy => policy.RequireRole("employee"));
-});
-
+    {
+        // บังคับใช้ Policy Global (ยกเว้นเฉพาะ [AllowAnonymous])
+        var policy = new AuthorizationPolicyBuilder()
+                        .RequireAuthenticatedUser()
+                        .Build();
+        options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
+    });
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");
@@ -127,12 +151,17 @@ var app = builder.Build();
 
 // app.UseCors("AllowAllOrigins");
 app.UseCors("AllowReactApp");
+// app.UseCors("AllowedSpecificDomain");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "API V1");
+        options.RoutePrefix = string.Empty; // Make Swagger UI accessible at root (/)
+    });
 }
 
 app.UseHttpsRedirection();

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,7 +16,7 @@ namespace backend.Services.AuthService
 
         public AuthService(FirestoreDB firestoreDb)
         {
-            _firestoreDb = firestoreDb;
+            _firestoreDb = firestoreDb ?? throw new ArgumentNullException(nameof(firestoreDb));
         }
 
         public string GenerateSalt()
@@ -31,6 +32,9 @@ namespace backend.Services.AuthService
 
         public string HashPassword(string password, string salt)
         {
+            if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Password cannot be null or whitespace.", nameof(password));
+            if (string.IsNullOrWhiteSpace(salt)) throw new ArgumentException("Salt cannot be null or whitespace.", nameof(salt));
+
             var saltBytes = Convert.FromBase64String(salt);
             var hashed = KeyDerivation.Pbkdf2(
                 password: password,
@@ -44,12 +48,18 @@ namespace backend.Services.AuthService
 
         public bool VerifyPassword(string enteredPassword, string storedHash, string storedSalt)
         {
+            if (string.IsNullOrWhiteSpace(enteredPassword)) throw new ArgumentException("Entered password cannot be null or whitespace.");
+            if (string.IsNullOrWhiteSpace(storedHash) || string.IsNullOrWhiteSpace(storedSalt))
+                return false;
+
             var hashOfEnteredPassword = HashPassword(enteredPassword, storedSalt);
             return hashOfEnteredPassword == storedHash;
         }
 
         public async Task<bool> IsEmailRegistered(string email)
         {
+            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be null or whitespace.", nameof(email));
+
             var userCollection = _firestoreDb.Collection("users");
             var snapshot = await userCollection.WhereEqualTo("email", email).GetSnapshotAsync();
             return snapshot.Documents.Any();
@@ -62,111 +72,172 @@ namespace backend.Services.AuthService
             var idSnapshot = await idDocRef.GetSnapshotAsync();
 
             int newId = 1;
-            if (idSnapshot.Exists)
+
+            // เพิ่มการตรวจสอบการมีอยู่ของเอกสาร
+            if (idSnapshot.Exists && idSnapshot.ContainsField("lastUserId"))
             {
                 var currentId = idSnapshot.GetValue<int>("lastUserId");
                 newId = currentId + 1;
             }
 
-            await idDocRef.SetAsync(new { lastUserId = newId });
-            return newId.ToString("D3");
+            // อัปเดต/สร้างเอกสารใหม่พร้อมค่าใหม่ของ lastUserId
+            await idDocRef.SetAsync(new { lastUserId = newId }, SetOptions.MergeAll);
+            return newId.ToString("D3"); // คืนค่า ID 3 หลัก
         }
 
         public async Task<DocumentSnapshot> GetUserByEmail(string email)
         {
+            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be null or whitespace.", nameof(email));
+
             var userCollection = _firestoreDb.Collection("users");
             var snapshot = await userCollection.WhereEqualTo("email", email).GetSnapshotAsync();
             return snapshot.Documents.FirstOrDefault();
         }
 
-        public async Task<DocumentReference> RegisterUserAsync(string userId, string firstName, string lastName, string email, string salt, string hashedPassword)
+        public async Task<DocumentReference> RegisterUserAsync(
+            string userId,
+            string firstName,
+            string lastName,
+            string email,
+            string salt,
+            string hashedPassword,
+            IList<Role> roles)
         {
-            var userCollection = _firestoreDb.Collection("users");
+            if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(hashedPassword))
+                throw new ArgumentException("UserId, email, and password hash cannot be null or empty.");
 
-            return await userCollection.AddAsync(new
+            var userCollection = _firestoreDb.Collection("users");
+            var userDoc = userCollection.Document(userId); // สร้าง/อ้างอิง Document โดยใช้ userId
+
+            // เพิ่มข้อมูล Role และ Field ต่าง ๆ ลงในเอกสาร
+            var data = new
             {
                 id = userId,
                 firstName = firstName,
                 lastName = lastName,
                 email = email,
                 salt = salt,
-                passwordHash = hashedPassword
-            });
+                passwordHash = hashedPassword,
+                roles = roles
+            };
+
+            await userDoc.SetAsync(data); // บันทึกข้อมูลโดยใช้ `SetAsync` (กำหนด ID)
+            return userDoc; // ส่งคืน Document Reference
         }
 
         public async Task<List<Dictionary<string, object>>> GetAllUsers()
         {
             var userCollection = _firestoreDb.Collection("users");
             var snapshot = await userCollection.GetSnapshotAsync();
-            
-            var users = snapshot.Documents.Select(doc =>
+
+            return snapshot.Documents.Select(doc =>
             {
                 var user = doc.ToDictionary();
-
-                if (!user.ContainsKey("role"))
-                {
-                    user["role"] = "Admin"; // Default role
-                }
-
+                // if (!user.ContainsKey("role"))
+                // {
+                //     user["role"] = "Admin"; // Default role
+                // }
                 return user;
             }).ToList();
-
-            return users;
         }
 
-        public async Task<bool> UpdateUserAsync(string id, UpdateUser updateUser)
+        // อัปเดตข้อมูลผู้ใช้
+        public async Task<bool> UpdateUserAsync(string userId, User updatedUser)
         {
-            var userRef = _firestoreDb.Collection("users").Document(id);
-            var snapshot = await userRef.GetSnapshotAsync();
+            Console.WriteLine($"Attempting to update user with ID: {userId}");
+
+            // อ้างอิง Document ใน Firestore
+            var userDoc = _firestoreDb.Collection("users").Document(userId);
+            var snapshot = await userDoc.GetSnapshotAsync();
 
             if (!snapshot.Exists)
             {
+                Console.WriteLine($"Error: User with ID {userId} not found in Firestore.");
+                return false; // ไม่พบเอกสารใน Firestore
+            }
+
+            Console.WriteLine($"User found: {System.Text.Json.JsonSerializer.Serialize(snapshot.ToDictionary())}");
+
+            // Role Validation
+            var allowedRoles = new List<string> { "admin", "manager", "employee" };
+            if (updatedUser.roles.Any(r => !allowedRoles.Contains(r.Name.ToLower())))
+            {
+                throw new ArgumentException("One or more roles are invalid.");
+            }
+
+            // ดึงข้อมูลเดิมจาก Firestore
+            var existingData = snapshot.ToDictionary();
+
+            // รักษาข้อมูลเดิมที่สำคัญ เช่น passwordHash และ salt
+            if (!existingData.ContainsKey("passwordHash") || !existingData.ContainsKey("salt"))
+            {
+                Console.WriteLine($"Error: Missing critical fields in existing data for user ID {userId}.");
                 return false;
             }
 
-            var updateData = new Dictionary<string, object>
+            var passwordHash = existingData["passwordHash"].ToString();
+            var salt = existingData["salt"].ToString();
+
+            // เตรียมข้อมูลใหม่สำหรับอัปเดต (รวมกับข้อมูลเก่า)
+            var updateData = new
             {
-                { "firstname", updateUser.FirstName },
-                { "lastname", updateUser.LastName },
-                { "email", updateUser.Email },
-                { "role", updateUser.Role }
+                id = userId,
+                firstName = updatedUser.firstName,
+                lastName = updatedUser.lastName,
+                email = updatedUser.email,
+                passwordHash = passwordHash, // ดึงมาจากข้อมูลเดิม
+                salt = salt,                 // ดึงมาจากข้อมูลเดิม
+                roles = updatedUser.roles.Select(r => new { Id = r.Id, Name = r.Name }).ToList()
             };
 
-            await userRef.UpdateAsync(updateData);
+            // เขียนข้อมูลกลับไปที่ Firestore
+            await userDoc.SetAsync(updateData);
+
+            Console.WriteLine("User updated successfully in Firestore.");
             return true;
         }
 
-        public async Task<bool> DeleteUserAsync(string id)
+        // ลบผู้ใช้ตาม Id
+        public async Task<bool> DeleteUserAsync(string userId)
         {
-            var userRef = _firestoreDb.Collection("users").Document(id);
-            var snapshot = await userRef.GetSnapshotAsync();
+            var userDoc = _firestoreDb.Collection("users").Document(userId);
 
+            var snapshot = await userDoc.GetSnapshotAsync();
             if (!snapshot.Exists)
             {
-                return false;
+                return false; // ไม่พบ User
             }
 
-            await userRef.DeleteAsync();
+            await userDoc.DeleteAsync();
             return true;
         }
 
+        // ลบผู้ใช้ทั้งหมด
         public async Task<bool> DeleteAllUsersAsync()
         {
-            var usersRef = _firestoreDb.Collection("users");
-            var snapshot = await usersRef.GetSnapshotAsync();
-
-            // ลบเอกสารทั้งหมดในคอลเลกชัน users
-            foreach (var doc in snapshot.Documents)
+            var userDocs = await _firestoreDb.Collection("users").GetSnapshotAsync();
+            foreach (var doc in userDocs.Documents)
             {
                 await doc.Reference.DeleteAsync();
             }
 
-            // รีเซ็ต lastUserId เป็น 0
-            var settingsCollection = _firestoreDb.Collection("settings");
-            var idDocRef = settingsCollection.Document("userIdTracking");
-            await idDocRef.SetAsync(new { lastUserId = 0 });
-
             return true;
+        }
+        
+        // Your existing AuthService
+        public async Task<DocumentSnapshot> GetUserById(string userId)
+        {
+            if (string.IsNullOrWhiteSpace(userId))
+                throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
+
+            // Access Firestore Collection "users"
+            var userCollection = _firestoreDb.Collection("users");
+            
+            // Query user by userId field
+            var snapshot = await userCollection.WhereEqualTo("userId", userId).GetSnapshotAsync();
+            
+            // Return the corresponding document or null if not found
+            return snapshot.Documents.FirstOrDefault();
         }
     }
 }

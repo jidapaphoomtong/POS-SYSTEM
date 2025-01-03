@@ -21,49 +21,38 @@ namespace backend.Services.AdminService
         {
             try
             {
-                CollectionReference branches = _firestoreDb.Collection("branches");
-                DocumentReference newBranch = await branches.AddAsync(branch);
-
+                DocumentReference newBranch = await _firestoreDb.Collection("branches").AddAsync(branch);
                 return ServiceResponse<string>.CreateSuccess(newBranch.Id, "Branch added successfully!");
             }
             catch (Exception ex)
             {
-                // หากเกิดข้อผิดพลาด
                 return ServiceResponse<string>.CreateFailure($"Failed to add branch: {ex.Message}");
             }
         }
 
-        //admin and manager
         public async Task<ServiceResponse<string>> AddEmployee(string branchId, Employee employee)
         {
             try
             {
-                CollectionReference employees = _firestoreDb
-                    .Collection("branches")
+                var employeeDoc = await _firestoreDb.Collection("branches")
                     .Document(branchId)
-                    .Collection("employees");
-
-                DocumentReference newEmployee = await employees.AddAsync(employee);
-                return ServiceResponse<string>.CreateSuccess(newEmployee.Id, "Employee added successfully!");
+                    .Collection("employees").AddAsync(employee);
+                return ServiceResponse<string>.CreateSuccess(employeeDoc.Id, "Employee added successfully!");
             }
             catch (Exception ex)
             {
                 return ServiceResponse<string>.CreateFailure($"Failed to add employee: {ex.Message}");
             }
         }
-        
-        //manager
+
         public async Task<ServiceResponse<string>> AddProduct(string branchId, Products product)
         {
             try
             {
-                CollectionReference products = _firestoreDb
-                    .Collection("branches")
+                var productDoc = await _firestoreDb.Collection("branches")
                     .Document(branchId)
-                    .Collection("products");
-
-                DocumentReference newProduct = await products.AddAsync(product);
-                return ServiceResponse<string>.CreateSuccess(newProduct.Id, "Product added successfully!");
+                    .Collection("products").AddAsync(product);
+                return ServiceResponse<string>.CreateSuccess(productDoc.Id, "Product added successfully!");
             }
             catch (Exception ex)
             {
@@ -229,18 +218,23 @@ namespace backend.Services.AdminService
                     .Collection("employees")
                     .Document(employeeId);
 
-                await employeeDoc.UpdateAsync(new Dictionary<string, object>
+                // สร้างข้อมูลใหม่ที่จะอัปเดต
+                var updateData = new Dictionary<string, object>
                 {
                     { "firstName", updatedEmployee.firstName },
                     { "lastName", updatedEmployee.lastName },
                     { "emailName", updatedEmployee.emailName },
-                    { "Role", updatedEmployee.Role }
-                });
+                    { "Role", updatedEmployee.role } // เพิ่ม Role ในการอัปเดต
+                };
+
+                // อัปเดตข้อมูลใน Firestore
+                await employeeDoc.UpdateAsync(updateData);
 
                 return ServiceResponse<string>.CreateSuccess(employeeId, "Employee updated successfully!");
             }
             catch (Exception ex)
             {
+                // ส่งข้อผิดพลาดในกรณีที่ล้มเหลว
                 return ServiceResponse<string>.CreateFailure($"Failed to update employee: {ex.Message}");
             }
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
+using Google.Cloud.Firestore;
 
 namespace backend.Models
 {
@@ -13,12 +14,17 @@ namespace backend.Models
             public string Description { get; set; } = string.Empty;
         }
 
+    [FirestoreData]
     public class UpdateUser
     {
-        public string Email { get; set; } = string.Empty;
-        public string Password {get; set;} = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Role { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string firstName { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string lastName { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string email { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string password { get; set; } = string.Empty;
+        // public IList<Role> role { get; set; } = new List<Role>();
     }
 }
