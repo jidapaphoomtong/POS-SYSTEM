@@ -18,5 +18,6 @@ namespace backend.Services.AuthService
         Task<bool> UpdateUserAsync(string userId, User updatedUser);
         Task<bool> DeleteUserAsync(string userId);
         Task<bool> DeleteAllUsersAsync();
+        Task ResetUserIdSequence();
     }
 }

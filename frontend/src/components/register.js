@@ -16,7 +16,7 @@ const Register = () => {
         setIsLoading(true);
         try {
         const response = await axios.post(
-            "http://localhost:5293/api/Auth/register",
+            "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app/api/Auth/register",
             {
             firstName: fullName.split(" ")[0], // แยก Firstname
             lastName: fullName.split(" ")[1] || "", // แยก Lastname หรือกำหนด Default เป็นค่าว่าง

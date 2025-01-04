@@ -67,22 +67,21 @@ namespace backend.Services.AuthService
 
         public async Task<string> GetNextUserId()
         {
-            var settingsCollection = _firestoreDb.Collection("settings");
-            var idDocRef = settingsCollection.Document("userIdTracking");
-            var idSnapshot = await idDocRef.GetSnapshotAsync();
+            var sequenceDoc = _firestoreDb.Collection("config").Document("sequence");
+            var snapshot = await sequenceDoc.GetSnapshotAsync();
 
-            int newId = 1;
+            int counter = 1;
 
-            // เพิ่มการตรวจสอบการมีอยู่ของเอกสาร
-            if (idSnapshot.Exists && idSnapshot.ContainsField("lastUserId"))
+            if (snapshot.Exists && snapshot.TryGetValue<int>("counter", out var currentCounter))
             {
-                var currentId = idSnapshot.GetValue<int>("lastUserId");
-                newId = currentId + 1;
+                counter = currentCounter;
             }
 
-            // อัปเดต/สร้างเอกสารใหม่พร้อมค่าใหม่ของ lastUserId
-            await idDocRef.SetAsync(new { lastUserId = newId }, SetOptions.MergeAll);
-            return newId.ToString("D3"); // คืนค่า ID 3 หลัก
+            // บันทึกลำดับใหม่ (เพิ่ม 1)
+            await sequenceDoc.SetAsync(new { counter = counter + 1 });
+
+            // คืนค่า ID ในรูปแบบ "001", "002"
+            return counter.ToString("D3");
         }
 
         public async Task<DocumentSnapshot> GetUserByEmail(string email)
@@ -110,6 +109,12 @@ namespace backend.Services.AuthService
             var userDoc = userCollection.Document(userId); // สร้าง/อ้างอิง Document โดยใช้ userId
 
             // เพิ่มข้อมูล Role และ Field ต่าง ๆ ลงในเอกสาร
+            var defaultRole = new List<Role>
+            {
+                new Role { Id = 1, Name = "Employee" } // Default Role เป็น Employee
+            };
+
+            // ภายใน RegisterUserAsync
             var data = new
             {
                 id = userId,
@@ -118,9 +123,8 @@ namespace backend.Services.AuthService
                 email = email,
                 salt = salt,
                 passwordHash = hashedPassword,
-                roles = roles
+                roles = roles.Any() ? roles : defaultRole // ถ้าไม่มี Role จะใช้ Default
             };
-
             await userDoc.SetAsync(data); // บันทึกข้อมูลโดยใช้ `SetAsync` (กำหนด ID)
             return userDoc; // ส่งคืน Document Reference
         }
@@ -178,22 +182,22 @@ namespace backend.Services.AuthService
             var passwordHash = existingData["passwordHash"].ToString();
             var salt = existingData["salt"].ToString();
 
-            // เตรียมข้อมูลใหม่สำหรับอัปเดต (รวมกับข้อมูลเก่า)
-            var updateData = new
+            // เตรียมข้อมูลใหม่สำหรับอัปเดต
+            var updateData = new Dictionary<string, object>
             {
-                id = userId,
-                firstName = updatedUser.firstName,
-                lastName = updatedUser.lastName,
-                email = updatedUser.email,
-                passwordHash = passwordHash, // ดึงมาจากข้อมูลเดิม
-                salt = salt,                 // ดึงมาจากข้อมูลเดิม
-                roles = updatedUser.roles.Select(r => new { Id = r.Id, Name = r.Name }).ToList()
+                { "id", userId },
+                { "firstName", string.IsNullOrWhiteSpace(updatedUser.firstName) ? existingData["firstName"] : updatedUser.firstName },
+                { "lastName", string.IsNullOrWhiteSpace(updatedUser.lastName) ? existingData["lastName"] : updatedUser.lastName },
+                { "email", string.IsNullOrWhiteSpace(updatedUser.email) ? existingData["email"] : updatedUser.email },
+                { "passwordHash", passwordHash }, // ดึงมาจากข้อมูลเดิม
+                { "salt", salt },                 // ดึงมาจากข้อมูลเดิม
+                { "roles", updatedUser.roles.Select(r => new { Id = r.Id, Name = r.Name }).ToList() }
             };
 
-            // เขียนข้อมูลกลับไปที่ Firestore
-            await userDoc.SetAsync(updateData);
+            // อัปเดตข้อมูลใน Firestore
+            await userDoc.SetAsync(updateData, SetOptions.MergeAll); // MergeAll จะอัปเดตเฉพาะข้อมูลที่ส่งมา
 
-            Console.WriteLine("User updated successfully in Firestore.");
+            Console.WriteLine($"User updated successfully in Firestore with ID: {userId}");
             return true;
         }
 
@@ -227,17 +231,14 @@ namespace backend.Services.AuthService
         // Your existing AuthService
         public async Task<DocumentSnapshot> GetUserById(string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-                throw new ArgumentException("User ID cannot be null or empty.", nameof(userId));
-
-            // Access Firestore Collection "users"
-            var userCollection = _firestoreDb.Collection("users");
-            
-            // Query user by userId field
-            var snapshot = await userCollection.WhereEqualTo("userId", userId).GetSnapshotAsync();
-            
-            // Return the corresponding document or null if not found
-            return snapshot.Documents.FirstOrDefault();
+            var userRef = _firestoreDb.Collection("users").Document(userId);
+            var snapshot = await userRef.GetSnapshotAsync();
+            return snapshot.Exists ? snapshot : null;
+        }
+        public async Task ResetUserIdSequence()
+        {
+            var sequenceDoc = _firestoreDb.Collection("config").Document("sequence");
+            await sequenceDoc.SetAsync(new { counter = 1 }); // ตั้งค่าเริ่มต้นใหม่เป็น 001
         }
     }
 }

@@ -112,7 +112,7 @@ const Login = () => {
 
         try {
         // เรียก API เพื่อเข้าสู่ระบบ
-        const response = await axios.post("http://localhost:5293/api/Auth/login", {
+        const response = await axios.post("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app/api/Auth/login", {
             email,
             password,
         });

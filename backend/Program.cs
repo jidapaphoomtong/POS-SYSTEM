@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text;
 using backend;
 using backend.Services;
@@ -40,9 +41,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowReactApp", builder =>
     {
-        builder.WithOrigins("http://localhost:3000") // URL จาก React
-               .AllowAnyHeader()
-               .AllowAnyMethod();
+        builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // URL จาก React
+                .AllowAnyHeader()
+                .AllowAnyMethod();
     });
 });
 
@@ -100,6 +101,9 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultAuthenticateScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = CookieAuthenticationDefaults.AuthenticationScheme;
 })
 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
@@ -114,7 +118,8 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidAudience = settings.Audience,
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero // ลดเวลา Clock Skew เพื่อป้องกัน Token หมดอายุช้ากว่าเวลาจริง
+        ClockSkew = TimeSpan.Zero, // ลดเวลา Clock Skew เพื่อป้องกัน Token หมดอายุช้ากว่าเวลาจริง
+        RoleClaimType = ClaimTypes.Role // ระบุว่า Role ใช้ ClaimTypes.Role
     };
     options.Events = new JwtBearerEvents
     {
@@ -133,7 +138,29 @@ builder.Services.AddAuthentication(options =>
         }
     };
 })
-.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme); // ใช้งาน Cookies Authentication
+.AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
+{
+    options.Cookie.Name = "PosAppCookie"; // ตั้งชื่อ Cookie
+    options.Cookie.HttpOnly = true; // ป้องกันการเข้าถึงผ่าน JavaScript
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // ใช้ HTTPs ใน Production
+    
+    options.LoginPath = "/api/Auth/login"; // Path สำหรับหน้า Login
+    options.LogoutPath = "/api/Auth/logout"; // Path สำหรับหน้า Logout
+    options.SlidingExpiration = true; // ยืดอายุ Session อัตโนมัติเมื่อมีการใช้งาน
+    options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // อายุของ Cookie
+    options.Events = new CookieAuthenticationEvents
+    {
+        OnRedirectToAccessDenied = context =>
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden; // ส่ง 403 Forbidden
+            context.Response.ContentType = "application/json"; // ส่งข้อมูล JSON แทนการ Redirect
+            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+            {
+                Message = "You do not have permission to access this resource."
+            }));
+        }
+    };
+});
 
 builder.Services.AddControllers(options =>
     {

@@ -48,19 +48,22 @@ namespace backend.Controllers
             if (!_authService.VerifyPassword(userLogin.Password, user["passwordHash"].ToString(), user["salt"].ToString()))
                 return Unauthorized(new { Success = false, Message = "Invalid credentials." });
 
-            // ตรวจสอบ Role ของผู้ใช้
-            string role = user.ContainsKey("role") ? user["role"].ToString() : RoleName.Employee;
+            // ตรวจสอบ Role ในข้อมูลผู้ใช้
+            string role = user.ContainsKey("roles") && user["roles"] is IList<object> roles && roles.Count > 0
+                ? (roles.First() as Dictionary<string, object>)?["Name"]?.ToString() ?? RoleName.Employee
+                : RoleName.Employee;
 
-            // สร้าง Claims
+            // ตั้ง Claim JWT
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.Name, user["firstName"].ToString()),
                 new Claim(ClaimTypes.Email, userLogin.Email),
                 new Claim(ClaimTypes.NameIdentifier, userSnapshot.Id),
-                new Claim(ClaimTypes.Role, role) // เพิ่ม Role
+                new Claim(ClaimTypes.Role, role), // เพิ่ม Role
+                // new Claim("branchId", user.ContainsKey("branchId") ? user["branchId"].ToString() : "")  // เพิ่ม Branch ID
             };
 
-            // สร้าง Access Token
+            // Generate Token
             var accessToken = _tokenService.GenerateAccessToken(claims);
 
             // ตั้งค่าสำหรับ Cookies
@@ -74,8 +77,18 @@ namespace backend.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
-            return Ok(new { Token = accessToken });
+            // อ่าน Cookies ที่เพิ่งถูกสร้าง
+            // var responseCookies = HttpContext.Response.Headers["Set-Cookie"];
+
+            return Ok(new { 
+                Success = true, 
+                Message = "Login successful.", 
+                Token = accessToken, // Token สำหรับใช้ใน Client-Side Authentication
+                Expiration = authProperties.ExpiresUtc, // ระยะเวลาหมดอายุของเซสชัน
+                // Cookies = responseCookies // คืนค่าข้อมูล Cookies กลับให้ผู้ใช้ดูใน Swagger
+            });
         }
+
 
         [HttpPost("register")]
         [AllowAnonymous]
@@ -121,23 +134,51 @@ namespace backend.Controllers
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            return Ok(new { Message = "Logged out successfully!" });
+            return Ok(new { Message = "Logout successfully!" });
         }
 
         // Get User Data from JWT Claims
-        [Authorize]
         [HttpGet("get-user-data")]
-        public IActionResult GetUserData()
+        [Authorize]
+        public async Task<IActionResult> GetUserData()
         {
-            var claims = HttpContext.User.Identity as ClaimsIdentity;
-            if (claims == null)
-            return Unauthorized(new { Success = false, Message = "Unauthorized" });
+            try
+            {
+                // ดึง User ID จาก JWT Token
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var email = claims.FindFirst(ClaimTypes.Email)?.Value ?? string.Empty;
-            var name = claims.FindFirst(ClaimTypes.Name)?.Value ?? string.Empty;
-            var role = claims.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+                if (string.IsNullOrEmpty(userId))
+                    return Unauthorized(new { Success = false, Message = "Token does not contain user ID" });
 
-            return Ok(new { Success = true, Data = new { Name = name, Email = email, Role = role } });
+                // ค้นหาเอกสารผู้ใช้ใน Firestore
+                var userSnapshot = await _authService.GetUserById(userId);
+                if (userSnapshot == null)
+                    return NotFound(new { Success = false, Message = "User not found" });
+
+                var user = userSnapshot.ToDictionary();
+
+                // รองรับกรณี roles เป็น List<object>
+                var roles = user.ContainsKey("roles")
+                    ? ((List<object>)user["roles"]).OfType<Dictionary<string, object>>().ToList()
+                    : new List<Dictionary<string, object>>();
+
+                var mainRole = roles.FirstOrDefault()?["Name"]?.ToString() ?? "employee";
+
+                return Ok(new
+                {
+                    Success = true,
+                    Data = new
+                    {
+                        Name = user["firstName"],
+                        Email = user["email"],
+                        Role = mainRole
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = "An error occurred.", Details = ex.Message });
+            }
         }
 
         [HttpGet("users")]
@@ -158,26 +199,43 @@ namespace backend.Controllers
 
         // Admin และ Manager สามารถแก้ไขข้อมูลผู้ใช้
         [HttpPut("update/{id}")]
-        // [Authorize(Roles = "admin")] // Admin เท่านั้นที่สามารถอัปเดตข้อมูลได้
         public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
         {
             try
             {
-                // ตรวจสอบ Role ที่ส่งมาว่าไม่เป็นค่าว่าง
+                // ตรวจสอบว่า Role ที่ส่งมาว่าไม่เป็นค่าว่าง
                 if (updatedUser.roles.Any(r => string.IsNullOrWhiteSpace(r.Name)))
                 {
                     return BadRequest(new { Success = false, Message = "Invalid Role detected." });
                 }
 
-                // ตรวจสอบ Email ว่าซ้ำหรือไม่
-                var userWithSameEmail = await _authService.IsEmailRegistered(updatedUser.email);
-                if (userWithSameEmail && id != updatedUser.email)
+                // ดึงข้อมูลผู้ใช้เดิมจากฐานข้อมูล
+                var existingUserSnapshot = await _authService.GetUserById(id);
+                if (existingUserSnapshot == null)
                 {
-                    return Conflict(new { Success = false, Message = "Email already exists." });
+                    return NotFound(new { Success = false, Message = "User not found." });
                 }
+                var existingUser = existingUserSnapshot.ToDictionary();
 
-                // เรียก AuthService เพื่ออัปเดตข้อมูล
-                var success = await _authService.UpdateUserAsync(id, updatedUser);
+                // อัปเดตเฉพาะฟิลด์ที่มีการเปลี่ยนแปลง
+                var userToUpdate = new User
+                {
+                    firstName = string.IsNullOrWhiteSpace(updatedUser.firstName)
+                                ? existingUser["firstName"].ToString()
+                                : updatedUser.firstName,
+                    lastName = string.IsNullOrWhiteSpace(updatedUser.lastName)
+                                ? existingUser["lastName"].ToString()
+                                : updatedUser.lastName,
+                    email = string.IsNullOrWhiteSpace(updatedUser.email)
+                            ? existingUser["email"].ToString()
+                            : updatedUser.email,
+                    roles = updatedUser.roles.Any()
+                            ? updatedUser.roles
+                            : (List<Role>)existingUser["roles"]
+                };
+
+                // ส่งข้อมูลไปยัง AuthService เพื่ออัปเดตข้อมูล
+                var success = await _authService.UpdateUserAsync(id, userToUpdate);
                 if (!success)
                 {
                     return NotFound(new { Success = false, Message = "User not found or cannot update." });
@@ -187,7 +245,6 @@ namespace backend.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error while updating user: {ex.Message}");
                 return StatusCode(500, new { Success = false, Message = ex.Message });
             }
         }
@@ -221,7 +278,11 @@ namespace backend.Controllers
             {
                 // ลบผู้ใช้ทั้งหมดใน Firestore
                 var deleted = await _authService.DeleteAllUsersAsync();
-                return Ok(new { Success = true, Message = "All users have been deleted." });
+
+                // ตั้งค่า ID ให้เริ่มต้นใหม่
+                await _authService.ResetUserIdSequence();
+
+                return Ok(new { Success = true, Message = "All users have been deleted and ID sequence refreshed." });
             }
             catch (Exception ex)
             {

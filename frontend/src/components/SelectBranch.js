@@ -18,7 +18,7 @@ export default function SelectBranch() {
     useEffect(() => {
         const fetchBranches = async () => {
             try {
-                const response = await axios.get("http://localhost:5293/api/Admin/branches", {
+                const response = await axios.get("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches", {
                     headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
                 });
                 const data = response.data.data;
