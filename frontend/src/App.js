@@ -5,7 +5,7 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import SelectBranch from './components/SelectBranch';
 import Sale from './components/Sale';
-import Department from './components/Department';
+import BranchList from './components/Branch/BranchList';
 
 function App() {
   return (
@@ -15,7 +15,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/select-branch" element={<SelectBranch />} />
         <Route path="/sale" element={<Sale />} />
-        <Route path="/department" element={<Department />} />
+        <Route path="/BranchList" element={<BranchList />} />
       </Routes>
       <ToastContainer />
     </Router>

@@ -109,34 +109,56 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-
-        try {
-        // เรียก API เพื่อเข้าสู่ระบบ
-        const response = await axios.post("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app/api/Auth/login", {
-            email,
-            password,
-        });
-
-        // แสดง Token ใน Console (เฉพาะโหมดพัฒนา)
-        if (process.env.NODE_ENV === "development") {
-            console.log("JWT Token:", response.data.token);
+    
+        // ตรวจสอบ Validation
+        if (!email || !password) {
+            toast.error("Email and Password are required.");
+            setIsLoading(false);
+            return;
         }
-
-        // เก็บ JWT Token ใน LocalStorage
-        localStorage.setItem("authToken", response.data.token);
-
-        // แจ้งเตือนสำเร็จ
-        toast.success("Login successful! 🎉");
-
-        // นำทางไปหน้า Dashboard หรือ Sale
-        navigate("/select-branch");
+    
+        try {
+            // เรียก API พร้อม Header
+            const response = await axios.post(
+                "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Auth/login",
+                { email, password },
+                {
+                    headers: {
+                        "x-posapp-header": process.env.REACT_APP_HEADER_SECRET_KEY,
+                    },
+                    
+                    
+                    
+                }
+            );
+            console.log("Header Key (from env):", process.env.REACT_APP_HEADER_SECRET_KEY);
+    
+            // แสดง Token ใน Console (เฉพาะโหมดพัฒนา)
+            if (process.env.NODE_ENV === "development") {
+                console.log("JWT Token:", response.data.token);
+            }
+    
+            // เก็บ JWT Token ใน LocalStorage
+            localStorage.setItem("authToken", response.data.token);
+    
+            // แจ้งเตือนสำเร็จ
+            toast.success("Login successful! 🎉");
+    
+            // นำทางไปหน้า Dashboard หรือ Sale
+            navigate("/select-branch");
         } catch (error) {
-        console.error(error.response?.data || error.message);
-        toast.error(
-            error.response?.data?.message || "Unable to login. Please try again."
-        );
+            console.error(error.response?.data || error.message);
+            if (error.response?.status === 400) {
+                toast.error("Invalid request. Please check your input.");
+            } else if (error.response?.status === 401) {
+                toast.error("Invalid login credentials. Please try again.");
+            } else {
+                toast.error(
+                    error.response?.data?.message || "Unable to login. Please try again."
+                );
+            }
         } finally {
-        setIsLoading(false);
+            setIsLoading(false);
         }
     };
 
@@ -177,7 +199,7 @@ const Login = () => {
             </button>
             </div>
             <button type="submit" className="btn" disabled={isLoading}>
-                {isLoading ? "Processing..." : "Login"}
+                {isLoading ? <div className="spinner"></div> : "Login"}
             </button>
             </form>
             <p>
