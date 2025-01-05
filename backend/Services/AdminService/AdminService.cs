@@ -16,13 +16,24 @@ namespace backend.Services.AdminService
             _firestoreDb = firestoreDb;
         }
         
-        //admin only
+        public async Task<string> GenerateSequentialId(string collectionName)
+        {
+            CollectionReference collection = _firestoreDb.Collection(collectionName);
+            QuerySnapshot snapshot = await collection.GetSnapshotAsync();
+
+            // สร้าง Id ต่อเนื่อง (แบบ 001, 002, 003)
+            var maxId = snapshot.Documents.Select(doc => int.Parse(doc.Id)).DefaultIfEmpty(0).Max();
+            return (maxId + 1).ToString("D3"); // Format เป็นแบบ 3 หลัก (001)
+        }
+
         public async Task<ServiceResponse<string>> AddBranch(Branch branch)
         {
             try
             {
-                DocumentReference newBranch = await _firestoreDb.Collection("branches").AddAsync(branch);
-                return ServiceResponse<string>.CreateSuccess(newBranch.Id, "Branch added successfully!");
+                string branchId = await GenerateSequentialId("branches"); // Generate ID
+                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                await branchDoc.SetAsync(branch);
+                return ServiceResponse<string>.CreateSuccess(branchId, "Branch added successfully!");
             }
             catch (Exception ex)
             {
@@ -34,10 +45,13 @@ namespace backend.Services.AdminService
         {
             try
             {
-                var employeeDoc = await _firestoreDb.Collection("branches")
+                string employeeId = await GenerateSequentialId($"branches/{branchId}/employees"); // Generate ID
+                DocumentReference employeeDoc = _firestoreDb.Collection("branches")
                     .Document(branchId)
-                    .Collection("employees").AddAsync(employee);
-                return ServiceResponse<string>.CreateSuccess(employeeDoc.Id, "Employee added successfully!");
+                    .Collection("employees")
+                    .Document(employeeId);
+                await employeeDoc.SetAsync(employee);
+                return ServiceResponse<string>.CreateSuccess(employeeId, "Employee added successfully!");
             }
             catch (Exception ex)
             {
@@ -49,10 +63,13 @@ namespace backend.Services.AdminService
         {
             try
             {
-                var productDoc = await _firestoreDb.Collection("branches")
+                string productId = await GenerateSequentialId($"branches/{branchId}/products"); // Generate ID
+                DocumentReference productDoc = _firestoreDb.Collection("branches")
                     .Document(branchId)
-                    .Collection("products").AddAsync(product);
-                return ServiceResponse<string>.CreateSuccess(productDoc.Id, "Product added successfully!");
+                    .Collection("products")
+                    .Document(productId);
+                await productDoc.SetAsync(product);
+                return ServiceResponse<string>.CreateSuccess(productId, "Product added successfully!");
             }
             catch (Exception ex)
             {

@@ -17,8 +17,8 @@ namespace backend.Models
 
     public struct RoleName
 {
-    public const string Admin = "admin";
-    public const string Manager = "manager";
-    public const string Employee = "employee";
+    public const string Admin = "Admin";
+    public const string Manager = "Manager";
+    public const string Employee = "Employee";
 }
 }

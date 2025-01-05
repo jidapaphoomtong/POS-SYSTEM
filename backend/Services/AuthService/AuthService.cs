@@ -156,11 +156,9 @@ namespace backend.Services.AuthService
 
             if (!snapshot.Exists)
             {
-                Console.WriteLine($"Error: User with ID {userId} not found in Firestore.");
                 return false; // ไม่พบเอกสารใน Firestore
             }
 
-            Console.WriteLine($"User found: {System.Text.Json.JsonSerializer.Serialize(snapshot.ToDictionary())}");
 
             // Role Validation
             var allowedRoles = new List<string> { "admin", "manager", "employee" };
@@ -175,7 +173,6 @@ namespace backend.Services.AuthService
             // รักษาข้อมูลเดิมที่สำคัญ เช่น passwordHash และ salt
             if (!existingData.ContainsKey("passwordHash") || !existingData.ContainsKey("salt"))
             {
-                Console.WriteLine($"Error: Missing critical fields in existing data for user ID {userId}.");
                 return false;
             }
 
@@ -197,7 +194,6 @@ namespace backend.Services.AuthService
             // อัปเดตข้อมูลใน Firestore
             await userDoc.SetAsync(updateData, SetOptions.MergeAll); // MergeAll จะอัปเดตเฉพาะข้อมูลที่ส่งมา
 
-            Console.WriteLine($"User updated successfully in Firestore with ID: {userId}");
             return true;
         }
 

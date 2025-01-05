@@ -8,6 +8,7 @@ namespace backend.Services.AdminService
 {
     public interface IAdminService
     {
+        Task<string> GenerateSequentialId(string collectionName);
         Task<ServiceResponse<string>> AddBranch(Branch branch);
         Task<ServiceResponse<string>> AddEmployee(string branchId, Employee employee);
         Task<ServiceResponse<string>> AddProduct(string branchId, Products product);

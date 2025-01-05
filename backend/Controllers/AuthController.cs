@@ -32,8 +32,8 @@ namespace backend.Controllers
         }
 
         // Login (JWT-based)
-        [HttpPost("login")]
         [AllowAnonymous]
+        [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Login userLogin)
         {
             if (!ModelState.IsValid)
@@ -89,9 +89,8 @@ namespace backend.Controllers
             });
         }
 
-
-        [HttpPost("register")]
         [AllowAnonymous]
+        [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] User userRegister)
         {
             if (!ModelState.IsValid)

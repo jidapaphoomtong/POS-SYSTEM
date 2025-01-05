@@ -39,9 +39,9 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
 // ตรวจสอบ url
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowReactApp", builder =>
+    options.AddPolicy("AllowAll", builder =>
     {
-        builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // URL จาก React
+        builder.AllowAnyOrigin()
                 .AllowAnyHeader()
                 .AllowAnyMethod();
     });
@@ -52,7 +52,7 @@ builder.Services.AddCors(options =>
 // {
 //     options.AddPolicy("AllowedSpecificDomain", builder =>
 //     {
-//         builder.WithOrigins("https://trusted-domain.com", "https://another-trusted-domain.com") // ระบุ Domain ที่อนุญาต
+//         builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุ Domain ที่อนุญาต
 //                 .AllowAnyHeader()
 //                 .AllowAnyMethod(); // เปิดเฉพาะ HTTP Method (GET, POST, PUT, DELETE) ที่ต้องการ
 //     });
@@ -90,7 +90,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAdminService, AdminService>();
-
+// builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
 
 builder.Services.AddOptions();
 builder.Services.Configure<JwtSettings>(configSection);
@@ -147,7 +147,7 @@ builder.Services.AddAuthentication(options =>
     options.LoginPath = "/api/Auth/login"; // Path สำหรับหน้า Login
     options.LogoutPath = "/api/Auth/logout"; // Path สำหรับหน้า Logout
     options.SlidingExpiration = true; // ยืดอายุ Session อัตโนมัติเมื่อมีการใช้งาน
-    options.ExpireTimeSpan = TimeSpan.FromMinutes(30); // อายุของ Cookie
+    options.ExpireTimeSpan = TimeSpan.FromDays(3); // อายุของ Cookie
     options.Events = new CookieAuthenticationEvents
     {
         OnRedirectToAccessDenied = context =>
@@ -169,7 +169,9 @@ builder.Services.AddControllers(options =>
                         .RequireAuthenticatedUser()
                         .Build();
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
+        // options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
+
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");
@@ -177,7 +179,7 @@ builder.WebHost.UseUrls("http://*:5293");
 var app = builder.Build();
 
 // app.UseCors("AllowAllOrigins");
-app.UseCors("AllowReactApp");
+app.UseCors("AllowAll");
 // app.UseCors("AllowedSpecificDomain");
 
 // Configure the HTTP request pipeline.
