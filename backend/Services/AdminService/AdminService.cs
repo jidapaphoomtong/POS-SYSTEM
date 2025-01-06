@@ -136,8 +136,7 @@ namespace backend.Services.AdminService
 
         public async Task<ServiceResponse<List<BranchResponse>>> GetBranches()
         {
-            try
-            {
+            try {
                 CollectionReference branches = _firestoreDb.Collection("branches");
                 QuerySnapshot snapshot = await branches.GetSnapshotAsync();
 

@@ -39,11 +39,12 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
 // ตรวจสอบ url
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", builder =>
+    options.AddPolicy("AllowFrontend", builder =>
     {
-        builder.AllowAnyOrigin()
-                .AllowAnyHeader()
-                .AllowAnyMethod();
+        builder.WithOrigins("http://localhost:3000") // URL ของ Frontend
+               .AllowAnyHeader()
+               .AllowAnyMethod()
+               .AllowCredentials(); // เปิดใช้งาน Cookie
     });
 });
 
@@ -119,7 +120,8 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = settings.Audience,
         ValidateLifetime = true,
         ClockSkew = TimeSpan.Zero, // ลดเวลา Clock Skew เพื่อป้องกัน Token หมดอายุช้ากว่าเวลาจริง
-        RoleClaimType = ClaimTypes.Role // ระบุว่า Role ใช้ ClaimTypes.Role
+        RoleClaimType = ClaimTypes.Role, // ระบุว่า Role ใช้ ClaimTypes.Role
+        NameClaimType = ClaimTypes.Name,
     };
     options.Events = new JwtBearerEvents
     {
@@ -139,28 +141,31 @@ builder.Services.AddAuthentication(options =>
     };
 })
 .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
-{
-    options.Cookie.Name = "PosAppCookie"; // ตั้งชื่อ Cookie
-    options.Cookie.HttpOnly = true; // ป้องกันการเข้าถึงผ่าน JavaScript
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // ใช้ HTTPs ใน Production
-    
-    options.LoginPath = "/api/Auth/login"; // Path สำหรับหน้า Login
-    options.LogoutPath = "/api/Auth/logout"; // Path สำหรับหน้า Logout
-    options.SlidingExpiration = true; // ยืดอายุ Session อัตโนมัติเมื่อมีการใช้งาน
-    options.ExpireTimeSpan = TimeSpan.FromDays(3); // อายุของ Cookie
-    options.Events = new CookieAuthenticationEvents
     {
-        OnRedirectToAccessDenied = context =>
+        options.Cookie.Name = "PosAppCookie"; // ชื่อ Cookie
+        options.Cookie.HttpOnly = true; // ป้องกันการเข้าถึงผ่าน JavaScript
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // ใช้ HTTPS เท่านั้น
+        options.Cookie.SameSite = SameSiteMode.Strict; // ป้องกัน Cross-Site Attack
+        options.LoginPath = "/api/Auth/login"; // Path สำหรับ Login
+        options.LogoutPath = "/api/Auth/logout"; // Path สำหรับ Logout
+        options.SlidingExpiration = true; // รีเฟรชอายุใช้งานของ Cookie หากใช้งานอยู่
+        options.ExpireTimeSpan = TimeSpan.FromDays(3); // อายุ Cookie
+
+        options.Events = new CookieAuthenticationEvents
         {
-            context.Response.StatusCode = StatusCodes.Status403Forbidden; // ส่ง 403 Forbidden
-            context.Response.ContentType = "application/json"; // ส่งข้อมูล JSON แทนการ Redirect
-            return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+            OnRedirectToAccessDenied = context =>
             {
-                Message = "You do not have permission to access this resource."
-            }));
-        }
-    };
-});
+                // กรณี Unauthorized ส่ง JSON 403 แทนการ Redirect
+                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    Success = false,
+                    Message = "You do not have permission to access this resource."
+                }));
+            }
+        };
+    });
 
 builder.Services.AddControllers(options =>
     {
@@ -171,6 +176,7 @@ builder.Services.AddControllers(options =>
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
         // options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
+builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
 
 
 // Explicitly configure URLs to listen on
@@ -179,7 +185,7 @@ builder.WebHost.UseUrls("http://*:5293");
 var app = builder.Build();
 
 // app.UseCors("AllowAllOrigins");
-app.UseCors("AllowAll");
+app.UseCors("AllowFrontend");
 // app.UseCors("AllowedSpecificDomain");
 
 // Configure the HTTP request pipeline.

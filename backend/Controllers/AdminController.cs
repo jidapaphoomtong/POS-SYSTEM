@@ -14,6 +14,7 @@ namespace backend.Controllers
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
+    [LogAction]
     public class AdminController : Controller
     {
         private readonly IAdminService _adminService;
@@ -24,7 +25,7 @@ namespace backend.Controllers
         }
 
         // เพิ่ม Branch เข้า Collection "branches"
-        [Authorize(Roles = "Admin")] // ระบุว่าต้องเป็น Role "Admin" เท่านั้นถึงเข้าถึงได้
+        [CustomAuthorizeRole("Admin")] // ระบุว่าต้องเป็น Role "Admin" เท่านั้นถึงเข้าถึงได้
         [HttpPost("add-branch")]
         public async Task<IActionResult> AddBranch([FromBody] Branch branch)
         {
@@ -43,7 +44,7 @@ namespace backend.Controllers
             return BadRequest(response); // ล้มเหลว
         }
 
-        [Authorize(Roles = "Admin, Manager")]
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpPost("add-employee/{branchId}")]
         public async Task<IActionResult> AddEmployee(string branchId, [FromBody] Employee employee)
         {
@@ -59,7 +60,7 @@ namespace backend.Controllers
             return BadRequest(response);              // ล้มเหลว
         }
 
-        [Authorize(Roles = "Admin, Manager")]
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpPost("add-product/{branchId}")]
         public async Task<IActionResult> AddProduct(string branchId, [FromBody] Products product)
         {
@@ -68,17 +69,29 @@ namespace backend.Controllers
             return BadRequest(response);
         }
 
-        [Authorize(Roles = "Admin")]
+        [CustomAuthorizeRole("Admin")]
         [HttpGet("branches")]
         public async Task<IActionResult> GetBranches()
         {
+            var user = User.Identity?.Name; // ดูข้อมูลชื่อของ User
+            var roles = User.Claims.Where(c => c.Type == "role").Select(c => c.Value); // ดู Role ของ User
+            Console.WriteLine($"User: {user}, Roles: {string.Join(", ", roles)}"); // Log ข้อมูล User และ Role ออกมา
+
             var response = await _adminService.GetBranches();
-            if (response.Success) return Ok(response.Data);
-            return BadRequest(response);
+            if (response.Success)
+            {
+                Console.WriteLine("Branches fetched successfully.");
+                return Ok(new { success = true, data = response.Data });
+            }
+            else
+            {
+                Console.WriteLine($"Error fetching branches: {response.Message}");
+                return BadRequest(new { success = false, message = response.Message });
+            }
         }
 
         // อัปเดต Branch
-        [Authorize(Roles = "Admin")]
+        [CustomAuthorizeRole("Admin")]
         [HttpPut("branches/{branchId}")]
         public async Task<IActionResult> UpdateBranch(string branchId, [FromBody] Dictionary<string, object> updatedData)
         {
@@ -94,7 +107,7 @@ namespace backend.Controllers
         }
 
         // ลบ Branch
-        [Authorize(Roles = "Admin")]
+        [CustomAuthorizeRole("Admin")]
         [HttpDelete("branches/{branchId}")]
         public async Task<IActionResult> DeleteBranch(string branchId)
         {
@@ -110,7 +123,7 @@ namespace backend.Controllers
         }
 
         // พนักงาน
-        [Authorize(Roles = "Admin, Manager")]
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpGet("branches/{branchId}/employees")]
         public async Task<IActionResult> GetEmployees(string branchId)
         {
@@ -125,7 +138,7 @@ namespace backend.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin, Manager")]
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpPut("branches/{branchId}/employees/{employeeId}")]
         public async Task<IActionResult> UpdateEmployee(string branchId, string employeeId, [FromBody] Employee updatedEmployee)
         {
@@ -140,7 +153,7 @@ namespace backend.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin, Manager")]
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpDelete("branches/{branchId}/employees/{employeeId}")]
         public async Task<IActionResult> DeleteEmployee(string branchId, string employeeId)
         {
@@ -156,7 +169,7 @@ namespace backend.Controllers
         }
 
         // สินค้า
-        [Authorize(Roles = "Admin, Manager, Employee")]
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
         [HttpGet("branches/{branchId}/products")]
         public async Task<IActionResult> GetProducts(string branchId)
         {
@@ -171,7 +184,7 @@ namespace backend.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin, Manager")]
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpPut("branches/{branchId}/products/{productId}")]
         public async Task<IActionResult> UpdateProduct(string branchId, string productId, [FromBody] Products updatedProduct)
         {
@@ -186,7 +199,7 @@ namespace backend.Controllers
             }
         }
 
-        [Authorize(Roles = "Admin, Manager")]
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpDelete("branches/{branchId}/products/{productId}")]
         public async Task<IActionResult> DeleteProduct(string branchId, string productId)
         {
