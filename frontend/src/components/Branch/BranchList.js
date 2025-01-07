@@ -28,7 +28,7 @@ const BranchList = () => {
 
             try {
                 setIsLoading(true);
-                const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches", {
+                const response = await axios.get("http://localhost:5293/api/Admin/branches", {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     },
@@ -78,19 +78,25 @@ const BranchList = () => {
         const token = Cookies.get("authToken"); // ดึง Token
 
         try {
-            await axios.delete(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${deleteBranchId}`, {
+            const response = await axios.delete(`https://your-backend-url/api/Admin/branches/${deleteBranchId}`, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                    "x-posapp-header": "your-header",
                     Authorization: `Bearer ${token}`,
                 },
+                withCredentials: true,
             });
 
-            alert("Branch deleted successfully!");
-            setBranches(branches.filter((branch) => branch.id !== deleteBranchId));
-            handleCloseDeleteModal();
+            if (response.status === 200) {
+                alert("Branch deleted successfully!");
+                // Update state to remove the deleted branch
+                setBranches(branches.filter((branch) => branch.id !== deleteBranchId));
+                handleCloseDeleteModal();
+            } else {
+                alert("Failed to delete branch.");
+            }
         } catch (error) {
             console.error("Failed to delete branch:", error);
-            alert("Failed to delete branch.");
+            alert("Failed to delete branch: " + (error.response?.data?.message || "Unknown error"));
         }
     };
 
@@ -130,12 +136,15 @@ const BranchList = () => {
                                 <td>{name}</td>
                                 <td>{location}</td>
                                 <td className="action-buttons">
-                                    <button
-                                        className="edit-button"
-                                        onClick={() => setEditBranch({ id, name, location })}
-                                    >
-                                        ✏️
-                                    </button>
+                                <button
+                                    className="edit-button"
+                                    onClick={() => {
+                                        setEditBranch({ id, name, location });
+                                        navigate(`/edit-branch/${id}`); // หรือลิงก์ไปที่ EditBranchModal
+                                    }}
+                                >
+                                    ✏️
+                                </button>
                                     <button
                                         className="delete-button"
                                         onClick={() => handleOpenDeleteModal(id)}

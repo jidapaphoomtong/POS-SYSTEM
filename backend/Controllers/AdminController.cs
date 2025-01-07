@@ -114,16 +114,71 @@ namespace backend.Controllers
         // อัปเดต Branch
         [CustomAuthorizeRole("Admin")]
         [HttpPut("branches/{branchId}")]
-        public async Task<IActionResult> UpdateBranch(string branchId, [FromBody] Dictionary<string, object> updatedData)
+        public async Task<IActionResult> UpdateBranch(string branchId, [FromBody] Branch updatedBranch)
         {
             try
             {
-                await _adminService.UpdateBranch(branchId, updatedData);
-                return Ok(new { message = "Branch updated successfully!" });
+                // ตรวจสอบข้อมูล branch
+                if (string.IsNullOrWhiteSpace(updatedBranch.Name) || 
+                    string.IsNullOrWhiteSpace(updatedBranch.Location) || 
+                    string.IsNullOrWhiteSpace(updatedBranch.IconUrl))
+                {
+                    return BadRequest(new { Success = false, Message = "Invalid branch data." });
+                }
+
+                // ดึงข้อมูล branch เดิมจาก Firestore
+                var existingBranchResponse = await _adminService.GetBranchById(branchId);
+                if (!existingBranchResponse.Success)
+                {
+                    return NotFound(new { Success = false, Message = "Branch not found." });
+                }
+
+                // สร้าง branch ที่ต้องการอัปเดต
+                var branchToUpdate = new Branch
+                {
+                    Name = string.IsNullOrWhiteSpace(updatedBranch.Name) ? existingBranchResponse.Data.Name : updatedBranch.Name,
+                    Location = string.IsNullOrWhiteSpace(updatedBranch.Location) ? existingBranchResponse.Data.Location : updatedBranch.Location,
+                    IconUrl = string.IsNullOrWhiteSpace(updatedBranch.IconUrl) ? existingBranchResponse.Data.IconUrl : updatedBranch.IconUrl,
+                };
+
+                // อัปเดต branch ใน Firestore
+                var updateResponse = await _adminService.UpdateBranch(branchId, branchToUpdate);
+                if (!updateResponse.Success)
+                {
+                    return BadRequest(new { Success = false, Message = "Failed to update branch." });
+                }
+
+                return Ok(new { Success = true, Message = "Branch updated successfully!" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return StatusCode(500, new { Success = false, Message = ex.Message });
+            }
+        }
+
+        [CustomAuthorizeRole("Admin")]
+        [HttpGet("branches/{branchId}")]
+        public async Task<IActionResult> GetBranchById(string branchId)
+        {
+            try
+            {
+                // Log ID ที่เรียก
+                Console.WriteLine($"Requesting branch with ID: {branchId}");
+
+                // เรียกใช้ AdminService เพื่อตรวจสอบ branch
+                var response = await _adminService.GetBranchById(branchId);
+
+                // ตรวจสอบว่ามีข้อมูลหรือไม่
+                if (!response.Success)
+                {
+                    return NotFound(new { Success = false, Message = response.Message });
+                }
+
+                return Ok(new { Success = true, Data = response.Data });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Success = false, Message = ex.Message });
             }
         }
 
@@ -235,25 +290,32 @@ namespace backend.Controllers
             }
         }
 
-        // [Authorize(Roles = "admin")]
-        // [HttpGet("view-bran")]
-        // public IActionResult ViewBranch()
+        // [CustomAuthorizeRole("Admin")]
+        // [HttpDelete("branches")]
+        // public async Task<IActionResult> DeleteAllBranches()
         // {
-        //     return Ok(new List<string> { "Branch A", "Branch B", "Branch C" });
+        //     var response = await _adminService.DeleteAllBranches();
+
+        //     if (response.Success)
+        //     {
+        //         return Ok(new { Success = true, Message = response.Message });
+        //     }
+
+        //     return BadRequest(new { Success = false, Message = response.Message });
         // }
 
-        // [Authorize(Roles = "manager")]
-        // [HttpGet("view-employee")]
-        // public IActionResult ViewEmployee()
+        // [CustomAuthorizeRole("Admin")]
+        // [HttpPost("reset-branch-sequence")]
+        // public async Task<IActionResult> ResetBranchIdSequence()
         // {
-        //     return Ok(new List<string> { "Employee A", "Employee B", "Employee C" });
-        // }
+        //     var response = await _adminService.ResetBranchIdSequence();
 
-        // [Authorize(Roles = "employee, manager")]
-        // [HttpGet("view-products")]
-        // public IActionResult ViewProducts()
-        // {
-        //     return Ok(new List<string> { "Product A", "Product B", "Product C" });
+        //     if (response.Success)
+        //     {
+        //         return Ok(new { Success = true, Message = response.Message });
+        //     }
+
+        //     return BadRequest(new { Success = false, Message = response.Message });
         // }
     }
 }
