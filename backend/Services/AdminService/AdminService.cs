@@ -16,23 +16,46 @@ namespace backend.Services.AdminService
             _firestoreDb = firestoreDb;
         }
         
-        public async Task<string> GenerateSequentialId(string collectionName)
+        public async Task<string> GetNextId(string sequenceName)
         {
-            CollectionReference collection = _firestoreDb.Collection(collectionName);
-            QuerySnapshot snapshot = await collection.GetSnapshotAsync();
+            try
+            {
+                var sequenceDoc = _firestoreDb.Collection("config").Document(sequenceName);
+                var snapshot = await sequenceDoc.GetSnapshotAsync();
 
-            // สร้าง Id ต่อเนื่อง (แบบ 001, 002, 003)
-            var maxId = snapshot.Documents.Select(doc => int.Parse(doc.Id)).DefaultIfEmpty(0).Max();
-            return (maxId + 1).ToString("D3"); // Format เป็นแบบ 3 หลัก (001)
+                int counter = 1;
+
+                if (snapshot.Exists && snapshot.TryGetValue<int>("counter", out var currentCounter))
+                {
+                    counter = currentCounter;
+                }
+
+                // Increment ลำดับ
+                await sequenceDoc.SetAsync(new { counter = counter + 1 });
+
+                // คืนค่า ID ในรูปแบบ "001", "002", "003"
+                return counter.ToString("D3");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to generate ID for {sequenceName}: {ex.Message}");
+            }
         }
 
         public async Task<ServiceResponse<string>> AddBranch(Branch branch)
         {
             try
             {
-                string branchId = await GenerateSequentialId("branches"); // Generate ID
+                // สร้างไอดีแบบกำหนดเอง
+                string branchId = await GetNextId("branch-sequence");
+
+                // สร้าง Document ID โดยใช้ไอดีที่กำหนดเอง
                 DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
-                await branchDoc.SetAsync(branch);
+
+                // เพิ่มไอดีเข้าไปใน Branch Object
+                branch.Id = int.Parse(branchId);  // เก็บไอดีในฟิลด์ "Id"
+                await branchDoc.SetAsync(branch); // บันทึกข้อมูลใน Firestore
+
                 return ServiceResponse<string>.CreateSuccess(branchId, "Branch added successfully!");
             }
             catch (Exception ex)
@@ -44,31 +67,49 @@ namespace backend.Services.AdminService
         public async Task<ServiceResponse<string>> AddEmployee(string branchId, Employee employee)
         {
             try
-            {
-                string employeeId = await GenerateSequentialId($"branches/{branchId}/employees"); // Generate ID
-                DocumentReference employeeDoc = _firestoreDb.Collection("branches")
-                    .Document(branchId)
-                    .Collection("employees")
-                    .Document(employeeId);
-                await employeeDoc.SetAsync(employee);
-                return ServiceResponse<string>.CreateSuccess(employeeId, "Employee added successfully!");
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse<string>.CreateFailure($"Failed to add employee: {ex.Message}");
-            }
+                {
+                    // สร้าง Employee ID ใหม่โดยใช้ Sequence
+                    string employeeId = await GetNextId($"employee-sequence-{branchId}"); // ใช้ลำดับไอดีแยกตาม Branch
+
+                    // อ้างถึง Document ID ด้วย Employee ID ใหม่
+                    DocumentReference employeeDoc = _firestoreDb.Collection("branches")
+                        .Document(branchId)
+                        .Collection("employees")
+                        .Document(employeeId);
+
+                    // เพิ่ม Employee ID เข้าสู่ Object ก่อนบันทึก
+                    employee.Id = employeeId;
+
+                    // บันทึก Employee ลงใน Firestore
+                    await employeeDoc.SetAsync(employee);
+
+                    return ServiceResponse<string>.CreateSuccess(employeeId, "Employee added successfully!");
+                }
+                catch (Exception ex)
+                {
+                    return ServiceResponse<string>.CreateFailure($"Failed to add employee: {ex.Message}");
+                }
         }
 
         public async Task<ServiceResponse<string>> AddProduct(string branchId, Products product)
         {
             try
             {
-                string productId = await GenerateSequentialId($"branches/{branchId}/products"); // Generate ID
+                // สร้าง Product ID ใหม่
+                string productId = await GetNextId($"product-sequence-{branchId}"); // ลำดับเฉพาะต่อ Branch
+
+                // อ้างถึง Document ID
                 DocumentReference productDoc = _firestoreDb.Collection("branches")
                     .Document(branchId)
                     .Collection("products")
                     .Document(productId);
+
+                // เพิ่ม Product ID เข้าไปใน Object ก่อนบันทึก
+                product.Id = productId;
+
+                // บันทึก Product ลงใน Firestore
                 await productDoc.SetAsync(product);
+
                 return ServiceResponse<string>.CreateSuccess(productId, "Product added successfully!");
             }
             catch (Exception ex)
@@ -269,7 +310,7 @@ namespace backend.Services.AdminService
                 {
                     { "productName", updatedProduct.productName },
                     { "price", updatedProduct.price },
-                    { "quantity", updatedProduct.quantity }
+                    { "stock", updatedProduct.stock }
                 });
 
                 return ServiceResponse<string>.CreateSuccess(productId, "Product updated successfully!");

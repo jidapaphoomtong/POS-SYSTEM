@@ -11,11 +11,11 @@ namespace backend.Models
     public class Products
     {
         [FirestoreProperty]
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty; // ไอดีของสินค้า
         [FirestoreProperty]
         public string productName{ get; set; } = string.Empty;
         [FirestoreProperty]
-        public int quantity { get; set; }
+        public int stock { get; set; }
         [FirestoreProperty]
         public double price { get; set; }
     }
