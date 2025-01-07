@@ -15,12 +15,14 @@ using backend.Services.Tokenservice;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Google.Apis.Auth.OAuth2.Requests;
+using backend.Filters;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
     [LogAction]
+    // [ServiceFilter(typeof(CheckHeaderAttribute))]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -85,8 +87,13 @@ namespace backend.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
-            // อ่าน Cookies ที่เพิ่งถูกสร้าง
+            // // Log Cookies เพื่อตรวจสอบ
             // var responseCookies = HttpContext.Response.Headers["Set-Cookie"];
+            // Console.WriteLine("===== Cookies After Login =====");
+            // foreach (var cookie in responseCookies)
+            // {
+            //     Console.WriteLine($"Set-Cookie: {cookie}");
+            // }
 
             return Ok(new {
                 Success = true,
@@ -206,6 +213,7 @@ namespace backend.Controllers
         }
 
         // Admin และ Manager สามารถแก้ไขข้อมูลผู้ใช้
+        [Authorize]
         [HttpPut("update/{id}")]
         public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
         {
@@ -258,6 +266,7 @@ namespace backend.Controllers
         }
 
         // เฉพาะ Admin เท่านั้นที่ลบผู้ใช้ได้
+        [Authorize]
         [HttpDelete("delete/{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {
@@ -279,6 +288,7 @@ namespace backend.Controllers
         }
 
         // รีเซ็ตผู้ใช้ทั้งหมด (เฉพาะ Admin)
+        [Authorize]
         [HttpDelete("reset-all")]
         public async Task<IActionResult> ResetAll()
         {

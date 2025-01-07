@@ -20,12 +20,4 @@ namespace backend.Models
         [FirestoreProperty]
         public IList<Role> role { get; set; } = new List<Role>(); // กำหนดค่า Role นับตั้งแต่เริ่ม
     }
-
-    public class EmployeeRequest
-    {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string Email { get; set; }
-        public string Position { get; set; }
-    }
 }

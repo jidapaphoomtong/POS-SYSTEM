@@ -4,6 +4,7 @@ import admin from "../Images/Admin.png";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -25,15 +26,26 @@ const Login = () => {
         try {
             // ส่งคำขอ Login ไปยัง Backend
             const response = await axios.post(
-                "http://localhost:5293/api/Auth/login",
+                "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Auth/login",
                 { email, password },
-                { withCredentials: true }
+                {
+                    headers: {
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        
+                    },
+                    withCredentials: true 
+                }
             );
-
-            console.log("Login Response:", response.data); // ใช้เพื่อดู Response
+            // console.log("Login Response:", response.data); // ใช้เพื่อดู Response
 
             const { role } = response.data; // ดึง Role จาก Response
             console.log("User Role:", role); // Debug Role เพื่อดูว่ามีค่าหรือไม่
+
+            const token = response.data.token;
+            // console.log("Login successful, JWT Token received:", token);
+
+            // เก็บ JWT Token ลงใน Cookie
+            Cookies.set("authToken", token, { expires: 1, secure: true, sameSite: "Strict" });
 
             // นำทางตาม Role
             if (role === "Admin") {

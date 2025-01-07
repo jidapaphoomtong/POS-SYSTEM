@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using backend.Filters;
 using backend.Models;
 using backend.Services;
 using backend.Services.AdminService;
@@ -11,10 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     [LogAction]
+    // [ServiceFilter(typeof(CheckHeaderAttribute))]
     public class AdminController : Controller
     {
         private readonly IAdminService _adminService;
@@ -65,9 +66,8 @@ namespace backend.Controllers
             // ดึง User จาก Claim
             var userName = User.FindFirst(ClaimTypes.Name)?.Value; // ชื่อ user จาก Jwt Token
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value; // ดึง Role จาก Claim
-
-            var response = await _adminService.AddProduct(branchId, product);
             
+            var response = await _adminService.AddProduct(branchId, product);
             if (response.Success) return Ok(response);
             return BadRequest(response);
         }

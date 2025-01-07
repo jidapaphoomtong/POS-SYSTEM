@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/SelectBranch.css";
 import { FaTh, FaList } from "react-icons/fa";
+import Cookies from "js-cookie";
 
 export default function SelectBranch() {
     const [branches, setBranches] = useState([]);
@@ -18,27 +19,33 @@ export default function SelectBranch() {
 
     useEffect(() => {
         const fetchBranches = async () => {
-            try {
-                // console.log("Fetching branches...");
-                setIsLoading(true);
-                const response = await axios.get("http://localhost:5293/api/Admin/branches", {
-                    withCredentials: true, // ส่งคำขอพร้อม Cookie
-                });
-
-                const data = response.data.data || []; // กำหนด Default ถ้าไม่มี Data
-                // console.log("Branches loaded:", data);
-
-                setBranches(data); // บันทึก Branch ใน State
-            } catch (error) {
-                // console.error("Failed to fetch branches:", error);
-                if (error.response?.status === 401) {
-                    alert("Unauthorized. Please login.");
-                    navigate("/"); // Redirect ไปหน้า Login
-                } else if (error.response?.status === 403) {
-                    alert("Access Denied: You do not have the required permissions.");
+            const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
+            console.log("Login successful, JWT Token received:", token);
+            if(token){
+                try {
+                    // console.log("Fetching branches...");
+                    setIsLoading(true);
+                    const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches", {
+                        headers: {
+                            "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        },
+                        withCredentials: true, // ส่งคำขอพร้อม Cookie
+                    });
+    
+                    const data = response.data.data || []; // กำหนด Default ถ้าไม่มี Data
+                    // console.log("Branches loaded:", data);
+    
+                    setBranches(data); // บันทึก Branch ใน State
+                } catch (error) {
+                    // console.error("Failed to fetch branches:", error);
+                    if (error.response?.status === 401) {
+                        alert("Unauthorized. Please login.");
+                        navigate("/"); // Redirect ไปหน้า Login
+                    } else if (error.response?.status === 403) {
+                        alert("Access Denied: You do not have the required permissions.");
+                    }
                 }
-            } finally {
-                setIsLoading(false); // ปิดสถานะการโหลด
+            setIsLoading(false); // ปิดสถานะการโหลด
             }
         };
 

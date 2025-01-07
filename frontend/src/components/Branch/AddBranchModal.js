@@ -23,7 +23,7 @@ const AddBranchModal = ({ onClose, onAddSuccess }) => {
         setIsLoading(true); // เริ่มสถานะ Loading
 
         try {
-            const response = await axios.post("http://localhost:5293/api/Admin/add-branch", formData, {
+            const response = await axios.post("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/add-branch", formData, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("authToken")}`, // เพิ่ม Token จาก LocalStorage
                     "Content-Type": "application/json",

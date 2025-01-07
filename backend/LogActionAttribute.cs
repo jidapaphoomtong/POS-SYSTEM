@@ -7,15 +7,15 @@ public class LogActionAttribute : ActionFilterAttribute
     // เรียกก่อน Action ทำงาน
     public override void OnActionExecuting(ActionExecutingContext context)
     {
-         // ดึง User Claims
-        var userName = context.HttpContext.User.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User";
-        var userRole = context.HttpContext.User.FindFirst(ClaimTypes.Role)?.Value ?? "No Role Assigned";
+        //  // ดึง User Claims
+        // var userName = context.HttpContext.User.FindFirst(ClaimTypes.Name)?.Value ?? "Unknown User";
+        // var userRole = context.HttpContext.User.FindFirst(ClaimTypes.Role)?.Value ?? "No Role Assigned";
 
         var controllerName = context.RouteData.Values["controller"];
         var actionName = context.RouteData.Values["action"];
 
         // Log รายละเอียดข้อมูล
-        Console.WriteLine($"[OnActionExecuting] Controller: {controllerName}, Action: {actionName}, User: {userName}, Role: {userRole}");
+        Console.WriteLine($"[OnActionExecuting] Controller: {controllerName}, Action: {actionName}");
         
         if (!context.HttpContext.User.Claims.Any())
         {

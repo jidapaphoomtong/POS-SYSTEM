@@ -5,32 +5,44 @@ import EditBranchModal from "./EditBranchModal";
 import ConfirmationModal from "./ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import "../../styles/branch.css";
+import Cookies from "js-cookie";
 
 const BranchList = () => {
-    const [branches, setBranches] = useState([]); // ใช้ State `branches` ตัวเดียว
+    const [branches, setBranches] = useState([]); 
     const [showAddModal, setShowAddModal] = useState(false);
     const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [editBranch, setEditBranch] = useState(null);
-    const [deleteBranchId, setDeleteBranchId] = useState(null); // เก็บ ID ที่ต้องการลบ
+    const [deleteBranchId, setDeleteBranchId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
     // Fetch Branch List
     useEffect(() => {
         const fetchBranches = async () => {
+            const token = Cookies.get("authToken"); // ดึง Token
+            if (!token) {
+                alert("Your session has expired. Please login again.");
+                navigate("/"); // Redirect ไปหน้า Login
+                return;
+            }
+
             try {
                 setIsLoading(true);
-                const response = await axios.get("http://localhost:5293/api/Admin/branches", {
-                    withCredentials: true, // ส่ง Cookie
+                const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches", {
+                    headers: {
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                    },
+                    withCredentials: true,
                 });
 
-                setBranches(response.data.data || []); // บันทึก Branch
+                setBranches(response.data.data || []); // อัปเดต State Branches
             } catch (error) {
+                console.error("Failed to fetch branches:", error);
                 if (error.response?.status === 401) {
                     alert("Unauthorized. Please login.");
-                    navigate("/"); // Redirect ไปหน้า Login
-                } else if (error.response?.status === 403) {
-                    alert("Access denied.");
+                    navigate("/");
+                } else {
+                    alert("Failed to fetch branches.");
                 }
             } finally {
                 setIsLoading(false);
@@ -41,7 +53,7 @@ const BranchList = () => {
     }, [navigate]);
 
     const handleAddBranch = (newBranch) => {
-        setBranches([...branches, newBranch]);
+        setBranches([...branches, newBranch]); // อัปเดต Branch ใหม่
     };
 
     const handleEditBranch = (id, updatedBranch) => {
@@ -63,17 +75,22 @@ const BranchList = () => {
     };
 
     const handleConfirmDelete = async () => {
+        const token = Cookies.get("authToken"); // ดึง Token
+
         try {
-            await axios.delete(`http://localhost:5293/api/Admin/branches/${deleteBranchId}`, {
+            await axios.delete(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${deleteBranchId}`, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                    Authorization: `Bearer ${token}`,
                 },
             });
+
             alert("Branch deleted successfully!");
             setBranches(branches.filter((branch) => branch.id !== deleteBranchId));
             handleCloseDeleteModal();
         } catch (error) {
-            alert(error.response?.data?.message || "Failed to delete branch.");
+            console.error("Failed to delete branch:", error);
+            alert("Failed to delete branch.");
         }
     };
 

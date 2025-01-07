@@ -1,164 +1,128 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
-import AddBranchModal from "./AddBranchModal";
-import EditBranchModal from "./EditBranchModal";
-import { useNavigate } from "react-router-dom";
 import "../../styles/branch.css";
+import { useParams } from "react-router-dom";
+import axios from "axios";
+import Cookies from "js-cookie";
 
-const BranchList = () => {
-    const [branches, setBranches] = useState([]); // ใช้แค่ `branches` แทน `departments`
-    const [showAddModal, setShowAddModal] = useState(false);
-    const [editBranch, setEditBranch] = useState(null); // เปลี่ยนชื่อให้ชัดเจน
-    const navigate = useNavigate();
-    const [isLoading, setIsLoading] = useState(true);
+const EditBranchModal = ({ onClose, onBranchUpdated }) => {
+    const { branchId } = useParams(); // ดึง Branch ID จาก URL
+    const [formData, setFormData] = useState({
+        name: "",
+        location: "",
+        iconUrl: "",
+    });
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Fetch Branch List
+    // ฟังก์ชันโหลดรายละเอียดของ Branch
     useEffect(() => {
-        const fetchBranches = async () => {
-            try {
-                setIsLoading(true);
-                const response = await axios.get("http://localhost:5293/api/Admin/branches", {
-                    withCredentials: true // ส่งคำขอพร้อม Cookie
-                });
+        const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
+        console.log("Login successful, JWT Token received:", token);
+        console.log("Branch ID:", branchId); // ลอกรับ Branch ID
 
-                const data = response.data.data || []; // กำหนด Default ถ้าไม่มี Data
-                setBranches(data); // Update State
-            } catch (error) {
-                if (error.response?.status === 401) {
-                    alert("Unauthorized. Please login.");
-                    navigate("/"); // Redirect ไปหน้า Login
-                } else if (error.response?.status === 403) {
-                    alert("Access Denied: You do not have the required permissions.");
+        const fetchBranch = async () => {
+            try {
+                setIsLoading(true); // เริ่มโหลด
+                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${branchId}`, {
+                    headers: {
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                    },
+                    withCredentials: true, // ส่งคำขอพร้อม Cookie
+                });
+                if (response.data?.success) {
+                    setFormData({
+                        name: response.data.data.name || "",
+                        location: response.data.data.location || "",
+                        iconUrl: response.data.data.iconUrl || "",
+                    }); // อัปเดตข้อมูลในฟอร์ม
+                } else {
+                    alert(response.data?.message || "Failed to fetch branch details.");
+                    onClose(); // ปิด Modal และแจ้งผู้ใช้
                 }
+            } catch (error) {
+                console.error("Failed to fetch branch details:", error.response ? error.response.data : error);
+                alert(error.response ? error.response.data.message : "Failed to load branch details.");
+                onClose(); // ปิด Modal และแจ้งผู้ใช้
             } finally {
-                setIsLoading(false); // ปิดสถานะการโหลด
+                setIsLoading(false); // ปิดสถานะโหลด
             }
         };
 
-        fetchBranches();
-    }, [navigate]);
+        fetchBranch();
+    }, [branchId, onClose]);
 
-    const handleAddBranch = (newBranch) => {
-        setBranches([...branches, newBranch]); // อัปเดต Branch ใหม่
+    // ฟังก์ชันจัดการการเปลี่ยนค่าช่อง Input
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
-    const handleDeleteBranch = async (id) => {
-        if (!window.confirm("Are you sure you want to delete this branch?")) return;
-
-        try {
-            await axios.delete(`http://localhost:5293/api/Admin/branches/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("authToken")}`
-                }
-            });
-            alert("Branch deleted successfully!");
-            setBranches(branches.filter(branch => branch.id !== id)); // ลบ Branch ออกจาก State
-        } catch (error) {
-            console.error("Failed to delete branch:", error);
-            alert(error.response?.data?.message || "Failed to delete branch.");
+    // ฟังก์ชันจัดการการบันทึกข้อมูล
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (!formData.name || !formData.location) {
+            alert("Please fill out all fields!");
+            return;
         }
-    };
 
-    const handleEditBranch = async (id, updatedBranch) => {
         try {
-            await axios.put(
-                `http://localhost:5293/api/Admin/branches/${id}`,
-                updatedBranch,
-                {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("authToken")}`
-                    }
-                }
-            );
+            setIsLoading(true); // เริ่มโหลด
+            await axios.put(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${branchId}`, formData, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("authToken")}`,
+                },
+            });
             alert("Branch updated successfully!");
-            setBranches(
-                branches.map(branch =>
-                    branch.id === id ? { ...branch, ...updatedBranch } : branch
-                )
-            );
-            setEditBranch(null);
+            onBranchUpdated(); // แจ้ง Parent Component ในกรณีบันทึกสำเร็จ
+            onClose(); // ปิด Modal
         } catch (error) {
-            console.error("Failed to update branch:", error);
-            alert(error.response?.data?.message || "Failed to update branch.");
+            console.error("Failed to update branch:", error.response ? error.response.data : error);
+            alert(error.response ? error.response.data.message : "Failed to update branch.");
+        } finally {
+            setIsLoading(false); // ปิดสถานะโหลด
         }
     };
 
     return (
-        <div className="branch-container">
-            <div className="header">
-                <h1>Branch Management</h1>
-                <button
-                    className="add-button"
-                    onClick={() => setShowAddModal(true)}
-                    disabled={isLoading}
-                >
-                    Add Department
-                </button>
+        <div className="modal">
+            <div className="modal-content">
+                <h2>Edit Branch</h2>
+                {isLoading ? (
+                    <p>Loading...</p>
+                ) : (
+                    <form onSubmit={handleSubmit}>
+                        <input
+                            type="text"
+                            name="name"
+                            placeholder="Branch name"
+                            value={formData.name}
+                            onChange={handleChange}
+                        />
+                        <input
+                            type="text"
+                            name="location"
+                            placeholder="location"
+                            value={formData.location}
+                            onChange={handleChange}
+                        />
+                        <input
+                            type="text"
+                            name="iconUrl"
+                            placeholder="URL Icon"
+                            value={formData.iconUrl}
+                            onChange={handleChange}
+                        />
+                        <div className="modal-buttons">
+                            <button type="button" onClick={onClose} disabled={isLoading}>
+                                ยกเลิก
+                            </button>
+                            <button type="submit" disabled={isLoading}>
+                                {isLoading ? "Saving..." : "Save"}
+                            </button>
+                        </div>
+                    </form>
+                )}
             </div>
-
-            {isLoading ? (
-                <p>Loading branches...</p> // แสดงข้อความขณะกำลังโหลด
-            ) : (
-                <table className="branch-table">
-                    <thead>
-                        <tr>
-                            <th>Detail</th>
-                            <th>Department ID</th>
-                            <th>Department Name</th>
-                            <th>Location</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {branches.map(({ id, name, location }) => (
-                            <tr key={id}>
-                                <td><a href={`/branch/${id}`} className="detail-link">Detail</a></td>
-                                <td>{id}</td>
-                                <td>{name}</td>
-                                <td>{location}</td>
-                                <td className="action-buttons">
-                                    <button
-                                        className="edit-button"
-                                        onClick={() => setEditBranch({ id, name, location })}
-                                    >
-                                        ✏️
-                                    </button>
-                                    <button
-                                        className="delete-button"
-                                        onClick={() => handleDeleteBranch(id)}
-                                    >
-                                        🗑️
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-
-            <button
-                className="back-button"
-                onClick={() => navigate("/select-branch")}
-            >
-                Back
-            </button>
-
-            {showAddModal && (
-                <AddBranchModal
-                    onClose={() => setShowAddModal(false)}
-                    onAdd={handleAddBranch}
-                />
-            )}
-
-            {editBranch && (
-                <EditBranchModal
-                    department={editBranch}
-                    onClose={() => setEditBranch(null)}
-                    onEdit={handleEditBranch}
-                />
-            )}
         </div>
     );
 };
 
-export default BranchList;
+export default EditBranchModal;

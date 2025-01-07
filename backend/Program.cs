@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using backend;
+using backend.Filters;
 using backend.Services;
 using backend.Services.AdminService;
 using backend.Services.AuthService;
@@ -41,7 +42,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", builder =>
     {
-        builder.WithOrigins("http://localhost:3000") // URL ของ Frontend
+        builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // URL ของ Frontend
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials(); // เปิดใช้งาน Cookie
@@ -197,10 +198,13 @@ builder.Services.AddControllers(options =>
                         .RequireAuthenticatedUser()
                         .Build();
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
-        // options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
+        options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
 
+// ลงทะเบียน Action Filters (ตัวกรอง)
+// builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
+builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");
