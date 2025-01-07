@@ -37,28 +37,27 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
     return new FirestoreDB(settings);
 });
 
-// ตรวจสอบ url
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", builder =>
-    {
-        builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // URL ของ Frontend
-               .AllowAnyHeader()
-               .AllowAnyMethod()
-               .AllowCredentials(); // เปิดใช้งาน Cookie
-    });
-});
-
-//ตรวจสอบ domain
+// // ตรวจสอบ url
 // builder.Services.AddCors(options =>
 // {
-//     options.AddPolicy("AllowedSpecificDomain", builder =>
+//     options.AddPolicy("AllowFrontend", builder =>
 //     {
-//         builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุ Domain ที่อนุญาต
-//                 .AllowAnyHeader()
-//                 .AllowAnyMethod(); // เปิดเฉพาะ HTTP Method (GET, POST, PUT, DELETE) ที่ต้องการ
+//         builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // URL ของ Frontend
+//                .AllowAnyHeader()
+//                .AllowAnyMethod()
+//                .AllowCredentials(); // เปิดใช้งาน Cookie
 //     });
 // });
+
+// เพิ่มการตั้งค่า CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("http://localhost:3000") // ระบุโดเมนที่อนุญาต
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials()); // เปิดใช้งาน Cookie
+});
 
 builder.Services.AddEndpointsApiExplorer();
 
@@ -191,6 +190,12 @@ builder.Services.AddAuthentication(options =>
         };
     });
 
+// อ่านค่า JwtSettings จาก appsettings.json
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+
+// ถ้าคุณต้องการการเข้าถึง JwtSettings โดยตรง ใช้ AddSingleton
+builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
+
 builder.Services.AddControllers(options =>
     {
         // บังคับใช้ Policy Global (ยกเว้นเฉพาะ [AllowAnonymous])
@@ -200,6 +205,7 @@ builder.Services.AddControllers(options =>
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
         options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
+
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
 
 // ลงทะเบียน Action Filters (ตัวกรอง)
@@ -211,9 +217,7 @@ builder.WebHost.UseUrls("http://*:5293");
 
 var app = builder.Build();
 
-// app.UseCors("AllowAllOrigins");
-app.UseCors("AllowFrontend");
-// app.UseCors("AllowedSpecificDomain");
+app.UseCors("AllowSpecificOrigin");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

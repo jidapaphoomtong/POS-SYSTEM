@@ -12,41 +12,44 @@ const EditBranchModal = ({ onClose, onBranchUpdated }) => {
         iconUrl: "",
     });
     const [isLoading, setIsLoading] = useState(false);
+    // ในตัว component
+
+    console.log("Branch ID:", branchId);
 
     // ฟังก์ชันโหลดรายละเอียดของ Branch
     useEffect(() => {
         const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
         console.log("Login successful, JWT Token received:", token);
-        console.log("Branch ID:", branchId); // ลอกรับ Branch ID
-
+        // console.log("Branch ID:", branchId); // ลอกรับ Branch ID
+    
         const fetchBranch = async () => {
             try {
-                setIsLoading(true); // เริ่มโหลด
-                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${branchId}`, {
+                setIsLoading(true);
+                const response = await axios.get(`http://localhost:5293/api/Admin/branches/${branchId}`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        "Authorization": `Bearer ${token}`,
                     },
                     withCredentials: true, // ส่งคำขอพร้อม Cookie
                 });
-                if (response.data?.success) {
+                if (response.data.success) {
                     setFormData({
-                        name: response.data.data.name || "",
-                        location: response.data.data.location || "",
-                        iconUrl: response.data.data.iconUrl || "",
-                    }); // อัปเดตข้อมูลในฟอร์ม
+                        name: response.data.data.name,
+                        location: response.data.data.location,
+                        iconUrl: response.data.data.iconUrl,
+                    });
                 } else {
-                    alert(response.data?.message || "Failed to fetch branch details.");
-                    onClose(); // ปิด Modal และแจ้งผู้ใช้
+                    alert(response.data.message || "Failed to fetch branch details.");
+                    onClose();
                 }
             } catch (error) {
-                console.error("Failed to fetch branch details:", error.response ? error.response.data : error);
+                console.error("Failed to fetch branch details:", error);
                 alert(error.response ? error.response.data.message : "Failed to load branch details.");
-                onClose(); // ปิด Modal และแจ้งผู้ใช้
+                onClose();
             } finally {
-                setIsLoading(false); // ปิดสถานะโหลด
+                setIsLoading(false);
             }
         };
-
+    
         fetchBranch();
     }, [branchId, onClose]);
 
@@ -62,22 +65,26 @@ const EditBranchModal = ({ onClose, onBranchUpdated }) => {
             alert("Please fill out all fields!");
             return;
         }
-
+    
         try {
-            setIsLoading(true); // เริ่มโหลด
-            await axios.put(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${branchId}`, formData, {
+            setIsLoading(true);
+            await axios.put(`http://localhost:5293/api/Admin/branches/${branchId}`, {
+                name: formData.name,
+                location: formData.location,
+                iconUrl: formData.iconUrl,
+            }, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("authToken")}`,
                 },
             });
             alert("Branch updated successfully!");
-            onBranchUpdated(); // แจ้ง Parent Component ในกรณีบันทึกสำเร็จ
-            onClose(); // ปิด Modal
+            onBranchUpdated();
+            onClose();
         } catch (error) {
-            console.error("Failed to update branch:", error.response ? error.response.data : error);
+            console.error("Failed to update branch:", error);
             alert(error.response ? error.response.data.message : "Failed to update branch.");
         } finally {
-            setIsLoading(false); // ปิดสถานะโหลด
+            setIsLoading(false);
         }
     };
 

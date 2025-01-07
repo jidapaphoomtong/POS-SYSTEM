@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 using Google.Cloud.Firestore;
+using Newtonsoft.Json;
 
 namespace backend.Services.AdminService
 {
@@ -53,7 +54,7 @@ namespace backend.Services.AdminService
                 DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
 
                 // เพิ่มไอดีเข้าไปใน Branch Object
-                branch.Id = int.Parse(branchId);  // เก็บไอดีในฟิลด์ "Id"
+                branch.Id = branchId; // เก็บไอดีในฟิลด์ "Id" แบบ string
                 await branchDoc.SetAsync(branch); // บันทึกข้อมูลใน Firestore
 
                 return ServiceResponse<string>.CreateSuccess(branchId, "Branch added successfully!");
@@ -247,16 +248,29 @@ namespace backend.Services.AdminService
             }
         }
 
-        public async Task<ServiceResponse<string>> UpdateBranch(string branchId, Dictionary<string, object> updatedData)
+        public async Task<ServiceResponse<string>> UpdateBranch(string branchId, Branch branch)
         {
             try
             {
-                DocumentReference branchDoc = _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId);
+                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                
+                // ตรวจสอบว่า Document มีอยู่
+                var branchDocSnapshot = await branchDoc.GetSnapshotAsync();
+                if (!branchDocSnapshot.Exists)
+                {
+                    return ServiceResponse<string>.CreateFailure("Branch document does not exist.");
+                }
+
+                // แปลง branch เป็น dictionary สำหรับอัปเดต Firestore
+                var updatedData = new Dictionary<string, object>
+                {
+                    { "Name", branch.Name },
+                    { "Location", branch.Location },
+                    { "IconUrl", branch.IconUrl }
+                };
 
                 await branchDoc.UpdateAsync(updatedData);
-
+                
                 return ServiceResponse<string>.CreateSuccess(branchId, "Branch updated successfully!");
             }
             catch (Exception ex)
@@ -321,5 +335,74 @@ namespace backend.Services.AdminService
             }
         }
 
+        public async Task<ServiceResponse<BranchResponse>> GetBranchById(string branchId)
+        {
+            try
+            {
+                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                Console.WriteLine($"Fetching branch with ID: {branchId}");
+
+                // ตรวจสอบว่า Document มีอยู่
+                var branchDocSnapshot = await branchDoc.GetSnapshotAsync();
+                if (!branchDocSnapshot.Exists)
+                {
+                    Console.WriteLine($"Branch with ID {branchId} does not exist."); // Logging
+                    return ServiceResponse<BranchResponse>.CreateFailure("Branch document does not exist.");
+                }
+
+                // แปลงข้อมูลจาก Firestore เป็น BranchResponse
+                var branch = branchDocSnapshot.ConvertTo<BranchResponse>();
+                Console.WriteLine($"Branch fetched: {JsonConvert.SerializeObject(branch)}");
+
+                return ServiceResponse<BranchResponse>.CreateSuccess(branch, "Branch fetched successfully.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error fetching branch: {ex.Message}"); // Logging error
+                return ServiceResponse<BranchResponse>.CreateFailure($"Failed to fetch branch: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<string>> DeleteAllBranches()
+        {
+            try
+            {
+                // ดึง snapshot ของ branches
+                var branchesSnapshot = await _firestoreDb.Collection("branches").GetSnapshotAsync();
+
+                // หากไม่มี documents ให้ส่งกลับข้อความที่เหมาะสม
+                if (branchesSnapshot.Count == 0)
+                {
+                    return ServiceResponse<string>.CreateSuccess("No branches to delete.", "No branches deleted");
+                }
+
+                // ลบแต่ละ Document
+                foreach (var document in branchesSnapshot.Documents)
+                {
+                    await document.Reference.DeleteAsync(); // ลบ Document โดยตรง
+                }
+
+                return ServiceResponse<string>.CreateSuccess("All branches deleted successfully!", "All deleted");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to delete branches: {ex.Message}");
+            }
+}
+
+        public async Task<ServiceResponse<string>> ResetBranchIdSequence()
+        {
+            try
+            {
+                var sequenceDoc = _firestoreDb.Collection("config").Document("branch-sequence");
+                await sequenceDoc.SetAsync(new { counter = 1 }); // รีเซ็ตค่าเป็น 1
+
+                return ServiceResponse<string>.CreateSuccess("Branch ID sequence reset successfully!", "Reset done");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to reset branch ID sequence: {ex.Message}");
+            }
+        }
     }
 }

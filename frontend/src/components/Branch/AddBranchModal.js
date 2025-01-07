@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import "../../styles/branch.css"
+import Cookies from "js-cookie";
 
 const AddBranchModal = ({ onClose, onAddSuccess }) => {
     const [formData, setFormData] = useState({
@@ -19,17 +20,25 @@ const AddBranchModal = ({ onClose, onAddSuccess }) => {
             alert("Please fill out all fields!");
             return;
         }
-
+    
         setIsLoading(true); // เริ่มสถานะ Loading
-
+    
         try {
-            const response = await axios.post("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/add-branch", formData, {
+           const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
+            console.log("Auth Token from Cookies:", token);
+            if (!token) {
+                alert("No token found. Please log in again.");
+                return;
+            }
+    
+            const response = await axios.post("http://localhost:5293/api/Admin/add-branch", formData, {
                 headers: {
-                    Authorization: `Bearer ${localStorage.getItem("authToken")}`, // เพิ่ม Token จาก LocalStorage
+                    Authorization: `Bearer ${token}`,
                     "Content-Type": "application/json",
                 },
+                withCredentials: true, // ส่งคำขอพร้อม Cookie
             });
-
+    
             if (response.data?.Success) {
                 alert("Branch added successfully!");
                 onAddSuccess(response.data?.BranchId); // เรียก Callback หลังเพิ่มสำเร็จ

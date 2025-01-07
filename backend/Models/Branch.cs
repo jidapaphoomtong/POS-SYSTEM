@@ -10,7 +10,7 @@ namespace backend.Models
     public class Branch
     {
         [FirestoreProperty]
-        public int Id { get; set; } 
+        public string Id { get; set; } = string.Empty;
         [FirestoreProperty]
         public string Name { get; set; } = string.Empty;
         [FirestoreProperty]
@@ -19,11 +19,18 @@ namespace backend.Models
         public string IconUrl { get; set; } = string.Empty;
     }
 
+    [FirestoreData]
     public class BranchResponse
     {
-        public string Id { get; set; }
-        public string Name { get; set; }
-        public string IconUrl { get; set; }
-        public string Location { get; set; }
+        [FirestoreProperty]
+        public string Id { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string Name { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string Location { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string IconUrl { get; set; } = string.Empty;
     }
+
+    
 }
