@@ -151,17 +151,40 @@ builder.Services.AddAuthentication(options =>
         options.SlidingExpiration = true; // รีเฟรชอายุใช้งานของ Cookie หากใช้งานอยู่
         options.ExpireTimeSpan = TimeSpan.FromDays(3); // อายุ Cookie
 
+        // options.Events = new CookieAuthenticationEvents
+        // {
+        //     OnRedirectToAccessDenied = context =>
+        //     {
+        //         // กรณี Unauthorized ส่ง JSON 403 แทนการ Redirect
+        //         context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        //         context.Response.ContentType = "application/json";
+        //         return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+        //         {
+        //             Success = false,
+        //             Message = "You do not have permission to access this resource."
+        //         }));
+        //     }
+        // };
         options.Events = new CookieAuthenticationEvents
         {
-            OnRedirectToAccessDenied = context =>
+            OnRedirectToLogin = context =>
             {
-                // กรณี Unauthorized ส่ง JSON 403 แทนการ Redirect
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized; // ส่ง JSON Unauthorized
                 context.Response.ContentType = "application/json";
                 return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
                 {
                     Success = false,
-                    Message = "You do not have permission to access this resource."
+                    Message = "Unauthorized. Please login."
+                }));
+            },
+            OnRedirectToAccessDenied = context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden; // ส่ง JSON Forbidden
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    Success = false,
+                    Message = "Access Denied: You do not have the required permissions."
                 }));
             }
         };

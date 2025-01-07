@@ -30,21 +30,25 @@ const Login = () => {
                 { withCredentials: true }
             );
 
-            const { role, message } = response.data; // ดึง Role จาก Response
-            
-            // แจ้งเตือนสำเร็จ
-            toast.success(message);
+            console.log("Login Response:", response.data); // ใช้เพื่อดู Response
 
-            // นำทางผู้ใช้ตาม Role
+            const { role } = response.data; // ดึง Role จาก Response
+            console.log("User Role:", role); // Debug Role เพื่อดูว่ามีค่าหรือไม่
+
+            // นำทางตาม Role
             if (role === "Admin") {
-                navigate("/select-branch"); // Admin ไปหน้า Select Branch
+                console.log("Redirecting to: /select-branch");
+                navigate("/select-branch");
             } else if (role === "Manager" || role === "Employee") {
-                navigate("/sale"); // Manager และ Employee ไปหน้า Sale
+                console.log("Redirecting to: /sale");
+                navigate("/sale");
             } else {
+                console.log("Redirecting to: undefined");
                 toast.error("Unknown role. Please contact support.");
             }
         } catch (error) {
             console.error("Login failed:", error.response?.data || error.message);
+
             if (error.response?.status === 401) {
                 toast.error("Invalid login credentials.");
             } else {
