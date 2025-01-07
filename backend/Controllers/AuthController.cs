@@ -20,6 +20,7 @@ namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [LogAction]
     public class AuthController : ControllerBase
     {
         private readonly IAuthService _authService;
@@ -36,22 +37,29 @@ namespace backend.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Login userLogin)
         {
+            // Validate ModelState
             if (!ModelState.IsValid)
+            {
                 return BadRequest(new { Success = false, Message = "Invalid input data." });
+            }
 
-            // ตรวจสอบข้อมูลผู้ใช้
+            // ตรวจสอบผู้ใช้
             var userSnapshot = await _authService.GetUserByEmail(userLogin.Email);
             if (userSnapshot == null)
+            {
                 return Unauthorized(new { Success = false, Message = "User not found." });
+            }
 
-            var user = userSnapshot.ToDictionary();
+            var user = userSnapshot.ToDictionary(); // Convert snapshot to Dictionary
             if (!_authService.VerifyPassword(userLogin.Password, user["passwordHash"].ToString(), user["salt"].ToString()))
+            {
                 return Unauthorized(new { Success = false, Message = "Invalid credentials." });
+            }
 
             // ตรวจสอบ Role ในข้อมูลผู้ใช้
             string role = user.ContainsKey("roles") && user["roles"] is IList<object> roles && roles.Count > 0
-                ? (roles.First() as Dictionary<string, object>)?["Name"]?.ToString() ?? RoleName.Employee
-                : RoleName.Employee;
+            ? (roles.First() as Dictionary<string, object>)?["Name"]?.ToString() ?? RoleName.Employee
+            : RoleName.Employee;
 
             // ตั้ง Claim JWT
             var claims = new List<Claim>
@@ -60,7 +68,7 @@ namespace backend.Controllers
                 new Claim(ClaimTypes.Email, userLogin.Email),
                 new Claim(ClaimTypes.NameIdentifier, userSnapshot.Id),
                 new Claim(ClaimTypes.Role, role), // เพิ่ม Role
-                // new Claim("branchId", user.ContainsKey("branchId") ? user["branchId"].ToString() : "")  // เพิ่ม Branch ID
+                // new Claim("branchId", user.ContainsKey("branchId") ? user["branchId"].ToString() : "") // เพิ่ม Branch ID
             };
 
             // Generate Token
@@ -80,11 +88,12 @@ namespace backend.Controllers
             // อ่าน Cookies ที่เพิ่งถูกสร้าง
             // var responseCookies = HttpContext.Response.Headers["Set-Cookie"];
 
-            return Ok(new { 
-                Success = true, 
-                Message = "Login successful.", 
+            return Ok(new {
+                Success = true,
+                Message = "Login successful.",
                 Token = accessToken, // Token สำหรับใช้ใน Client-Side Authentication
-                Expiration = authProperties.ExpiresUtc, // ระยะเวลาหมดอายุของเซสชัน
+                Expiration = authProperties.ExpiresUtc,
+                Role = role, // ระยะเวลาหมดอายุของเซสชัน
                 // Cookies = responseCookies // คืนค่าข้อมูล Cookies กลับให้ผู้ใช้ดูใน Swagger
             });
         }
