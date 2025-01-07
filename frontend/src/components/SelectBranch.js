@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import "../styles/SelectBranch.css";
-import { FaTh, FaList, FaStore } from "react-icons/fa";
+import { FaTh, FaList } from "react-icons/fa";
 
 export default function SelectBranch() {
     const [branches, setBranches] = useState([]);
@@ -10,51 +10,51 @@ export default function SelectBranch() {
     const [viewMode, setViewMode] = useState("grid");
     const navigate = useNavigate();
     const [searchTerm, setSearchTerm] = useState("");
-    const [isLoading, setIsLoading] = useState(true); // เพิ่ม State สำหรับสถานะการโหลด
+    const [isLoading, setIsLoading] = useState(true);
 
-    const filteredBranches = branches.filter(branch =>
+    const filteredBranches = branches.filter((branch) =>
         branch.name && branch.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
     useEffect(() => {
         const fetchBranches = async () => {
             try {
-                setIsLoading(true); // ตั้งค่าเป็นกำลังโหลด
+                // console.log("Fetching branches...");
+                setIsLoading(true);
                 const response = await axios.get("http://localhost:5293/api/Admin/branches", {
-                    headers: { Authorization: `Bearer ${localStorage.getItem("authToken")}` },
+                    withCredentials: true, // ส่งคำขอพร้อม Cookie
                 });
-                const data = response.data.data;
-                if (Array.isArray(data)) {
-                    setBranches(data);
-                } else {
-                    console.error("Unexpected data format:", response.data);
-                    setBranches([]);
-                }
+
+                const data = response.data.data || []; // กำหนด Default ถ้าไม่มี Data
+                // console.log("Branches loaded:", data);
+
+                setBranches(data); // บันทึก Branch ใน State
             } catch (error) {
-                console.error("Error fetching branches:", error);
+                // console.error("Failed to fetch branches:", error);
                 if (error.response?.status === 401) {
-                    alert("You are not authorized. Please login again.");
-                    navigate("/"); // นำทางกลับหน้า Login
+                    alert("Unauthorized. Please login.");
+                    navigate("/"); // Redirect ไปหน้า Login
                 } else if (error.response?.status === 403) {
-                    alert("You do not have permission to access this resource.");
+                    alert("Access Denied: You do not have the required permissions.");
                 }
             } finally {
                 setIsLoading(false); // ปิดสถานะการโหลด
             }
         };
+
         fetchBranches();
-    }, []);
+    }, [navigate]);
 
     const handleSelectBranch = (branchName) => {
         setSelectedBranch(branchName);
-        navigate(`/sale?branch=${branchName}`); // นำทางไป Sale
+        navigate(`/sale?branch=${branchName}`); // Redirect ไป Sale หน้าต่าง ๆ
     };
 
     return (
         <div className="container">
             <h1 className="header">Select Department</h1>
-            {isLoading ? ( // ตรวจสอบสถานะการโหลด
-                <p>Loading branches...</p> // แสดงข้อความเมื่อกำลังโหลดข้อมูล
+            {isLoading ? (
+                <p>Loading branches...</p> // แสดง Loading ขณะกำลังโหลด
             ) : (
                 <>
                     <div className="search-container">
@@ -75,19 +75,23 @@ export default function SelectBranch() {
                         />
                     </div>
                     <div className={viewMode === "grid" ? "branch-grid" : "branch-list"}>
-                        {filteredBranches.map((branch) => (
-                            <div
-                                key={branch.id}
-                                className={`branch-card ${selectedBranch === branch.name ? "active" : ""}`}
-                                onClick={() => handleSelectBranch(branch.name)}
-                            >
-                                <img
-                                    src={branch.iconUrl || "https://via.placeholder.com/50"}
-                                    alt={branch.name || "Branch"}
-                                />
-                                <p>{branch.name || "Unnamed Branch"}</p>
-                            </div>
-                        ))}
+                        {filteredBranches.length > 0 ? (
+                            filteredBranches.map((branch) => (
+                                <div
+                                    key={branch.id}
+                                    className={`branch-card ${selectedBranch === branch.name ? "active" : ""}`}
+                                    onClick={() => handleSelectBranch(branch.name)}
+                                >
+                                    <img
+                                        src={branch.iconUrl || "https://via.placeholder.com/50"}
+                                        alt={branch.name || "Branch"}
+                                    />
+                                    <p>{branch.name || "Unnamed Branch"}</p>
+                                </div>
+                            ))
+                        ) : (
+                            <p>No branches found.</p> // แสดงข้อความเมื่อไม่มีข้อมูล
+                        )}
                     </div>
                     <div className="buttons">
                         <button onClick={() => navigate("/")}>Back</button>
