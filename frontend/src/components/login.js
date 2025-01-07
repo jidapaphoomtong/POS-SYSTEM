@@ -4,6 +4,7 @@ import admin from "../Images/Admin.png";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
+import Cookies from "js-cookie";
 
 const Login = () => {
     const [email, setEmail] = useState("");
@@ -25,26 +26,41 @@ const Login = () => {
         try {
             // ส่งคำขอ Login ไปยัง Backend
             const response = await axios.post(
-                "http://localhost:5293/api/Auth/login",
+                "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Auth/login",
                 { email, password },
-                { withCredentials: true }
+                {
+                    headers: {
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        
+                    },
+                    withCredentials: true 
+                }
             );
+            // console.log("Login Response:", response.data); // ใช้เพื่อดู Response
 
-            const { role, message } = response.data; // ดึง Role จาก Response
-            
-            // แจ้งเตือนสำเร็จ
-            toast.success(message);
+            const { role } = response.data; // ดึง Role จาก Response
+            console.log("User Role:", role); // Debug Role เพื่อดูว่ามีค่าหรือไม่
 
-            // นำทางผู้ใช้ตาม Role
+            const token = response.data.token;
+            // console.log("Login successful, JWT Token received:", token);
+
+            // เก็บ JWT Token ลงใน Cookie
+            Cookies.set("authToken", token, { expires: 1, secure: true, sameSite: "Strict" });
+
+            // นำทางตาม Role
             if (role === "Admin") {
-                navigate("/select-branch"); // Admin ไปหน้า Select Branch
+                console.log("Redirecting to: /select-branch");
+                navigate("/select-branch");
             } else if (role === "Manager" || role === "Employee") {
-                navigate("/sale"); // Manager และ Employee ไปหน้า Sale
+                console.log("Redirecting to: /sale");
+                navigate("/sale");
             } else {
+                console.log("Redirecting to: undefined");
                 toast.error("Unknown role. Please contact support.");
             }
         } catch (error) {
             console.error("Login failed:", error.response?.data || error.message);
+
             if (error.response?.status === 401) {
                 toast.error("Invalid login credentials.");
             } else {

@@ -10,6 +10,8 @@ namespace backend.Models
     public class Employee
     {
         [FirestoreProperty]
+        public string Id { get; set; } = string.Empty; // ไอดีพนักงาน
+        [FirestoreProperty]
         public string firstName { get; set; } = string.Empty;
         [FirestoreProperty]
         public string lastName { get; set; } = string.Empty;

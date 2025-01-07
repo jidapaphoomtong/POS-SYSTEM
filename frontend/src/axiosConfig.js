@@ -2,7 +2,7 @@ import axios from "axios";
 
 // กำหนด Base URL
 const axiosInstance = axios.create({
-    baseURL: process.env.REACT_APP_BASE_API_URL,
+    baseURL: "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app",
     headers: {
         "Content-Type": "application/json",
     },

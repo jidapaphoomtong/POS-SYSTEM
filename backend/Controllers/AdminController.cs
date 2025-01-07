@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using backend.Filters;
 using backend.Models;
 using backend.Services;
 using backend.Services.AdminService;
@@ -11,10 +12,10 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
-    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     [LogAction]
+    // [ServiceFilter(typeof(CheckHeaderAttribute))]
     public class AdminController : Controller
     {
         private readonly IAdminService _adminService;
@@ -30,27 +31,25 @@ namespace backend.Controllers
         public async Task<IActionResult> AddBranch([FromBody] Branch branch)
         {
             // ดึงข้อมูล User จาก Claims
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;           // User Id จาก Jwt Token
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value;                   // Role จาก Jwt Token
             var userName = User.FindFirst(ClaimTypes.Name)?.Value;                   // ชื่อ user จาก Jwt Token
 
             // เรียกใช้ Service เพิ่มสาขา (Branch)
             var response = await _adminService.AddBranch(branch);
 
-            // ตรวจสอบผลลัพธ์จาก Service
-            if (response.Success) 
-                return Ok(response); // สำเร็จ
+            if (response.Success)
+                return Ok(new { Success = true, Message = response.Message, BranchId = response.Data });
 
-            return BadRequest(response); // ล้มเหลว
+            return BadRequest(new { Success = false, Message = response.Message });
         }
 
         [CustomAuthorizeRole("Admin, Manager")]
         [HttpPost("add-employee/{branchId}")]
         public async Task<IActionResult> AddEmployee(string branchId, [FromBody] Employee employee)
         {
-            // ดึง User Id หรือ Role ปัจจุบันจาก Claim
+            // ดึง User จาก Claim
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value; // ชื่อ user จาก Jwt Token
             var userRole = User.FindFirst(ClaimTypes.Role)?.Value; // ดึง Role จาก Claim
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value; // ดึง ID ผู้ใช้
 
             // เรียกใช้งาน Service Layer เพื่อทำธุรกิจ
             var response = await _adminService.AddEmployee(branchId, employee);
@@ -64,6 +63,10 @@ namespace backend.Controllers
         [HttpPost("add-product/{branchId}")]
         public async Task<IActionResult> AddProduct(string branchId, [FromBody] Products product)
         {
+            // ดึง User จาก Claim
+            var userName = User.FindFirst(ClaimTypes.Name)?.Value; // ชื่อ user จาก Jwt Token
+            var userRole = User.FindFirst(ClaimTypes.Role)?.Value; // ดึง Role จาก Claim
+            
             var response = await _adminService.AddProduct(branchId, product);
             if (response.Success) return Ok(response);
             return BadRequest(response);
@@ -73,11 +76,29 @@ namespace backend.Controllers
         [HttpGet("branches")]
         public async Task<IActionResult> GetBranches()
         {
-            var user = User.Identity?.Name; // ดูข้อมูลชื่อของ User
-            var roles = User.Claims.Where(c => c.Type == "role").Select(c => c.Value); // ดู Role ของ User
-            Console.WriteLine($"User: {user}, Roles: {string.Join(", ", roles)}"); // Log ข้อมูล User และ Role ออกมา
+            // ตรวจสอบว่าผู้ใช้ Authenticated หรือไม่
+            if (!HttpContext.User.Identity.IsAuthenticated)
+            {
+                return Unauthorized(new { Success = false, Message = "Unauthorized. Please login." });
+            }
 
+            // ดึงข้อมูล User และ Role
+            var user = User.Identity?.Name; // ดึงชื่อผู้ใช้
+            var roles = User.Claims.Where(c => c.Type == ClaimTypes.Role).Select(c => c.Value); // ดึง Role
+
+            // Log ข้อมูล User และ Role
+            Console.WriteLine($"User: {user}, Roles: {string.Join(", ", roles)}");
+
+            // // ตรวจสอบ Role ว่ามีสิทธิ์เข้าถึงหรือไม่
+            // if (!roles.Contains("Admin"))
+            // {
+            //     return Forbid(new { Success = false, Message = "Access Denied: Admin role required." });
+            // }
+
+            // เรียก Service เพื่อดึงข้อมูล Branches
             var response = await _adminService.GetBranches();
+
+            // ตอบกลับผลลัพธ์
             if (response.Success)
             {
                 Console.WriteLine("Branches fetched successfully.");

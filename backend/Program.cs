@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using System.Text;
 using backend;
+using backend.Filters;
 using backend.Services;
 using backend.Services.AdminService;
 using backend.Services.AuthService;
@@ -41,7 +42,7 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", builder =>
     {
-        builder.WithOrigins("http://localhost:3000") // URL ของ Frontend
+        builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // URL ของ Frontend
                .AllowAnyHeader()
                .AllowAnyMethod()
                .AllowCredentials(); // เปิดใช้งาน Cookie
@@ -151,17 +152,40 @@ builder.Services.AddAuthentication(options =>
         options.SlidingExpiration = true; // รีเฟรชอายุใช้งานของ Cookie หากใช้งานอยู่
         options.ExpireTimeSpan = TimeSpan.FromDays(3); // อายุ Cookie
 
+        // options.Events = new CookieAuthenticationEvents
+        // {
+        //     OnRedirectToAccessDenied = context =>
+        //     {
+        //         // กรณี Unauthorized ส่ง JSON 403 แทนการ Redirect
+        //         context.Response.StatusCode = StatusCodes.Status403Forbidden;
+        //         context.Response.ContentType = "application/json";
+        //         return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+        //         {
+        //             Success = false,
+        //             Message = "You do not have permission to access this resource."
+        //         }));
+        //     }
+        // };
         options.Events = new CookieAuthenticationEvents
         {
-            OnRedirectToAccessDenied = context =>
+            OnRedirectToLogin = context =>
             {
-                // กรณี Unauthorized ส่ง JSON 403 แทนการ Redirect
-                context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized; // ส่ง JSON Unauthorized
                 context.Response.ContentType = "application/json";
                 return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
                 {
                     Success = false,
-                    Message = "You do not have permission to access this resource."
+                    Message = "Unauthorized. Please login."
+                }));
+            },
+            OnRedirectToAccessDenied = context =>
+            {
+                context.Response.StatusCode = StatusCodes.Status403Forbidden; // ส่ง JSON Forbidden
+                context.Response.ContentType = "application/json";
+                return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
+                {
+                    Success = false,
+                    Message = "Access Denied: You do not have the required permissions."
                 }));
             }
         };
@@ -174,10 +198,13 @@ builder.Services.AddControllers(options =>
                         .RequireAuthenticatedUser()
                         .Build();
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
-        // options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
+        options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
 
+// ลงทะเบียน Action Filters (ตัวกรอง)
+// builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
+builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");

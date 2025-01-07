@@ -1,102 +1,182 @@
-import React, { useState } from "react";
-import AddDepartmentModal from "./AddBranchModal";
-import EditDepartmentModal from "./EditBranchModal";
-import "../../styles/branch.css"; // ใช้ CSS แบบใหม่
+import axios from "axios";
+import { useEffect, useState } from "react";
+import AddBranchModal from "./AddBranchModal";
+import EditBranchModal from "./EditBranchModal";
+import ConfirmationModal from "./ConfirmationModal";
+import { useNavigate } from "react-router-dom";
+import "../../styles/branch.css";
+import Cookies from "js-cookie";
 
 const BranchList = () => {
-    const [departments, setDepartments] = useState([
-        { id: "0000123", name: "Chickkai", location: "Bangkok" },
-        { id: "0000124", name: "Punjai", location: "Khon Kean" },
-        { id: "0000125", name: "Meesuk", location: "Mahasarakham" },
-        { id: "0000126", name: "YimYim", location: "Bangkok" },
-        { id: "0000127", name: "Kao", location: "Khon Kean" },
-        { id: "0000128", name: "Patthai", location: "Mahasarakham" },
-    ]);
-
+    const [branches, setBranches] = useState([]); 
     const [showAddModal, setShowAddModal] = useState(false);
-    const [editDepartment, setEditDepartment] = useState(null);
+    const navigate = useNavigate();
+    const [isLoading, setIsLoading] = useState(false);
+    const [editBranch, setEditBranch] = useState(null);
+    const [deleteBranchId, setDeleteBranchId] = useState(null);
+    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
-    const handleAddDepartment = (newDepartment) => {
-        setDepartments([...departments, newDepartment]);
+    // Fetch Branch List
+    useEffect(() => {
+        const fetchBranches = async () => {
+            const token = Cookies.get("authToken"); // ดึง Token
+            if (!token) {
+                alert("Your session has expired. Please login again.");
+                navigate("/"); // Redirect ไปหน้า Login
+                return;
+            }
+
+            try {
+                setIsLoading(true);
+                const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches", {
+                    headers: {
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                    },
+                    withCredentials: true,
+                });
+
+                setBranches(response.data.data || []); // อัปเดต State Branches
+            } catch (error) {
+                console.error("Failed to fetch branches:", error);
+                if (error.response?.status === 401) {
+                    alert("Unauthorized. Please login.");
+                    navigate("/");
+                } else {
+                    alert("Failed to fetch branches.");
+                }
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchBranches();
+    }, [navigate]);
+
+    const handleAddBranch = (newBranch) => {
+        setBranches([...branches, newBranch]); // อัปเดต Branch ใหม่
     };
 
-    const handleDeleteDepartment = (id) => {
-        if (window.confirm("Are you sure you want to delete this department?")) {
-            setDepartments(departments.filter((department) => department.id !== id));
-        }
-    };
-
-    const handleEditDepartment = (id, updatedDepartment) => {
-        setDepartments(
-            departments.map((dept) =>
-                dept.id === id ? { ...dept, ...updatedDepartment } : dept
+    const handleEditBranch = (id, updatedBranch) => {
+        setBranches(
+            branches.map((branch) =>
+                branch.id === id ? { ...branch, ...updatedBranch } : branch
             )
         );
-        setEditDepartment(null);
+    };
+
+    const handleOpenDeleteModal = (id) => {
+        setDeleteBranchId(id);
+        setIsConfirmModalOpen(true);
+    };
+
+    const handleCloseDeleteModal = () => {
+        setDeleteBranchId(null);
+        setIsConfirmModalOpen(false);
+    };
+
+    const handleConfirmDelete = async () => {
+        const token = Cookies.get("authToken"); // ดึง Token
+
+        try {
+            await axios.delete(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${deleteBranchId}`, {
+                headers: {
+                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            alert("Branch deleted successfully!");
+            setBranches(branches.filter((branch) => branch.id !== deleteBranchId));
+            handleCloseDeleteModal();
+        } catch (error) {
+            console.error("Failed to delete branch:", error);
+            alert("Failed to delete branch.");
+        }
     };
 
     return (
         <div className="branch-container">
             <div className="header">
                 <h1>Branch Management</h1>
-                <button className="add-button" onClick={() => setShowAddModal(true)}>
+                <button
+                    className="add-button"
+                    onClick={() => setShowAddModal(true)}
+                    disabled={isLoading}
+                >
                     Add Department
                 </button>
             </div>
 
-            <table className="branch-table">
-                <thead>
-                    <tr>
-                        <th>Department ID</th>
-                        <th>Department Name</th>
-                        <th>Location</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {departments.map(({ id, name, location }) => (
-                        <tr key={id}>
-                            <td>{id}</td>
-                            <td>{name}</td>
-                            <td>{location}</td>
-                            <td className="action-buttons">
-                                <button
-                                    className="edit-button"
-                                    onClick={() => setEditDepartment({ id, name, location })}
-                                >
-                                    ✏️
-                                </button>
-                                <button
-                                    className="delete-button"
-                                    onClick={() => handleDeleteDepartment(id)}
-                                >
-                                    🗑️
-                                </button>
-                            </td>
+            {isLoading ? (
+                <p>Loading branches...</p>
+            ) : (
+                <table className="branch-table">
+                    <thead>
+                        <tr>
+                            <th>Detail</th>
+                            <th>Department ID</th>
+                            <th>Department Name</th>
+                            <th>Location</th>
+                            <th>Actions</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {branches.map(({ id, name, location }) => (
+                            <tr key={id}>
+                                <td>
+                                    <a href={`/branch/${id}`} className="detail-link">Detail</a>
+                                </td>
+                                <td>{id}</td>
+                                <td>{name}</td>
+                                <td>{location}</td>
+                                <td className="action-buttons">
+                                    <button
+                                        className="edit-button"
+                                        onClick={() => setEditBranch({ id, name, location })}
+                                    >
+                                        ✏️
+                                    </button>
+                                    <button
+                                        className="delete-button"
+                                        onClick={() => handleOpenDeleteModal(id)}
+                                    >
+                                        🗑️
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            )}
 
             <button
                 className="back-button"
-                onClick={() => (window.location.href = "/select-branch")}
+                onClick={() => navigate("/select-branch")}
             >
                 Back
             </button>
 
-            {showAddModal && (
-                <AddDepartmentModal
-                    onClose={() => setShowAddModal(false)}
-                    onAdd={handleAddDepartment}
+            {isConfirmModalOpen && (
+                <ConfirmationModal
+                    isOpen={isConfirmModalOpen}
+                    onClose={handleCloseDeleteModal}
+                    onConfirm={handleConfirmDelete}
+                    message="Are you sure you want to delete this branch?"
                 />
             )}
 
-            {editDepartment && (
-                <EditDepartmentModal
-                    department={editDepartment}
-                    onClose={() => setEditDepartment(null)}
-                    onEdit={handleEditDepartment}
+            {showAddModal && (
+                <AddBranchModal
+                    onClose={() => setShowAddModal(false)}
+                    onAdd={handleAddBranch}
+                />
+            )}
+
+            {editBranch && (
+                <EditBranchModal
+                    department={editBranch}
+                    onClose={() => setEditBranch(null)}
+                    onEdit={handleEditBranch}
                 />
             )}
         </div>
