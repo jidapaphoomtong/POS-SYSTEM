@@ -11,13 +11,14 @@ const Register = () => {
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
+    
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
         const response = await axios.post(
-            "http://localhost:5293/api/Auth/register",
+            "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Auth/register",
             {
             firstName: fullName.split(" ")[0], // แยก Firstname
             lastName: fullName.split(" ")[1] || "", // แยก Lastname หรือกำหนด Default เป็นค่าว่าง

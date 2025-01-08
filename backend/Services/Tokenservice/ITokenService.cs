@@ -13,5 +13,6 @@ namespace backend.Services.Tokenservice
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
         Task<(string newAccessToken, string newRefreshToken)> RefreshToken(string token, string refreshToken, FirestoreDB firestoreDb); // ใช้สำหรับ Refresh Token
         Task RevokeToken(string userId, FirestoreDB firestoreDb); // ใช้เพื่อลบ Refresh Token
+        ClaimsPrincipal? ValidateToken(string authToken);
     }
 }

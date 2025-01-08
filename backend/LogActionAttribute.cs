@@ -25,7 +25,7 @@ public class LogActionAttribute : ActionFilterAttribute
         {
             foreach (var claim in context.HttpContext.User.Claims)
             {
-                Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+                // Console.WriteLine($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
             }
         }
 

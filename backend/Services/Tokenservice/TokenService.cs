@@ -54,6 +54,49 @@ namespace backend.Services.Tokenservice
             }
         }
 
+        public ClaimsPrincipal ValidateToken(string token)
+        {
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                _logger.LogWarning("Token is empty or null.");
+                return null;
+            }
+
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(_settings.SecretKey);
+
+            try
+            {
+                var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
+                {
+                    ValidateIssuerSigningKey = true,
+                    IssuerSigningKey = new SymmetricSecurityKey(key),
+                    ValidateIssuer = true,
+                    ValidIssuer = _settings.Issuer,
+                    ValidateAudience = true,
+                    ValidAudience = _settings.Audience,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero // ไม่มีการยืดเวลา
+                }, out SecurityToken validatedToken);
+
+                return principal;
+            }
+            catch (SecurityTokenExpiredException)
+            {
+                _logger.LogWarning("Token has expired.");
+            }
+            catch (SecurityTokenException ex)
+            {
+                _logger.LogWarning($"Invalid token: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Unexpected error during token validation: {ex.Message}");
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Generate a secure Refresh Token
         /// </summary>

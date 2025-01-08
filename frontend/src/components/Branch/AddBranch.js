@@ -4,7 +4,7 @@ import "../../styles/branch.css";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 
-const AddBranch = () => {
+const AddBranch = ({ onAddSuccess }) => {
     const [formData, setFormData] = useState({
         name: "",
         location: "",
@@ -35,8 +35,8 @@ const AddBranch = () => {
                 alert("No token found. Please log in again.");
                 return;
             }
-
-            const response = await axios.post("http://localhost:5293/api/Admin/add-branch", formData, {
+        
+            const response = await axios.post(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/add-branch`, formData, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
@@ -44,16 +44,34 @@ const AddBranch = () => {
                 },
                 withCredentials: true,
             });
-
-            if (response.data?.Success) {
-                alert("Branch added successfully!");
-                navigate("/BranchList"); // นำทางกลับไปหน้า BranchList
+        
+            // Check for successful response
+            if (response.status === 200) {
+                // Check if response.data is defined
+                if (response.data) {
+                        alert("Branch added successfully!");
+                        navigate("/BranchList");
+                } else {
+                    alert("Response data is empty.");
+                }
             } else {
-                alert(response.data?.Message || "Something went wrong!");
+                alert(`Request failed with status: ${response.status}`);
             }
         } catch (error) {
             console.error("Error adding branch:", error);
-            alert(error.response?.data?.Message || "Failed to add branch.");
+            
+            // Improved error handling
+            if (error.response) {
+                // Server responded with a status other than 200 range
+                console.error("Response data:", error.response.data);
+                alert(error.response.data?.Message || "Failed to add branch.");
+            } else if (error.request) {
+                // Request was made but no response was received
+                alert("No response from server. Please try again later.");
+            } else {
+                // Something happened in setting up the request
+                alert("Error: " + error.message);
+            }
         } finally {
             setIsLoading(false);
         }

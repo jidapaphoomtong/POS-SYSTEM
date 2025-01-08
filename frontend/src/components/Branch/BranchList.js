@@ -28,7 +28,7 @@ const BranchList = () => {
 
             try {
                 setIsLoading(true);
-                const response = await axios.get("http://localhost:5293/api/Admin/branches", {
+                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -64,7 +64,7 @@ const BranchList = () => {
                 branch.id === updatedBranch.id ? { ...branch, ...updatedBranch } : branch
             )
         );
-        setEditBranch(null); // ปิดการแก้ไขเมื่ออัปเดตเสร็จ
+        // setEditBranch(null); // ปิดการแก้ไขเมื่ออัปเดตเสร็จ
     };
 
     const handleOpenDeleteModal = (id) => {
@@ -81,7 +81,7 @@ const BranchList = () => {
         const token = Cookies.get("authToken");
 
         try {
-            const response = await axios.delete(`http://localhost:5293/api/Admin/branches/${deleteBranchId}`, {
+            const response = await axios.delete(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${deleteBranchId}`, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
@@ -141,7 +141,7 @@ const BranchList = () => {
                                     <button
                                         className="edit-button"
                                         onClick={() => {
-                                            setEditBranch({ id, name, location });
+                                            // setEditBranch({ id, name, location });
                                             navigate(`/edit-branch/${id}`);
                                         }}
                                     >
@@ -179,7 +179,7 @@ const BranchList = () => {
             {editBranch && (
                 <EditBranch
                     branchId={editBranch.id}
-                    onClose={() => setEditBranch(null)}
+                    // onClose={() => setEditBranch(null)}
                     onEdit={handleEditBranch} // ส่งฟังก์ชันแก้ไขไปยัง EditBranch
                 />
             )}

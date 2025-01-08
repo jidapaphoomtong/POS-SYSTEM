@@ -236,5 +236,6 @@ namespace backend.Services.AuthService
             var sequenceDoc = _firestoreDb.Collection("config").Document("sequence");
             await sequenceDoc.SetAsync(new { counter = 1 }); // ตั้งค่าเริ่มต้นใหม่เป็น 001
         }
+
     }
 }

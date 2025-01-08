@@ -192,9 +192,9 @@ builder.Services.AddAuthentication(options =>
 
 // อ่านค่า JwtSettings จาก appsettings.json
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-
 // ถ้าคุณต้องการการเข้าถึง JwtSettings โดยตรง ใช้ AddSingleton
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
+// builder.Services.AddSingleton<TokenService>();
 
 builder.Services.AddControllers(options =>
     {
@@ -203,14 +203,14 @@ builder.Services.AddControllers(options =>
                         .RequireAuthenticatedUser()
                         .Build();
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
-        // options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
+        options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
 
 // ลงทะเบียน Action Filters (ตัวกรอง)
 // builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
-// builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
+builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");

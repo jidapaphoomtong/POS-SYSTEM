@@ -20,12 +20,12 @@ export default function SelectBranch() {
     useEffect(() => {
         const fetchBranches = async () => {
             const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
-            // console.log("Login successful, JWT Token received:", token);
+            console.log("Login successful, JWT Token received:", token);
             if(token){
                 try {
                     // console.log("Fetching branches...");
                     setIsLoading(true);
-                    const response = await axios.get("http://localhost:5293/api/Admin/branches", {
+                    const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches", {
                         headers: {
                             "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         },
