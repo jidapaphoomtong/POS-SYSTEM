@@ -6,6 +6,9 @@ import { ToastContainer } from 'react-toastify';
 import SelectBranch from './components/SelectBranch';
 import Sale from './components/Sale';
 import BranchList from './components/Branch/BranchList';
+import EditBranch from './components/Branch/EditBranch';
+import AddBranch from './components/Branch/AddBranch';
+import BranchDetail from './components/Branch/BranchDetail';
 
 function App() {
   return (
@@ -16,6 +19,9 @@ function App() {
         <Route path="/select-branch" element={<SelectBranch />} />
         <Route path="/sale" element={<Sale />} />
         <Route path="/BranchList" element={<BranchList />} />
+        <Route path="/edit-branch/:branchId" element={<EditBranch />} />
+        <Route path="/add-branch" element={<AddBranch />} />
+        <Route path="/branch/:branchId" element={<BranchDetail />} />
       </Routes>
       <ToastContainer />
     </Router>

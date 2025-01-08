@@ -20,7 +20,7 @@ export default function SelectBranch() {
     useEffect(() => {
         const fetchBranches = async () => {
             const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
-            console.log("Login successful, JWT Token received:", token);
+            // console.log("Login successful, JWT Token received:", token);
             if(token){
                 try {
                     // console.log("Fetching branches...");
@@ -52,9 +52,9 @@ export default function SelectBranch() {
         fetchBranches();
     }, [navigate]);
 
-    const handleSelectBranch = (branchName) => {
-        setSelectedBranch(branchName);
-        navigate(`/sale?branch=${branchName}`); // Redirect ไป Sale หน้าต่าง ๆ
+    const handleSelectBranch = (branchId) => {
+        setSelectedBranch(branchId);
+        navigate(`/sale?branch=${branchId}`); // Redirect ไป Sale หน้าต่าง ๆ
     };
 
     return (
@@ -86,8 +86,8 @@ export default function SelectBranch() {
                             filteredBranches.map((branch) => (
                                 <div
                                     key={branch.id}
-                                    className={`branch-card ${selectedBranch === branch.name ? "active" : ""}`}
-                                    onClick={() => handleSelectBranch(branch.name)}
+                                    className={`branch-card ${selectedBranch === branch.id ? "active" : ""}`}
+                                    onClick={() => handleSelectBranch(branch.id)} // ส่ง ID
                                 >
                                     <img
                                         src={branch.iconUrl || "https://via.placeholder.com/50"}

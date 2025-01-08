@@ -10,6 +10,7 @@ const Register = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
 
     const handleRegister = async (e) => {
         e.preventDefault();
@@ -63,13 +64,23 @@ const Register = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
             />
-            <input
-                type="text-form"
-                placeholder="Password..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-            />
+            <div className="input-group">
+                <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="form-input"
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="show-password-btn"
+                >
+                    {showPassword ? "Hide" : "Show"}
+                </button>
+            </div>
             <button type="submit" className="btn" disabled={isLoading}>
                 {isLoading ? "Processing..." : "Register"}
             </button>

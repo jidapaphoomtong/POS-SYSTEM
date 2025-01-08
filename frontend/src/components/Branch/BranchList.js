@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import AddBranchModal from "./AddBranchModal";
-import EditBranchModal from "./EditBranchModal";
+// import AddBranch from "./AddBranch";
+import EditBranch from "./EditBranch";
 import ConfirmationModal from "./ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import "../../styles/branch.css";
@@ -9,7 +9,7 @@ import Cookies from "js-cookie";
 
 const BranchList = () => {
     const [branches, setBranches] = useState([]); 
-    const [showAddModal, setShowAddModal] = useState(false);
+    // const [showAddForm, setShowAddForm] = useState(false);
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [editBranch, setEditBranch] = useState(null);
@@ -19,10 +19,10 @@ const BranchList = () => {
     // Fetch Branch List
     useEffect(() => {
         const fetchBranches = async () => {
-            const token = Cookies.get("authToken"); // ดึง Token
+            const token = Cookies.get("authToken");
             if (!token) {
                 alert("Your session has expired. Please login again.");
-                navigate("/"); // Redirect ไปหน้า Login
+                navigate("/");
                 return;
             }
 
@@ -31,11 +31,12 @@ const BranchList = () => {
                 const response = await axios.get("http://localhost:5293/api/Admin/branches", {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        Authorization: `Bearer ${token}`,
                     },
                     withCredentials: true,
                 });
 
-                setBranches(response.data.data || []); // อัปเดต State Branches
+                setBranches(response.data.data || []);
             } catch (error) {
                 console.error("Failed to fetch branches:", error);
                 if (error.response?.status === 401) {
@@ -52,16 +53,18 @@ const BranchList = () => {
         fetchBranches();
     }, [navigate]);
 
-    const handleAddBranch = (newBranch) => {
-        setBranches([...branches, newBranch]); // อัปเดต Branch ใหม่
-    };
+    // const handleAddBranch = (newBranch) => {
+    //     setBranches([...branches, newBranch]);
+    //     setShowAddForm(false); // ปิดฟอร์มหลังจากเพิ่ม branch สำเร็จ
+    // };
 
-    const handleEditBranch = (id, updatedBranch) => {
+    const handleEditBranch = (updatedBranch) => {
         setBranches(
             branches.map((branch) =>
-                branch.id === id ? { ...branch, ...updatedBranch } : branch
+                branch.id === updatedBranch.id ? { ...branch, ...updatedBranch } : branch
             )
         );
+        setEditBranch(null); // ปิดการแก้ไขเมื่ออัปเดตเสร็จ
     };
 
     const handleOpenDeleteModal = (id) => {
@@ -75,12 +78,12 @@ const BranchList = () => {
     };
 
     const handleConfirmDelete = async () => {
-        const token = Cookies.get("authToken"); // ดึง Token
+        const token = Cookies.get("authToken");
 
         try {
-            const response = await axios.delete(`https://your-backend-url/api/Admin/branches/${deleteBranchId}`, {
+            const response = await axios.delete(`http://localhost:5293/api/Admin/branches/${deleteBranchId}`, {
                 headers: {
-                    "x-posapp-header": "your-header",
+                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
@@ -88,7 +91,6 @@ const BranchList = () => {
 
             if (response.status === 200) {
                 alert("Branch deleted successfully!");
-                // Update state to remove the deleted branch
                 setBranches(branches.filter((branch) => branch.id !== deleteBranchId));
                 handleCloseDeleteModal();
             } else {
@@ -106,7 +108,7 @@ const BranchList = () => {
                 <h1>Branch Management</h1>
                 <button
                     className="add-button"
-                    onClick={() => setShowAddModal(true)}
+                    onClick={() => navigate('/add-branch')} // นำทางไปยัง AddBranch
                     disabled={isLoading}
                 >
                     Add Department
@@ -136,15 +138,15 @@ const BranchList = () => {
                                 <td>{name}</td>
                                 <td>{location}</td>
                                 <td className="action-buttons">
-                                <button
-                                    className="edit-button"
-                                    onClick={() => {
-                                        setEditBranch({ id, name, location });
-                                        navigate(`/edit-branch/${id}`); // หรือลิงก์ไปที่ EditBranchModal
-                                    }}
-                                >
-                                    ✏️
-                                </button>
+                                    <button
+                                        className="edit-button"
+                                        onClick={() => {
+                                            setEditBranch({ id, name, location });
+                                            navigate(`/edit-branch/${id}`);
+                                        }}
+                                    >
+                                        ✏️
+                                    </button>
                                     <button
                                         className="delete-button"
                                         onClick={() => handleOpenDeleteModal(id)}
@@ -174,18 +176,11 @@ const BranchList = () => {
                 />
             )}
 
-            {showAddModal && (
-                <AddBranchModal
-                    onClose={() => setShowAddModal(false)}
-                    onAdd={handleAddBranch}
-                />
-            )}
-
             {editBranch && (
-                <EditBranchModal
-                    department={editBranch}
+                <EditBranch
+                    branchId={editBranch.id}
                     onClose={() => setEditBranch(null)}
-                    onEdit={handleEditBranch}
+                    onEdit={handleEditBranch} // ส่งฟังก์ชันแก้ไขไปยัง EditBranch
                 />
             )}
         </div>
