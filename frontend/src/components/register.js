@@ -10,13 +10,15 @@ const Register = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [showPassword, setShowPassword] = useState(false);
+    
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setIsLoading(true);
         try {
         const response = await axios.post(
-            "http://localhost:5293/api/Auth/register",
+            "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Auth/register",
             {
             firstName: fullName.split(" ")[0], // แยก Firstname
             lastName: fullName.split(" ")[1] || "", // แยก Lastname หรือกำหนด Default เป็นค่าว่าง
@@ -63,13 +65,23 @@ const Register = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 required
             />
-            <input
-                type="text-form"
-                placeholder="Password..."
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-            />
+            <div className="input-group">
+                <input
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="form-input"
+                />
+                <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="show-password-btn"
+                >
+                    {showPassword ? "Hide" : "Show"}
+                </button>
+            </div>
             <button type="submit" className="btn" disabled={isLoading}>
                 {isLoading ? "Processing..." : "Register"}
             </button>

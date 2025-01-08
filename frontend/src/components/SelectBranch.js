@@ -25,7 +25,7 @@ export default function SelectBranch() {
                 try {
                     // console.log("Fetching branches...");
                     setIsLoading(true);
-                    const response = await axios.get("http://localhost:5293/api/Admin/branches", {
+                    const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches", {
                         headers: {
                             "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         },
@@ -52,9 +52,9 @@ export default function SelectBranch() {
         fetchBranches();
     }, [navigate]);
 
-    const handleSelectBranch = (branchName) => {
-        setSelectedBranch(branchName);
-        navigate(`/sale?branch=${branchName}`); // Redirect ไป Sale หน้าต่าง ๆ
+    const handleSelectBranch = (branchId) => {
+        setSelectedBranch(branchId);
+        navigate(`/sale?branch=${branchId}`); // Redirect ไป Sale หน้าต่าง ๆ
     };
 
     return (
@@ -86,8 +86,8 @@ export default function SelectBranch() {
                             filteredBranches.map((branch) => (
                                 <div
                                     key={branch.id}
-                                    className={`branch-card ${selectedBranch === branch.name ? "active" : ""}`}
-                                    onClick={() => handleSelectBranch(branch.name)}
+                                    className={`branch-card ${selectedBranch === branch.id ? "active" : ""}`}
+                                    onClick={() => handleSelectBranch(branch.id)} // ส่ง ID
                                 >
                                     <img
                                         src={branch.iconUrl || "https://via.placeholder.com/50"}

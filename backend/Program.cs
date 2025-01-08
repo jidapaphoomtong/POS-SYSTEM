@@ -53,7 +53,7 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        builder => builder.WithOrigins("http://localhost:3000") // ระบุโดเมนที่อนุญาต
+        builder => builder.WithOrigins("http://localhost:3000","https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุโดเมนที่อนุญาต
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials()); // เปิดใช้งาน Cookie
@@ -192,9 +192,9 @@ builder.Services.AddAuthentication(options =>
 
 // อ่านค่า JwtSettings จาก appsettings.json
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
-
 // ถ้าคุณต้องการการเข้าถึง JwtSettings โดยตรง ใช้ AddSingleton
 builder.Services.AddSingleton(sp => sp.GetRequiredService<IOptions<JwtSettings>>().Value);
+// builder.Services.AddSingleton<TokenService>();
 
 builder.Services.AddControllers(options =>
     {

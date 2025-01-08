@@ -87,14 +87,6 @@ namespace backend.Controllers
 
             await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
 
-            // // Log Cookies เพื่อตรวจสอบ
-            // var responseCookies = HttpContext.Response.Headers["Set-Cookie"];
-            // Console.WriteLine("===== Cookies After Login =====");
-            // foreach (var cookie in responseCookies)
-            // {
-            //     Console.WriteLine($"Set-Cookie: {cookie}");
-            // }
-
             return Ok(new {
                 Success = true,
                 Message = "Login successful.",

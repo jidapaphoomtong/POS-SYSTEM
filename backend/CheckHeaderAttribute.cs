@@ -1,12 +1,15 @@
+using backend.Services.Tokenservice;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 
 namespace backend.Filters
 {
@@ -14,51 +17,97 @@ namespace backend.Filters
     {
         private readonly string _headerName = "x-posapp-header";
         private readonly string _expectedValue;
-        private readonly JwtSettings _settings;
+        private readonly ITokenService _tokenService;
         private readonly ILogger<CheckHeaderAttribute> _logger;
 
-        public CheckHeaderAttribute(IConfiguration configuration, JwtSettings settings, ILogger<CheckHeaderAttribute> logger)
+        public CheckHeaderAttribute(IConfiguration configuration, ITokenService tokenService, ILogger<CheckHeaderAttribute> logger)
         {
             _expectedValue = configuration["ApiSettings:HeaderSecretKey"] ?? throw new ArgumentNullException("ApiSettings:HeaderSecretKey");
-            _logger = logger;
-            _settings = settings;
+            _tokenService = tokenService ?? throw new ArgumentNullException(nameof(tokenService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             var headers = context.HttpContext.Request.Headers;
             var cookies = headers["Cookie"].ToString();
+            ClaimsPrincipal principal = null;
 
             if (!string.IsNullOrEmpty(cookies))
             {
-                var cookiesDictionary = cookies.Split(';')
-                                                .Select(c => c.Split('='))
-                                                .Where(c => c.Length == 2)
-                                                .ToDictionary(c => c[0].Trim(), c => c[1].Trim());
-                
-                if (cookiesDictionary.TryGetValue("authToken", out var authToken))
+                try
                 {
-                    _logger.LogInformation($"AuthToken: {authToken}");
+                    var cookiesDictionary = cookies.Split(';')
+                                                    .Select(c => c.Split('='))
+                                                    .Where(c => c.Length == 2)
+                                                    .ToDictionary(
+                                                        c => Uri.UnescapeDataString(c[0].Trim()),
+                                                        c => Uri.UnescapeDataString(c[1].Trim()));
 
-                    // สร้าง instance ของ JwtUtils
-                    var jwtUtils = new JwtUtils(_settings.SecretKey);
-                    
-                    // อัปเดต Claims ที่คุณต้องการ
-                    var updatedClaims = new Dictionary<string, object>
+                    if (cookiesDictionary.TryGetValue("authToken", out var authToken))
                     {
-                        { "newClaimKey", "newClaimValue" } // เพิ่มหรือปรับแก้ค่าใน claims ที่คุณต้องการ
-                    };
+                        _logger.LogInformation($"AuthToken found: {authToken}");
+                        principal = _tokenService.ValidateToken(authToken);
+                        
+                        if (principal == null)
+                        {
+                            _logger.LogWarning("Invalid or null token.");
+                            // Sign out
+                            _ = context.HttpContext.SignOutAsync();
+                            context.Result = new UnauthorizedObjectResult(new
+                            {
+                                Success = false,
+                                Message = "Invalid token. You have been logged out."
+                            });
+                            return;
+                        }
 
-                    // โมดิฟาย JWT token
-                    var modifiedToken = jwtUtils.ModifyToken(authToken, updatedClaims);
-                    _logger.LogInformation($"Modified AuthToken: {modifiedToken}");
-
-                    // หากต้องการใช้ token ใหม่ คุณสามารถเก็บมันในคุกกี้หรือ headers
-                    // context.HttpContext.Response.Cookies.Append("authToken", modifiedToken);
+                    //     // Log claims from the principal if available
+                    //     foreach (var claim in principal.Claims)
+                    //     {
+                    //         _logger.LogInformation($"Claim Type: {claim.Type}, Claim Value: {claim.Value}");
+                    //     }
+                    }
+                    else
+                    {
+                        _logger.LogWarning("AuthToken not found in cookies.");
+                    }
                 }
-                else
+                catch (SecurityTokenExpiredException)
                 {
-                    _logger.LogWarning("AuthToken not found in cookies.");
+                    _logger.LogWarning("AuthToken has expired, signing out.");
+                    // Sign out
+                    _ = context.HttpContext.SignOutAsync();
+                    context.Result = new UnauthorizedObjectResult(new
+                    {
+                        Success = false,
+                        Message = "AuthToken has expired. You have been logged out."
+                    });
+                    return;
+                }
+                catch (SecurityTokenException ex)
+                {
+                    _logger.LogWarning($"Invalid AuthToken: {ex.Message}");
+                    // Sign out
+                    _ = context.HttpContext.SignOutAsync();
+                    context.Result = new UnauthorizedObjectResult(new
+                    {
+                        Success = false,
+                        Message = "Invalid token. You have been logged out."
+                    });
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError($"Unexpected error validating AuthToken: {ex.Message}");
+                    // Sign out
+                    _ = context.HttpContext.SignOutAsync();
+                    context.Result = new UnauthorizedObjectResult(new
+                    {
+                        Success = false,
+                        Message = "An unexpected error occurred. You have been logged out."
+                    });
+                    return;
                 }
             }
             else
@@ -68,30 +117,42 @@ namespace backend.Filters
 
             var endpointMeta = context.HttpContext.GetEndpoint()?.Metadata;
 
-            // ถ้ามี [AllowAnonymous] ให้ข้ามการตรวจ Header
+            // Skip header check if [AllowAnonymous] is present
             if (endpointMeta != null && endpointMeta.GetMetadata<IAllowAnonymous>() != null)
             {
-                base.OnActionExecuting(context); // ข้ามการตรวจสอบ Header
+                base.OnActionExecuting(context);
                 return;
             }
 
-            // ตรวจสอบ Header ว่ามี "x-posapp-header" หรือไม่
+            // Check required header
             if (!headers.ContainsKey(_headerName) || headers[_headerName] != _expectedValue)
             {
-                // ออกจากระบบ (SignOut)
-                context.HttpContext.SignOutAsync(); // Clear Authentication
+                _logger.LogWarning("Missing or invalid required header.");
+                // Sign out
+                _ = context.HttpContext.SignOutAsync(); // Clear Authentication
 
-                // คืนการตอบกลับ 401 Unauthorized
+                // Return 401 Unauthorized
                 context.Result = new UnauthorizedObjectResult(new
                 {
                     Success = false,
                     Message = "Invalid or missing required header. You have been logged out."
                 });
 
-                return; // หยุดการทำงาน
+                return;
+            }
+
+            // Set the user claims from the validated token (if valid)
+            if (principal != null)
+            {
+                context.HttpContext.User = principal;
+            }
+            else
+            {
+                _logger.LogWarning("Token validation failed, setting empty User.");
             }
 
             base.OnActionExecuting(context);
         }
     }
+
 }

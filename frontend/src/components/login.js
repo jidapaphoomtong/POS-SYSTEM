@@ -12,6 +12,7 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
+    
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -26,7 +27,7 @@ const Login = () => {
         try {
             // ส่งคำขอ Login ไปยัง Backend
             const response = await axios.post(
-                "http://localhost:5293/api/Auth/login",
+                "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Auth/login",
                 { email, password },
                 {
                     headers: {
