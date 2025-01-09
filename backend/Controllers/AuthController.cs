@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Google.Apis.Auth.OAuth2.Requests;
 using backend.Filters;
+using backend.Services.AdminService;
+using Newtonsoft.Json;
 
 namespace backend.Controllers
 {
@@ -27,11 +29,13 @@ namespace backend.Controllers
     {
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
+        private readonly IAdminService _adminService;
 
-        public AuthController(IAuthService authService, ITokenService tokenService)
+        public AuthController(IAuthService authService, ITokenService tokenService, IAdminService adminService)
         {
             _authService = authService;
             _tokenService = tokenService;
+            _adminService = adminService;
         }
 
         // Login (JWT-based)
@@ -96,6 +100,128 @@ namespace backend.Controllers
                 // Cookies = responseCookies // คืนค่าข้อมูล Cookies กลับให้ผู้ใช้ดูใน Swagger
             });
         }
+
+        // [AllowAnonymous]
+        // [HttpPost("login")]
+        // public async Task<IActionResult> Login([FromBody] Login userLogin)
+        // {
+        //     if (!ModelState.IsValid)
+        //     {
+        //         return BadRequest(new { Success = false, Message = "Invalid input data." });
+        //     }
+
+        //     try
+        //     {
+        //         // ตรวจสอบ User
+        //         var userSnapshot = await _authService.GetUserByEmail(userLogin.Email);
+        //         Console.WriteLine(JsonConvert.SerializeObject(userSnapshot));
+        //         if (userSnapshot != null)
+        //         {
+        //             var user = userSnapshot.ToDictionary();
+        //             if (!_authService.VerifyPassword(userLogin.Password, user["password"].ToString(), user["salt"].ToString()))
+        //             {
+        //                 return Unauthorized(new { Success = false, Message = "Invalid credentials." });
+        //             }
+
+        //             // เปรียบเทียบ Role
+        //             var roles = user.ContainsKey("roles") ? user["roles"] as IList<object> : null;
+        //             var role = roles != null && roles.Count > 0
+        //                     ? (roles.First() as Dictionary<string, object>)?["Name"]?.ToString() ?? RoleName.Employee
+        //                     : RoleName.Employee;
+
+        //             var claims = GenerateClaimsForUser(user, userSnapshot.Id);
+
+        //             // ถ้าเป็น Admin, ทำการ Login เข้าสู่ระบบ
+        //             if (role == "Admin")
+        //             {
+        //                 return await SignInUser(claims);
+        //             }
+        //         }
+
+        //         // ตรวจสอบ Employee หรือ Manager
+        //         string branchId = userLogin.branchId ?? "default-branch"; // ใช้ default branch id
+            
+        //         var employee = await _adminService.GetEmployeeByEmail(branchId, userLogin.Email);
+        //         Console.WriteLine(JsonConvert.SerializeObject(employee));
+        //         if (employee != null)
+        //         {
+        //             if (!_adminService.VerifyPassword(userLogin.Password, employee.passwordHash, employee.passwordSalt))
+        //             {
+        //                 return Unauthorized(new { Success = false, Message = "Invalid credentials." });
+        //             }
+
+        //             // สร้าง Claims สำหรับ Employee
+        //             var employeeClaims = GenerateClaimsForEmployee(employee);
+        //             return await SignInUser(employeeClaims);
+        //         }
+
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return StatusCode(500, new { Success = false, Message = ex.Message });
+        //     }
+
+        //     return Unauthorized(new { Success = false, Message = "User not found." });
+        // }
+
+        // // Method สำหรับสร้าง Claims สำหรับ User
+        // private List<Claim> GenerateClaimsForUser(Dictionary<string, object> user, string userId)
+        // {
+        //     var roles = user.ContainsKey("roles") ? user["roles"] as IList<object> : null;
+        //     var role = roles != null && roles.Count > 0
+        //             ? (roles.First() as Dictionary<string, object>)?["Name"]?.ToString() ?? RoleName.Employee
+        //             : RoleName.Employee;
+
+        //     return new List<Claim>
+        //     {
+        //         new Claim(ClaimTypes.Name, user["firstName"]?.ToString() ?? ""),
+        //         new Claim(ClaimTypes.Email, user["email"]?.ToString() ?? ""),
+        //         new Claim(ClaimTypes.NameIdentifier, userId),
+        //         new Claim(ClaimTypes.Role, role)
+        //     };
+        // }
+
+        // // Method สำหรับสร้าง Claims สำหรับ Employee
+        // private List<Claim> GenerateClaimsForEmployee(Employee employee)
+        // {
+        //     var role = employee.role.FirstOrDefault()?.ToString() ?? RoleName.Employee;
+            
+        //     // ถ้ามีข้อมูลเกี่ยวกับ branch สามารถเพิ่มลงใน Claims ได้ที่นี่
+        //     var branchId = employee.branchId; // Assuming branchId is a property of Employee
+
+        //     return new List<Claim>
+        //     {
+        //         new Claim(ClaimTypes.Name, employee.firstName),
+        //         new Claim(ClaimTypes.Email, employee.email),
+        //         new Claim(ClaimTypes.NameIdentifier, employee.Id),
+        //         new Claim(ClaimTypes.Role, role),
+        //         new Claim("BranchId", branchId) // เพิ่ม branchId เป็น Claim
+        //     };
+        // }
+
+        // // Method สำหรับทำการ Sign In และสร้าง Cookie
+        // private async Task<IActionResult> SignInUser(List<Claim> claims)
+        // {
+        //     var accessToken = _tokenService.GenerateAccessToken(claims);
+        //     var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        //     var principal = new ClaimsPrincipal(identity);
+        //     var authProperties = new AuthenticationProperties
+        //     {
+        //         IsPersistent = true,
+        //         ExpiresUtc = DateTime.UtcNow.AddDays(7)
+        //     };
+
+        //     await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, authProperties);
+
+        //     return Ok(new
+        //     {
+        //         Success = true,
+        //         Message = "Login successful.",
+        //         Token = accessToken,
+        //         Expiration = authProperties.ExpiresUtc
+        //     });
+        // }
+
 
         [AllowAnonymous]
         [HttpPost("register")]
