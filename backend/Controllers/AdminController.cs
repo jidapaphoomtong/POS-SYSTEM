@@ -47,16 +47,56 @@ namespace backend.Controllers
         [HttpPost("add-employee/{branchId}")]
         public async Task<IActionResult> AddEmployee(string branchId, [FromBody] Employee employee)
         {
-            // ดึง User จาก Claim
-            var userName = User.FindFirst(ClaimTypes.Name)?.Value; // ชื่อ user จาก Jwt Token
-            var userRole = User.FindFirst(ClaimTypes.Role)?.Value; // ดึง Role จาก Claim
+            try
+            {
+                // ตรวจสอบสิทธิ์ของผู้ใช้
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value; 
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
 
-            // เรียกใช้งาน Service Layer เพื่อทำธุรกิจ
-            var response = await _adminService.AddEmployee(branchId, employee);
+                if (string.IsNullOrEmpty(userRole) || userRole != "Admin")
+                {
+                    return Forbid("You do not have permission to add employees.");
+                }
 
-            // ตรวจสอบผลลัพธ์
-            if (response.Success) return Ok(response); // สำเร็จ
-            return BadRequest(response);              // ล้มเหลว
+                // สร้าง Salt และ Hash Password
+                string salt = GenerateSalt();
+                string hashedPassword = HashPassword(employee.password, salt);
+
+                // เรียกใช้งาน Service Layer เพื่อเพิ่มพนักงาน
+                var response = await _adminService.AddEmployee(branchId, employee, salt, hashedPassword);
+
+                // ตรวจสอบผลลัพธ์
+                if (response.Success) return Ok(response);
+                return BadRequest(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"An error occurred: {ex.Message}");
+            }
+        }
+
+        private string HashPassword(string password, string salt)
+        {
+            using (var sha256 = System.Security.Cryptography.SHA256.Create())
+            {
+                // รวม password กับ salt
+                var saltedPassword = password + salt;
+                byte[] saltedPasswordBytes = System.Text.Encoding.UTF8.GetBytes(saltedPassword);
+
+                // แฮชรหัสผ่าน
+                byte[] hashBytes = sha256.ComputeHash(saltedPasswordBytes);
+                return Convert.ToBase64String(hashBytes); // แปลงเป็น Base64 เพื่อการเก็บในฐานข้อมูล
+            }
+        }
+
+        private string GenerateSalt()
+        {
+            byte[] saltBytes = new byte[16];
+            using (var rng = new System.Security.Cryptography.RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(saltBytes);
+            }
+            return Convert.ToBase64String(saltBytes); // แปลงเป็น Base64 เพื่อให้อ่านง่ายและเก็บในฐานข้อมูล
         }
 
         [CustomAuthorizeRole("Admin, Manager")]

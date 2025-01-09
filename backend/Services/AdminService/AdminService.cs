@@ -19,6 +19,33 @@ namespace backend.Services.AdminService
             _firestoreDb = firestoreDb;
         }
 
+        public string GenerateSalt()
+        {
+            byte[] salt = new byte[16];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(salt);
+            }
+
+            return Convert.ToBase64String(salt);
+        }
+
+        public string HashPassword(string password, string salt)
+        {
+            if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Password cannot be null or whitespace.", nameof(password));
+            if (string.IsNullOrWhiteSpace(salt)) throw new ArgumentException("Salt cannot be null or whitespace.", nameof(salt));
+
+            var saltBytes = Convert.FromBase64String(salt);
+            var hashed = KeyDerivation.Pbkdf2(
+                password: password,
+                salt: saltBytes,
+                prf: KeyDerivationPrf.HMACSHA256,
+                iterationCount: 10000,
+                numBytesRequested: 32
+            );
+            return Convert.ToBase64String(hashed);
+        }
+
         public bool VerifyPassword(string enteredPassword, string storedHash, string storedSalt)
         {
             if (string.IsNullOrWhiteSpace(enteredPassword)) throw new ArgumentException("Entered password cannot be null or whitespace.");
@@ -29,54 +56,13 @@ namespace backend.Services.AdminService
             return hashOfEnteredPassword == storedHash;
         }
 
-        public async Task<ServiceResponse<string>> GenerateSalt()
+        public async Task<bool> IsEmailRegistered(string email)
         {
-            byte[] salt = new byte[16];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-
-            return ServiceResponse<string>.CreateSuccess(Convert.ToBase64String(salt), "Salt generation successful!");
-        }
-
-        public string HashPassword(string password, string salt)
-        {
-            if (string.IsNullOrWhiteSpace(password)) 
-                throw new ArgumentException("Password cannot be null or whitespace.");
-
-            if (string.IsNullOrWhiteSpace(salt)) 
-                throw new ArgumentException("Salt cannot be null or whitespace.");
-
-            var saltBytes = Convert.FromBase64String(salt);
-            var hashed = KeyDerivation.Pbkdf2(
-                password: password,
-                salt: saltBytes,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 10000,
-                numBytesRequested: 32
-            );
-
-            return Convert.ToBase64String(hashed);
-        }
-
-        public async Task<ServiceResponse<bool>> IsEmailAdded(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email)) 
-                return ServiceResponse<bool>.CreateFailure("Email cannot be null or whitespace.");
+            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be null or whitespace.", nameof(email));
 
             var userCollection = _firestoreDb.Collection("employees");
             var snapshot = await userCollection.WhereEqualTo("email", email).GetSnapshotAsync();
-            
-            bool IsEmailAdded = snapshot.Documents.Any();
-            if (IsEmailAdded)
-            {
-                return ServiceResponse<bool>.CreateSuccess(true, "Email is already registered.");
-            }
-            else
-            {
-                return ServiceResponse<bool>.CreateSuccess(false, "Email is not registered.");
-            }
+            return snapshot.Documents.Any();
         }
         
         public async Task<string> GetNextId(string sequenceName)
@@ -127,28 +113,29 @@ namespace backend.Services.AdminService
             }
         }
 
-        public async Task<ServiceResponse<string>> AddEmployee(string branchId, Employee employee)
+        public async Task<ServiceResponse<string>> AddEmployee(string branchId, Employee employee, string salt, string hashedPassword)
         {
             try
             {
-                // ตรวจสอบข้อมูลที่จำเป็น
-                if (string.IsNullOrWhiteSpace(employee.firstName) || 
-                    string.IsNullOrWhiteSpace(employee.email)
-                    // string.IsNullOrWhiteSpace(employee.passwordHash
-                    )
+                // ตรวจสอบค่าที่ส่งเข้ามา
+                if (string.IsNullOrWhiteSpace(branchId) || employee == null || 
+                    string.IsNullOrWhiteSpace(employee.email) || 
+                    string.IsNullOrWhiteSpace(hashedPassword) || 
+                    string.IsNullOrWhiteSpace(salt))
                 {
-                    return ServiceResponse<string>.CreateFailure("First Name, Email, and Password are required fields.");
+                    throw new ArgumentException("BranchId, Employee object, email, password hash, and salt cannot be null or empty.");
                 }
 
-                // ตรวจสอบว่ารูปแบบอีเมลถูกต้อง
-                if (!IsValidEmail(employee.email))
+                // ตรวจสอบว่า Branch มีอยู่ใน Firestore หรือไม่
+                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                DocumentSnapshot branchSnapshot = await branchDoc.GetSnapshotAsync();
+                if (!branchSnapshot.Exists)
                 {
-                    return ServiceResponse<string>.CreateFailure("Email must be valid.");
+                    return ServiceResponse<string>.CreateFailure("Branch does not exist.");
                 }
 
-                // ตรวจสอบว่าอีเมลถูกใช้ไปแล้วหรือไม่
-                var emailCheckResult = await IsEmailAdded(employee.email);
-                if (emailCheckResult.Success && emailCheckResult.Data)
+                // ตรวจสอบว่า Email ซ้ำหรือไม่
+                if (await IsEmailRegistered(employee.email))
                 {
                     return ServiceResponse<string>.CreateFailure("Email is already registered.");
                 }
@@ -156,52 +143,39 @@ namespace backend.Services.AdminService
                 // สร้าง Employee ID ใหม่
                 string employeeId = await GetNextId($"employee-sequence-{branchId}");
 
-                // สร้าง Salt และ Hash รหัสผ่าน
-                var saltResponse = await GenerateSalt();
-                if (!saltResponse.Success) return ServiceResponse<string>.CreateFailure("Salt generation failed.");
-                string salt = saltResponse.Data;
-                // employee.passwordHash = HashPassword(employee.passwordHash, salt); // เข้ารหัสรหัสผ่าน
-                // employee.passwordSalt = salt; // เก็บ Salt สำหรับการตรวจสอบในอนาคต
-
-                // เพิ่ม Employee ID
+                // กำหนด Employee ID และ Branch ID
                 employee.Id = employeeId;
+                employee.branchId = branchId;
 
-                // เพิ่มข้อมูล Role
-                employee.role = new List<Role>
+                // ตั้งค่า Role ค่าเริ่มต้น
+                employee.role = employee.role?.Count > 0 ? employee.role : new List<Role>
                 {
-                    new Role { Id = 1, Name = "Employee" } // Default Role
+                    new Role { Id = 1, Name = "Employee" }
                 };
 
+                // กำหนดค่า Hashed Password และ Salt
+                employee.password = hashedPassword;
+                employee.Salt = salt;
+
+                // เพิ่ม Timestamp
+                employee.CreatedAt = Timestamp.FromDateTime(DateTime.UtcNow);
+                employee.UpdatedAt = Timestamp.FromDateTime(DateTime.UtcNow);
+
+                // อ้างถึง Document ID
+                DocumentReference employeeDoc = branchDoc.Collection("employees").Document(employeeId);
+
                 // บันทึก Employee ลงใน Firestore
-                DocumentReference employeeDoc = _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId)
-                    .Collection("employees")
-                    .Document(employeeId);
                 await employeeDoc.SetAsync(employee);
-                Console.WriteLine(JsonConvert.SerializeObject(employee));
 
                 return ServiceResponse<string>.CreateSuccess(employeeId, "Employee added successfully!");
             }
             catch (Exception ex)
             {
-                return ServiceResponse<string>.CreateFailure($"Failed to add employee: {ex.Message}");
+                return ServiceResponse<string>.CreateFailure($"An error occurred while adding the employee: {ex.Message}");
             }
         }
 
-        // Example of an email validation method
-        private bool IsValidEmail(string email)
-        {
-            try
-            {
-                var emailAddress = new System.Net.Mail.MailAddress(email);
-                return emailAddress.Address == email; // Return true only if email format is valid
-            }
-            catch
-            {
-                return false; // Return false if there's an error in the email format
-            }
-        }
+
 
         public async Task<ServiceResponse<string>> AddProduct(string branchId, Products product)
         {
@@ -309,30 +283,28 @@ namespace backend.Services.AdminService
             }
         }
 
-        public async Task<ServiceResponse<List<Employee>>> GetEmployees(string branchId)
+        public async Task<ServiceResponse<List<object>>> GetEmployees(string branchId)
         {
             try
             {
-                var employeesCollection = _firestoreDb
-                    .Collection("Branches")
+                CollectionReference employees = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("employees");
 
-                var snapshot = await employeesCollection.GetSnapshotAsync();
-                
-                var employeesList = snapshot.Documents
-                    .Select(doc => 
-                    {
-                        var employee = doc.ConvertTo<Employee>();
-                        employee.Id = doc.Id; // เพิ่ม ID ของเอกสารให้กับ Employee
-                        return employee;
-                    }).ToList();
+                QuerySnapshot snapshot = await employees.GetSnapshotAsync();
 
-                return ServiceResponse<List<Employee>>.CreateSuccess(employeesList, "Employees fetched successfully!");
+                var employeesList = snapshot.Documents.Select(doc => new
+                {
+                    Id = doc.Id,
+                    Data = doc.ToDictionary()
+                }).Cast<object>().ToList();
+
+                return ServiceResponse<List<object>>.CreateSuccess(employeesList, "Employees fetched successfully!");
             }
             catch (Exception ex)
             {
-                return ServiceResponse<List<Employee>>.CreateFailure($"Failed to fetch employees: {ex.Message}");
+                return ServiceResponse<List<object>>.CreateFailure($"Failed to fetch employees: {ex.Message}");
             }
         }
 
@@ -421,15 +393,10 @@ namespace backend.Services.AdminService
                     updateData["email"] = updatedEmployee.email;
                 }
 
-                // เข้ารหัสรหัสผ่านถ้ามีการเปลี่ยนแปลง
-                // if (!string.IsNullOrWhiteSpace(updatedEmployee.passwordHash))
-                // {
-                //     var saltResponse = await GenerateSalt();
-                //     if (!saltResponse.Success) return ServiceResponse<string>.CreateFailure("Salt generation failed.");
-                //     string salt = saltResponse.Data;
-                //     updateData["passwordHash"] = HashPassword(updatedEmployee.passwordHash, salt);
-                //     updateData["passwordSalt"] = salt; // เก็บ Salt สำหรับการตรวจสอบในอนาคต
-                // }
+                if (!string.IsNullOrWhiteSpace(updatedEmployee.password))
+                {
+                    updateData["password"] = updatedEmployee.password;
+                }
 
                 // อัปเดตข้อมูล Role ถ้ามีการเปลี่ยนแปลง
                 if (updatedEmployee.role != null && updatedEmployee.role.Any())
@@ -544,33 +511,6 @@ namespace backend.Services.AdminService
             }
         }
 
-        // public async Task<Employee?> GetEmployeeByEmail(string branchId, string email)
-        // {
-        //     try
-        //     {
-        //         Query employeeQuery = _firestoreDb
-        //             .Collection("branches")
-        //             .Document(branchId)
-        //             .Collection("employees")
-        //             .WhereEqualTo("email", email);
-
-        //         QuerySnapshot snapshot = await employeeQuery.GetSnapshotAsync();
-
-        //         if (snapshot.Documents.Count > 0)
-        //         {
-        //             var document = snapshot.Documents.First();
-        //             var employee = document.ConvertTo<Employee>(); // แปลงเป็น Employee
-        //             employee.Id = document.Id; // เก็บ Document ID
-        //             return employee;
-        //         }
-
-        //         return null; // ไม่พบเอกสาร
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         throw new Exception($"Failed to get employee by email: {ex.Message}", ex);
-        //     }
-        // }
         public async Task<Employee?> GetEmployeeByEmail(string branchId, string email)
         {
             var collectionReference = _firestoreDb.Collection("branches")

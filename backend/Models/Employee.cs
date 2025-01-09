@@ -9,22 +9,21 @@ namespace backend.Models
     {
         [FirestoreProperty]
         public string Id { get; set; } = string.Empty; // ไอดีพนักงาน
-        
-        [FirestoreProperty(Name = "firstName")]
+        [FirestoreProperty]
         public string firstName { get; set; } = string.Empty;
-
-        [FirestoreProperty(Name = "lastName")]
+        [FirestoreProperty]
         public string lastName { get; set; } = string.Empty;
-
-        [FirestoreProperty(Name = "email")]
+        [FirestoreProperty]
         public string email { get; set; } = string.Empty;
-
-        [FirestoreProperty(Name = "role")]
+        [FirestoreProperty]
+        public string password { get; set; } = string.Empty;
+        [FirestoreProperty]
         public IList<Role> role { get; set; } = new List<Role>(); // กำหนดค่า Role นับตั้งแต่เริ่ม
-
-        [FirestoreProperty(Name = "password")]
-        public string password { get; set; } = string.Empty; // ค่าที่เข้ารหัสแล้ว
         public string branchId { get; set; } // เพิ่มฟิลด์สำหรับ branchId
-
+         public string Salt { get; set; } // เพิ่ม property นี้
+        [FirestoreProperty]
+        public Timestamp CreatedAt { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
+        [FirestoreProperty]
+        public Timestamp UpdatedAt { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
     }
 }
