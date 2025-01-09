@@ -13,6 +13,8 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
+var AllowSpecificOrigin = "_AllowSpecificOrigin";
+
 var builder = WebApplication.CreateBuilder(args);
 
 var configuration = new ConfigurationBuilder()
@@ -37,23 +39,12 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
     return new FirestoreDB(settings);
 });
 
-// // ตรวจสอบ url
-// builder.Services.AddCors(options =>
-// {
-//     options.AddPolicy("AllowFrontend", builder =>
-//     {
-//         builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // URL ของ Frontend
-//                .AllowAnyHeader()
-//                .AllowAnyMethod()
-//                .AllowCredentials(); // เปิดใช้งาน Cookie
-//     });
-// });
 
 // เพิ่มการตั้งค่า CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        builder => builder.WithOrigins("http://localhost:3000","https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุโดเมนที่อนุญาต
+        builder => builder.WithOrigins("http://localhost:3000/", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app/") // ระบุโดเมนที่อนุญาต
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials()); // เปิดใช้งาน Cookie
@@ -203,21 +194,19 @@ builder.Services.AddControllers(options =>
                         .RequireAuthenticatedUser()
                         .Build();
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
-        options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
+        // options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
 
 // ลงทะเบียน Action Filters (ตัวกรอง)
 // builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
-builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
+// builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");
 
 var app = builder.Build();
-
-app.UseCors("AllowSpecificOrigin");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -231,6 +220,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AllowSpecificOrigin");
+
 app.UseAuthentication();
 app.UseAuthorization();
 

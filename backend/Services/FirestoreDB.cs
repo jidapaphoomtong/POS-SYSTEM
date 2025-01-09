@@ -45,5 +45,10 @@ namespace backend.Services
         {
             return _db.Collection(collectionName);
         }
+
+        internal object CollectionGroup(string v)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

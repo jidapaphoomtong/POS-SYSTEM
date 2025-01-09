@@ -203,15 +203,18 @@ namespace backend.Controllers
         [HttpGet("branches/{branchId}/employees")]
         public async Task<IActionResult> GetEmployees(string branchId)
         {
-            try
+            var response = await _adminService.GetEmployees(branchId);
+            if (!response.Success)
             {
-                var result = await _adminService.GetEmployees(branchId);
-                return Ok(result);
+                return NotFound(new { Success = false, Message = response.Message });
             }
-            catch (Exception ex)
+            
+            return Ok(new
             {
-                return BadRequest(new { message = ex.Message });
-            }
+                Success = true,
+                Message = response.Message,
+                Data = response.Data // จะส่งกลับเป็นรูปแบบรายการ
+            });
         }
 
         [CustomAuthorizeRole("Admin, Manager")]
