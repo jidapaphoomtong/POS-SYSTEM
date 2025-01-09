@@ -44,7 +44,7 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        builder => builder.WithOrigins("http://localhost:3000/", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app/") // ระบุโดเมนที่อนุญาต
+        builder => builder.WithOrigins("http://localhost:3000", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุโดเมนที่อนุญาต
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials()); // เปิดใช้งาน Cookie
@@ -221,6 +221,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseCors("AllowSpecificOrigin");
+
+app.Use(async (context, next) =>
+{
+    if (context.Request.Method == "OPTIONS")
+    {
+        context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+        context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, x-posapp-header");
+        context.Response.StatusCode = 204; // No Content
+        return;
+    }
+    await next();
+});
 
 app.UseAuthentication();
 app.UseAuthorization();
