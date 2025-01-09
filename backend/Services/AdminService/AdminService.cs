@@ -133,8 +133,9 @@ namespace backend.Services.AdminService
             {
                 // ตรวจสอบข้อมูลที่จำเป็น
                 if (string.IsNullOrWhiteSpace(employee.firstName) || 
-                    string.IsNullOrWhiteSpace(employee.email) || 
-                    string.IsNullOrWhiteSpace(employee.passwordHash))
+                    string.IsNullOrWhiteSpace(employee.email)
+                    // string.IsNullOrWhiteSpace(employee.passwordHash
+                    )
                 {
                     return ServiceResponse<string>.CreateFailure("First Name, Email, and Password are required fields.");
                 }
@@ -159,8 +160,8 @@ namespace backend.Services.AdminService
                 var saltResponse = await GenerateSalt();
                 if (!saltResponse.Success) return ServiceResponse<string>.CreateFailure("Salt generation failed.");
                 string salt = saltResponse.Data;
-                employee.passwordHash = HashPassword(employee.passwordHash, salt); // เข้ารหัสรหัสผ่าน
-                employee.passwordSalt = salt; // เก็บ Salt สำหรับการตรวจสอบในอนาคต
+                // employee.passwordHash = HashPassword(employee.passwordHash, salt); // เข้ารหัสรหัสผ่าน
+                // employee.passwordSalt = salt; // เก็บ Salt สำหรับการตรวจสอบในอนาคต
 
                 // เพิ่ม Employee ID
                 employee.Id = employeeId;
@@ -178,6 +179,7 @@ namespace backend.Services.AdminService
                     .Collection("employees")
                     .Document(employeeId);
                 await employeeDoc.SetAsync(employee);
+                Console.WriteLine(JsonConvert.SerializeObject(employee));
 
                 return ServiceResponse<string>.CreateSuccess(employeeId, "Employee added successfully!");
             }
@@ -420,14 +422,14 @@ namespace backend.Services.AdminService
                 }
 
                 // เข้ารหัสรหัสผ่านถ้ามีการเปลี่ยนแปลง
-                if (!string.IsNullOrWhiteSpace(updatedEmployee.passwordHash))
-                {
-                    var saltResponse = await GenerateSalt();
-                    if (!saltResponse.Success) return ServiceResponse<string>.CreateFailure("Salt generation failed.");
-                    string salt = saltResponse.Data;
-                    updateData["passwordHash"] = HashPassword(updatedEmployee.passwordHash, salt);
-                    updateData["passwordSalt"] = salt; // เก็บ Salt สำหรับการตรวจสอบในอนาคต
-                }
+                // if (!string.IsNullOrWhiteSpace(updatedEmployee.passwordHash))
+                // {
+                //     var saltResponse = await GenerateSalt();
+                //     if (!saltResponse.Success) return ServiceResponse<string>.CreateFailure("Salt generation failed.");
+                //     string salt = saltResponse.Data;
+                //     updateData["passwordHash"] = HashPassword(updatedEmployee.passwordHash, salt);
+                //     updateData["passwordSalt"] = salt; // เก็บ Salt สำหรับการตรวจสอบในอนาคต
+                // }
 
                 // อัปเดตข้อมูล Role ถ้ามีการเปลี่ยนแปลง
                 if (updatedEmployee.role != null && updatedEmployee.role.Any())
