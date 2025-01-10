@@ -8,12 +8,14 @@ using backend.Models;
 using backend.Services;
 using backend.Services.AdminService;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [DisableCors]
     [LogAction]
     // [ServiceFilter(typeof(CheckHeaderAttribute))]
     public class AdminController : Controller

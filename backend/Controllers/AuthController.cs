@@ -18,11 +18,13 @@ using Google.Apis.Auth.OAuth2.Requests;
 using backend.Filters;
 using backend.Services.AdminService;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Cors;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [DisableCors]
     [LogAction]
     // [ServiceFilter(typeof(CheckHeaderAttribute))]
     public class AuthController : ControllerBase

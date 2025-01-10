@@ -44,7 +44,7 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(AllowSpecificOrigin, builder =>
-        builder.WithOrigins("*")
+        builder.WithOrigins("http://localhost:3000", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials());
