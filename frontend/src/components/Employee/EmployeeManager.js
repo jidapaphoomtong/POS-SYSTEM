@@ -13,7 +13,7 @@ const EmployeeManager = () => {
         const fetchEmployees = async () => {
             try {
                 setIsLoading(true);
-                // const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/GetEmployees");
+                const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/GetEmployees");
                 setEmployees(response.data.data || []);
             } catch (error) {
                 console.error("Failed to fetch employees:", error);
@@ -85,7 +85,7 @@ const handleDelete = async (id) => {
     if (window.confirm(`Are you sure you want to delete employee #${id}?`)) {
         // Call the API to delete
         try {
-            // await axios.delete(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/DeleteEmployee/${id}`);
+            await axios.delete(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/DeleteEmployee/${id}`);
             alert("Employee deleted successfully!");
             // Refresh the employee list after deletion
         } catch (error) {

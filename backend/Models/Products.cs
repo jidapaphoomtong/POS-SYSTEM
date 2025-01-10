@@ -15,6 +15,8 @@ namespace backend.Models
         [FirestoreProperty]
         public string productName{ get; set; } = string.Empty;
         [FirestoreProperty]
+        public string description { get; set; } = string.Empty;
+        [FirestoreProperty]
         public int stock { get; set; }
         [FirestoreProperty]
         public double price { get; set; }

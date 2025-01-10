@@ -13,7 +13,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
-var AllowSpecificOrigin = "_AllowSpecificOrigin";
+var AllowSpecificOrigin = "_AllowSpecificOrigin";  // ชื่อนี้ต้องตรงกันเมื่อใช้ใน app.UseCors()
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,11 +43,11 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
 // เพิ่มการตั้งค่า CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowSpecificOrigin",
-        builder => builder.WithOrigins("http://localhost:3000", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุโดเมนที่อนุญาต
-                          .AllowAnyMethod()
-                          .AllowAnyHeader()
-                          .AllowCredentials()); // เปิดใช้งาน Cookie
+    options.AddPolicy(AllowSpecificOrigin, builder =>
+        builder.WithOrigins("http://localhost:3000", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials());
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -226,7 +226,7 @@ app.Use(async (context, next) =>
 {
     if (context.Request.Method == "OPTIONS")
     {
-        context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+        context.Response.Headers.Add("Access-Control-Allow-Origin", "*"); // อาจต้องใช้ '*' หากคุณไม่จำกัดโดเมน
         context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, x-posapp-header");
         context.Response.StatusCode = 204; // No Content
