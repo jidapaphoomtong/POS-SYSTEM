@@ -16,11 +16,13 @@ namespace backend.Models
         [FirestoreProperty]
         public string email { get; set; } = string.Empty;
         [FirestoreProperty]
-        public string password { get; set; } = string.Empty;
+        public string passwordHash { get; set; } = string.Empty;
         [FirestoreProperty]
-        public IList<Role> role { get; set; } = new List<Role>(); // กำหนดค่า Role นับตั้งแต่เริ่ม
+        public IList<Role> roles { get; set; } = new List<Role>(); // กำหนดค่า Role นับตั้งแต่เริ่ม
+        [FirestoreProperty]
         public string branchId { get; set; } // เพิ่มฟิลด์สำหรับ branchId
-        // public string Salt { get; set; } // เพิ่ม property นี้
+        [FirestoreProperty]
+        public string salt { get; set; } // เพิ่ม property นี้
         // [FirestoreProperty]
         // public Timestamp CreatedAt { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
         // [FirestoreProperty]

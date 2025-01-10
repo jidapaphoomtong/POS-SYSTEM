@@ -60,7 +60,7 @@ namespace backend.Controllers
 
                 // สร้าง Salt และ Hash Password
                 string salt = GenerateSalt();
-                string hashedPassword = HashPassword(employee.password, salt);
+                string hashedPassword = HashPassword(employee.passwordHash, salt);
 
                 // เรียกใช้งาน Service Layer เพื่อเพิ่มพนักงาน
                 var response = await _adminService.AddEmployee(branchId, employee);

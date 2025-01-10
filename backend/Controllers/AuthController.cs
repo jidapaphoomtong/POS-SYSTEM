@@ -119,6 +119,7 @@ namespace backend.Controllers
             if (userSnapshot != null)
             {
                 var user = userSnapshot.ToDictionary();
+                Console.WriteLine(JsonConvert.SerializeObject(user));
 
                 if (!_authService.VerifyPassword(userLogin.Password, user["passwordHash"].ToString(), user["salt"].ToString()))
                 {
@@ -134,6 +135,7 @@ namespace backend.Controllers
                 {
                     branchId = user["branchId"].ToString();
                 }
+                
             }
             else
             {
@@ -144,7 +146,7 @@ namespace backend.Controllers
                 }
 
                 var employeeResponse = await _adminService.GetEmployeeByEmail(branchId, userLogin.Email);
-                // Console.WriteLine(JsonConvert.SerializeObject(employeeResponse));
+                Console.WriteLine(JsonConvert.SerializeObject(employeeResponse));
                 if (!employeeResponse.Success)
                 {
                     return Unauthorized(new { Success = false, Message = "User not found in employees." });
@@ -152,38 +154,38 @@ namespace backend.Controllers
 
                 var employee = employeeResponse.Data;
 
-                // var storedSalt = ""; // ตั้งค่าไว้ตอนนี้
-                // // ตรวจสอบรหัสผ่าน
-                // if (!_adminService.VerifyPassword(userLogin.Password, employee.password, storedSalt))
-                // {
-                //     return Unauthorized(new { Success = false, Message = "Invalid credentials." });
-                // }
-
-                // ตรวจสอบบทบาท
-                if (employee.role != null && employee.role.Any())
+                // ตรวจสอบรหัสผ่าน
+                if (!_adminService.VerifyPassword(userLogin.Password, employee.passwordHash, employee.salt))
                 {
-                    role = employee.role.First().Name;
+                    return Unauthorized(new { Success = false, Message = "Invalid credentials." });
+                }
+
+                // // ตรวจสอบบทบาทของพนักงาน
+                if (employee.roles != null && employee.roles.Any())
+                {
+                    role = employee.roles.First().Name; // ดึงชื่อบทบาทจาก Role แรก
                 }
                 else
                 {
-                    role = RoleName.Employee; // ถ้าไม่มีบทบาทให้ตั้งเป็น Employee
+                    role = RoleName.Employee; // ถ้าไม่มี ให้ใช้ค่าเริ่มต้น
                 }
+                
+                // role = RoleName.Employee; 
                 branchId = employee.branchId;
             }
 
             // สร้าง Claim JWT
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, userLogin.Email),
-                new Claim(ClaimTypes.Email, userLogin.Email),
-                new Claim(ClaimTypes.Role, role),
-                new Claim("branchId", branchId) // เก็บ Branch ID ใน Token
+                new Claim(ClaimTypes.Name, userLogin.Email ?? throw new ArgumentNullException("Email cannot be null.")),
+                new Claim(ClaimTypes.Email, userLogin.Email ?? throw new ArgumentNullException("Email cannot be null.")),
+                new Claim(ClaimTypes.Role, role ?? throw new ArgumentNullException("Role cannot be null.")), // ตรวจสอบ role
             };
 
-            // if (!string.IsNullOrWhiteSpace(branchId))
-            // {
-            //     claims.Add(new Claim("branchId", branchId));
-            // }
+            if (!string.IsNullOrWhiteSpace(branchId))
+            {
+                claims.Add(new Claim("branchId", branchId));
+            }
 
             // Generate Token
             var accessToken = _tokenService.GenerateAccessToken(claims);
@@ -208,6 +210,32 @@ namespace backend.Controllers
                 BranchId = branchId
             });
         }
+
+        // private string GenerateUserToken(string email, string role, string branchId)
+        // {
+        //     var claims = new List<Claim>
+        //     {
+        //         new Claim(ClaimTypes.Name, email),
+        //         new Claim(ClaimTypes.Email, email),
+        //         new Claim(ClaimTypes.Role, role),
+        //         new Claim("branchId", branchId)
+        //     };
+
+        //     return _tokenService.GenerateAccessToken(claims);
+        // }
+
+        // private string GenerateEmployeeToken(string email, string role, string branchId)
+        // {
+        //     var claims = new List<Claim>
+        //     {
+        //         new Claim(ClaimTypes.Name, email),
+        //         new Claim(ClaimTypes.Email, email),
+        //         new Claim(ClaimTypes.Role, role),
+        //         new Claim("branchId", branchId)
+        //     };
+
+        //     return _tokenService.GenerateAccessToken(claims);
+        // }
 
 
         [AllowAnonymous]

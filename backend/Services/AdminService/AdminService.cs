@@ -118,10 +118,9 @@ namespace backend.Services.AdminService
             try
             {
                 // ตรวจสอบค่าที่ส่งเข้ามา
-                if (string.IsNullOrWhiteSpace(branchId) || 
-                employee == null || 
+                if (string.IsNullOrWhiteSpace(branchId) || employee == null || 
                     string.IsNullOrWhiteSpace(employee.email) || 
-                    string.IsNullOrWhiteSpace(employee.password)) // ปรับให้ตรวจสอบ password
+                    string.IsNullOrWhiteSpace(employee.passwordHash)) // ปรับให้ตรวจสอบ password
                 {
                     throw new ArgumentException("BranchId, Employee object, email, and password cannot be null or empty.");
                 }
@@ -148,9 +147,9 @@ namespace backend.Services.AdminService
                 employee.branchId = branchId;
 
                 // ถ้า Role ยังไม่ถูกตั้งค่า โดยค่าเริ่มต้นให้ใช้ Employee
-                if (employee.role == null || employee.role.Count == 0)
+                if (employee.roles == null || employee.roles.Count == 0)
                 {
-                    employee.role = new List<Role>
+                    employee.roles = new List<Role>
                     {
                         new Role { Id = 1, Name = "Employee" } // Default Role เป็น Employee
                     };
@@ -159,8 +158,8 @@ namespace backend.Services.AdminService
                 // สร้าง salt ใหม่
                 string salt = GenerateSalt();
                 // เข้ารหัสรหัสผ่านด้วย salt
-                string hashedPassword = HashPassword(employee.password, salt);
-                employee.password = hashedPassword; // นำมาเก็บไว้ใน password
+                string hashedPassword = HashPassword(employee.passwordHash, salt);
+                employee.passwordHash = hashedPassword; // นำมาเก็บไว้ใน password
 
                 // สร้างข้อมูลที่ต้องบันทึก
                 var data = new
@@ -171,7 +170,7 @@ namespace backend.Services.AdminService
                     email = employee.email,
                     passwordHash = hashedPassword, // เก็บรหัสที่เข้ารหัสแล้ว
                     salt = salt, // เก็บ salt ถ้าคุณต้องการ
-                    roles = employee.role, // ใช้ Role ที่ตั้งเอาไว้อยู่
+                    roles = employee.roles, // ใช้ Role ที่ตั้งเอาไว้อยู่
                     branchId = employee.branchId
                 };
 
@@ -397,7 +396,7 @@ namespace backend.Services.AdminService
 
                 // Role Validation
                 var allowedRoles = new List<string> { "Admin", "Manager" };
-                if (updatedEmployee.role != null && updatedEmployee.role.Any(r => !allowedRoles.Contains(r.Name.ToLower())))
+                if (updatedEmployee.roles != null && updatedEmployee.roles.Any(r => !allowedRoles.Contains(r.Name.ToLower())))
                 {
                     throw new ArgumentException("One or more roles are invalid.");
                 }
@@ -414,19 +413,6 @@ namespace backend.Services.AdminService
                 var passwordHash = existingData["passwordHash"].ToString();
                 var salt = existingData["salt"].ToString();
 
-                // ถ้ารหัสผ่านใหม่ถูกส่งมาทำการเข้ารหัส
-                if (!string.IsNullOrWhiteSpace(updatedEmployee.password))
-                {
-                    // สร้าง salt ใหม่
-                    string newSalt = GenerateSalt();
-                    // เข้ารหัสรหัสผ่านใหม่ด้วย salt ที่สร้างใหม่
-                    string hashedPassword = HashPassword(updatedEmployee.password, newSalt);
-                    
-                    // อัปเดตข้อมูลรหัสผ่านใน dictionary
-                    passwordHash = hashedPassword; // อัปเดตรหัสผ่านเป็น hash ใหม่
-                    salt = newSalt; // อัปเดต salt
-                }
-
                 // เตรียมข้อมูลใหม่สำหรับอัปเดต
                 var updateData = new Dictionary<string, object>
                 {
@@ -434,9 +420,9 @@ namespace backend.Services.AdminService
                     { "firstName", string.IsNullOrWhiteSpace(updatedEmployee.firstName) ? existingData["firstName"] : updatedEmployee.firstName },
                     { "lastName", string.IsNullOrWhiteSpace(updatedEmployee.lastName) ? existingData["lastName"] : updatedEmployee.lastName },
                     { "email", string.IsNullOrWhiteSpace(updatedEmployee.email) ? existingData["email"] : updatedEmployee.email },
-                    { "passwordHash", passwordHash }, // ใช้ค่า hash ใหม่
-                    { "salt", salt },                 // ใช้ salt ใหม่
-                    { "role", updatedEmployee.role?.Select(r => new { Id = r.Id, Name = r.Name }).ToList() ?? existingData["role"] }
+                    { "passwordHash", passwordHash }, // ใช้ค่าเก่า
+                    { "salt", salt },                 // ใช้ค่าเก่า
+                    { "role", updatedEmployee.roles?.Select(r => new { Id = r.Id, Name = r.Name }).ToList() ?? existingData["role"] }
                 };
 
                 // อัปเดตข้อมูลใน Firestore
