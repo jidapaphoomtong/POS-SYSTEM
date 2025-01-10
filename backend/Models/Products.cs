@@ -13,7 +13,11 @@ namespace backend.Models
         [FirestoreProperty]
         public string Id { get; set; } = string.Empty; // ไอดีของสินค้า
         [FirestoreProperty]
+        public string ImgUrl { get; set; } = string.Empty;
+        [FirestoreProperty]
         public string productName{ get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string description { get; set; } = string.Empty;
         [FirestoreProperty]
         public int stock { get; set; }
         [FirestoreProperty]

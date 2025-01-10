@@ -60,10 +60,10 @@ namespace backend.Controllers
 
                 // สร้าง Salt และ Hash Password
                 string salt = GenerateSalt();
-                string hashedPassword = HashPassword(employee.password, salt);
+                string hashedPassword = HashPassword(employee.passwordHash, salt);
 
                 // เรียกใช้งาน Service Layer เพื่อเพิ่มพนักงาน
-                var response = await _adminService.AddEmployee(branchId, employee, salt, hashedPassword);
+                var response = await _adminService.AddEmployee(branchId, employee);
 
                 // ตรวจสอบผลลัพธ์
                 if (response.Success) return Ok(response);
@@ -258,6 +258,21 @@ namespace backend.Controllers
         }
 
         [CustomAuthorizeRole("Admin, Manager")]
+        [HttpGet("getbyemail")]
+        public async Task<IActionResult> GetEmployeeByEmail([FromQuery] string branchId, string email)
+        {
+            var response = await _adminService.GetEmployeeByEmail(branchId ,email);
+
+            if (response.Success)
+            {
+                return Ok(response.Data); // คืนค่าพนักงานในรูปแบบ JSON
+            }
+
+            return NotFound(response.Message); // ส่งคืนข้อความถ้าไม่พบพนักงาน
+        }
+
+
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpPut("branches/{branchId}/employees/{employeeId}")]
         public async Task<IActionResult> UpdateEmployee(string branchId, string employeeId, [FromBody] Employee updatedEmployee)
         {
@@ -332,6 +347,57 @@ namespace backend.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        //**
+            //Employee
+        //**
+
+        // [CustomAuthorizeRole("Admin")]
+        // [HttpDelete("deleteall/{branchId}")]
+        // public async Task<IActionResult> DeleteAllEmployees(string branchId)
+        // {
+        //     // ตรวจสอบว่า branchId ไม่เป็น null หรือว่างเปล่า
+        //     if (string.IsNullOrWhiteSpace(branchId))
+        //     {
+        //         return BadRequest("Branch ID cannot be null or empty.");
+        //     }
+
+        //     try
+        //     {
+        //         var response = await _adminService.DeleteAllEmployees(branchId);
+
+        //         if (response.Success)
+        //         {
+        //             return Ok(response.Message); // ส่งค่าความสำเร็จกลับ
+        //         }
+
+        //         return BadRequest(response.Message); // ส่งค่าข้อผิดพลาดกลับ
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         // บันทึกข้อผิดพลาด
+        //         // Logger.LogError(ex, "Error deleting employees for branch {branchId}", branchId); // ใช้ logging ตามที่ได้ตั้งไว้
+        //         return StatusCode(500, "An unexpected error occurred. Please try again later."); // ข้อผิดพลาดที่ไม่คาดคิด
+        //     }
+        // }
+
+        // [CustomAuthorizeRole("Admin")]
+        // [HttpPost("reset-employee-sequence")]
+        // public async Task<IActionResult> ResetEmployeeId(string branchId)
+        // {
+        //     var response = await _adminService.ResetEmployeeId(branchId);
+
+        //     if (response.Success)
+        //     {
+        //         return Ok(new { Success = true, Message = response.Message });
+        //     }
+
+        //     return BadRequest(new { Success = false, Message = response.Message });
+        // }
+
+        //**
+            //Branch
+        //**
 
         // [CustomAuthorizeRole("Admin")]
         // [HttpDelete("branches")]

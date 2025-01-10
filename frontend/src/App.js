@@ -9,6 +9,7 @@ import BranchList from './components/Branch/BranchList';
 import EditBranch from './components/Branch/EditBranch';
 import AddBranch from './components/Branch/AddBranch';
 import BranchDetail from './components/Branch/BranchDetail';
+// import EmployeeManager from './components/Employee/EmployeeManager';
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
         <Route path="/edit-branch/:branchId" element={<EditBranch />} />
         <Route path="/add-branch" element={<AddBranch />} />
         <Route path="/branch/:branchId" element={<BranchDetail />} />
+        {/* <Route path="/employee" element={<EmployeeManager />} /> */}
       </Routes>
       <ToastContainer />
     </Router>
