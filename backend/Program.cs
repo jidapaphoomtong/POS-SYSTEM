@@ -3,8 +3,11 @@ using System.Text;
 using backend;
 using backend.Filters;
 using backend.Services;
-using backend.Services.AdminService;
+// using backend.Services.AdminService;
 using backend.Services.AuthService;
+using backend.Services.BranchService;
+using backend.Services.EmployeeService;
+using backend.Services.ProductService;
 using backend.Services.Tokenservice;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -81,7 +84,10 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IBranchService, BranchService>();
+builder.Services.AddScoped<IEmployeeService, EmployeeService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+// builder.Services.AddScoped<IAdminService, AdminService>();
 // builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
 
 builder.Services.AddOptions();
@@ -194,14 +200,14 @@ builder.Services.AddControllers(options =>
                         .RequireAuthenticatedUser()
                         .Build();
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
-        options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
+        // options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
 
 // ลงทะเบียน Action Filters (ตัวกรอง)
 // builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
-builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
+// builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");
