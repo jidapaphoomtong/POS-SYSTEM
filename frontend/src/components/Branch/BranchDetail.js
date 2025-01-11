@@ -17,7 +17,7 @@ const BranchDetail = () => {
             const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
 
             try {
-                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${branchId}`, {
+                const response = await axios.get(`http://localhost:5293/api/Admin/branches/${branchId}`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,

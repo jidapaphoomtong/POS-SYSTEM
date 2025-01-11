@@ -28,7 +28,7 @@ const BranchList = () => {
 
             try {
                 setIsLoading(true);
-                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches`, {
+                const response = await axios.get(`http://localhost:5293/api/Admin/branches`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -81,7 +81,7 @@ const BranchList = () => {
         const token = Cookies.get("authToken");
 
         try {
-            const response = await axios.delete(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${deleteBranchId}`, {
+            const response = await axios.delete(`http://localhost:5293/api/Admin/branches/${deleteBranchId}`, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
