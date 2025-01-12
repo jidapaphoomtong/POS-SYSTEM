@@ -30,7 +30,7 @@ const EditBranch = () => {
         const fetchBranch = async () => {
             try {
                 setIsLoading(true);
-                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${branchId}`, {
+                const response = await axios.get(`http://localhost:5293/api/Branch/branches/${branchId}`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -76,7 +76,7 @@ const EditBranch = () => {
         try {
             setIsLoading(true);
             const token = Cookies.get("authToken"); // ใช้ Token จาก Cookies
-            await axios.put(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Admin/branches/${branchId}`, {
+            await axios.put(`http://localhost:5293/api/Branch/branches/${branchId}`, {
                 name: formData.name,
                 location: formData.location,
                 iconUrl: formData.iconUrl,

@@ -16,9 +16,9 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Google.Apis.Auth.OAuth2.Requests;
 using backend.Filters;
-using backend.Services.AdminService;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Cors;
+using backend.Services.EmployeeService;
 
 namespace backend.Controllers
 {
@@ -31,13 +31,13 @@ namespace backend.Controllers
     {
         private readonly IAuthService _authService;
         private readonly ITokenService _tokenService;
-        private readonly IAdminService _adminService;
+        private readonly IEmployeeService _employeeService;
 
-        public AuthController(IAuthService authService, ITokenService tokenService, IAdminService adminService)
+        public AuthController(IAuthService authService, ITokenService tokenService, IEmployeeService employeeService)
         {
             _authService = authService;
             _tokenService = tokenService;
-            _adminService = adminService;
+            _employeeService = employeeService;
         }
 
         // Login (JWT-based)
@@ -147,8 +147,8 @@ namespace backend.Controllers
                     return BadRequest(new { Success = false, Message = "Branch ID is required for employee lookup." });
                 }
 
-                var employeeResponse = await _adminService.GetEmployeeByEmail(branchId, userLogin.Email);
-                Console.WriteLine(JsonConvert.SerializeObject(employeeResponse));
+                var employeeResponse = await _employeeService.GetEmployeeByEmail(branchId, userLogin.Email);
+                // Console.WriteLine(JsonConvert.SerializeObject(employeeResponse));
                 if (!employeeResponse.Success)
                 {
                     return Unauthorized(new { Success = false, Message = "User not found in employees." });
@@ -157,7 +157,7 @@ namespace backend.Controllers
                 var employee = employeeResponse.Data;
 
                 // ตรวจสอบรหัสผ่าน
-                if (!_adminService.VerifyPassword(userLogin.Password, employee.passwordHash, employee.salt))
+                if (!_employeeService.VerifyPassword(userLogin.Password, employee.passwordHash, employee.salt))
                 {
                     return Unauthorized(new { Success = false, Message = "Invalid credentials." });
                 }
@@ -179,7 +179,7 @@ namespace backend.Controllers
             // สร้าง Claim JWT
             var claims = new List<Claim>
             {
-                new Claim(ClaimTypes.Name, userLogin.Email ?? throw new ArgumentNullException("Email cannot be null.")),
+                // new Claim(ClaimTypes.Name, userLogin.Email ?? throw new ArgumentNullException("Email cannot be null.")),
                 new Claim(ClaimTypes.Email, userLogin.Email ?? throw new ArgumentNullException("Email cannot be null.")),
                 new Claim(ClaimTypes.Role, role ?? throw new ArgumentNullException("Role cannot be null.")), // ตรวจสอบ role
             };
