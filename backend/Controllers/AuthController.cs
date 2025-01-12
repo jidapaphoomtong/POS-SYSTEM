@@ -148,7 +148,7 @@ namespace backend.Controllers
                 }
 
                 var employeeResponse = await _employeeService.GetEmployeeByEmail(branchId, userLogin.Email);
-                Console.WriteLine(JsonConvert.SerializeObject(employeeResponse));
+                // Console.WriteLine(JsonConvert.SerializeObject(employeeResponse));
                 if (!employeeResponse.Success)
                 {
                     return Unauthorized(new { Success = false, Message = "User not found in employees." });

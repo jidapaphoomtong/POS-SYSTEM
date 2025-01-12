@@ -100,7 +100,7 @@ namespace backend.Controllers
         }
 
         [CustomAuthorizeRole("Admin, Manager")]
-        [HttpGet("getbyemail")]
+        [HttpGet("getEmployeeByEmail")]
         public async Task<IActionResult> GetEmployeeByEmail([FromQuery] string branchId, string email)
         {
             var response = await _employeeService.GetEmployeeByEmail(branchId ,email);
@@ -111,6 +111,20 @@ namespace backend.Controllers
             }
 
             return NotFound(response.Message); // ส่งคืนข้อความถ้าไม่พบพนักงาน
+        }
+
+        [HttpGet("getEmployeeById")]
+        public async Task<IActionResult> GetEmployeeById(string branchId, string employeeId)
+        {
+            var result = await _employeeService.GetEmployeeById(branchId, employeeId);
+            if (result.Success)
+            {
+                return Ok(result.Data);
+            }
+            else
+            {
+                return BadRequest(result.Message);
+            }
         }
 
 

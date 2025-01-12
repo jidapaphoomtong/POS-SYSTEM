@@ -1,98 +1,183 @@
-import axios from "axios";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import "../../styles/employee.css"; // Add appropriate CSS file for styling
+// import axios from "axios";
+// import { useEffect, useState } from "react";
+// import EditEmployee from "./EditEmployee";
+// import ConfirmationModal from "./ConfirmationModal";
+// import { useNavigate } from "react-router-dom";
+// import "../../styles/employee.css";
+// import Cookies from "js-cookie";
 
-const EmployeeList = () => {
-    const [employees, setEmployees] = useState([]);
-    const [isLoading, setIsLoading] = useState(false);
-    const navigate = useNavigate();
+// const EmployeeList = () => {
+//     const [employees, setEmployees] = useState([]); 
+//     const navigate = useNavigate();
+//     const [isLoading, setIsLoading] = useState(false);
+//     const [editEmployee, setEditEmployee] = useState(null);
+//     const [deleteEmployeeId, setDeleteEmployeeId] = useState(null);
+//     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
-    // Fetch Employee List
-    useEffect(() => {
-        const fetchEmployees = async () => {
-            try {
-                setIsLoading(true);
-                const response = await axios.get("http://localhost:5293/api/Admin/GetEmployees");
-                setEmployees(response.data.data || []);
-            } catch (error) {
-                console.error("Failed to fetch employees:", error);
-                alert("Failed to fetch employee data.");
-            } finally {
-                setIsLoading(false);
-            }
-        };
-        
-        fetchEmployees();
-    }, []);
+//     // Fetch Employee List
+//     useEffect(() => {
+//         const fetchEmployees = async () => {
+//             const token = Cookies.get("authToken");
+//             if (!token) {
+//                 alert("Your session has expired. Please login again.");
+//                 navigate("/");
+//                 return;
+//             }
 
-    return (
-        <div className="employee-container">
-            <div className="header">
-                <h1>Staff Management</h1>
-                <button
-                    className="add-button"
-                    onClick={() => navigate('/add-employee')} // Navigate to add employee page
-                >
-                    Add Staff
-                </button>
-            </div>
+//             try {
+//                 setIsLoading(true);
+//                 const response = await axios.get(`http://localhost:5293/api/Employee/employees`, {
+//                     headers: {
+//                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+//                         Authorization: `Bearer ${token}`,
+//                     },
+//                     withCredentials: true,
+//                 });
 
-            {isLoading ? (
-                <p>Loading employees...</p>
-            ) : (
-                <table className="employee-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Name</th>
-                            <th>Email</th>
-                            <th>Phone</th>
-                            <th>Age</th>
-                            <th>Salary</th>
-                            <th>Timings</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {employees.map((employee) => (
-                            <tr key={employee.id}>
-                                <td>{employee.id}</td>
-                                <td>{employee.name}</td>
-                                <td>{employee.email}</td>
-                                <td>{employee.phone}</td>
-                                <td>{employee.age}</td>
-                                <td>${employee.salary.toFixed(2)}</td>
-                                <td>{employee.timings}</td>
-                                <td className="action-buttons">
-                                    <button onClick={() => navigate(`/edit-employee/${employee.id}`)}>✏️</button>
-                                    <button onClick={() => handleDelete(employee.id)}>🗑️</button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
+//                 setEmployees(response.data.data || []);
+//             } catch (error) {
+//                 console.error("Failed to fetch employees:", error);
+//                 if (error.response?.status === 401) {
+//                     alert("Unauthorized. Please login.");
+//                     navigate("/");
+//                 } else {
+//                     alert("Failed to fetch employees.");
+//                 }
+//             } finally {
+//                 setIsLoading(false);
+//             }
+//         };
 
-            {employees.length === 0 && !isLoading && <p>No employees found.</p>}
-        </div>
-    );
-};
+//         fetchEmployees();
+//     }, [navigate]);
 
-const handleDelete = async (id) => {
-    // Implement delete functionality
-    // Show confirmation modal
-    if (window.confirm(`Are you sure you want to delete employee #${id}?`)) {
-        // Call the API to delete
-        try {
-            await axios.delete(`http://localhost:5293/api/Admin/DeleteEmployee/${id}`);
-            alert("Employee deleted successfully!");
-            // Refresh the employee list after deletion
-        } catch (error) {
-            console.error("Failed to delete employee:", error);
-            alert("Failed to delete employee.");
-        }
-    }
-};
+//     const handleEditEmployee = (updatedEmployee) => {
+//         setEmployees(
+//             employees.map((employee) =>
+//                 employee.id === updatedEmployee.id ? { ...employee, ...updatedEmployee } : employee
+//             )
+//         );
+//     };
 
-export default EmployeeList;
+//     const handleOpenDeleteModal = (id) => {
+//         setDeleteEmployeeId(id);
+//         setIsConfirmModalOpen(true);
+//     };
+
+//     const handleCloseDeleteModal = () => {
+//         setDeleteEmployeeId(null);
+//         setIsConfirmModalOpen(false);
+//     };
+
+//     const handleConfirmDelete = async () => {
+//         const token = Cookies.get("authToken");
+
+//         try {
+//             const response = await axios.delete(`http://localhost:5293/api/Employee/employees/${deleteEmployeeId}`, {
+//                 headers: {
+//                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+//                     Authorization: `Bearer ${token}`,
+//                 },
+//                 withCredentials: true,
+//             });
+
+//             if (response.status === 200) {
+//                 alert("Employee deleted successfully!");
+//                 setEmployees(employees.filter((employee) => employee.id !== deleteEmployeeId));
+//                 handleCloseDeleteModal();
+//             } else {
+//                 alert("Failed to delete employee.");
+//             }
+//         } catch (error) {
+//             console.error("Failed to delete employee:", error);
+//             alert("Failed to delete employee: " + (error.response?.data?.message || "Unknown error"));
+//         }
+//     };
+
+//     return (
+//         <div className="employee-container">
+//             <div className="header">
+//                 <h1>Employee Management</h1>
+//                 <button
+//                     className="add-button"
+//                     onClick={() => navigate('/add-employee')} // นำทางไปยัง AddEmployee
+//                     disabled={isLoading}
+//                 >
+//                     Add Employee
+//                 </button>
+//             </div>
+
+//             {isLoading ? (
+//                 <p>Loading employees...</p>
+//             ) : (
+//                 <table className="employee-table">
+//                     <thead>
+//                         <tr>
+//                             <th>Detail</th>
+//                             <th>Employee ID</th>
+//                             <th>First Name</th>
+//                             <th>Last Name</th>
+//                             <th>Email</th>
+//                             <th>Actions</th>
+//                         </tr>
+//                     </thead>
+//                     <tbody>
+//                         {employees.map(({ id, firstName, lastName, email }) => (
+//                             <tr key={id}>
+//                                 <td>
+//                                     <a href={`/employee/${id}`} className="detail-link">Detail</a>
+//                                 </td>
+//                                 <td>{id}</td>
+//                                 <td>{firstName}</td>
+//                                 <td>{lastName}</td>
+//                                 <td>{email}</td>
+//                                 <td className="action-buttons">
+//                                     <button
+//                                         className="edit-button"
+//                                         onClick={() => {
+//                                             setEditEmployee({ id, firstName, lastName, email });
+//                                             navigate(`/edit-employee/${id}`);
+//                                         }}
+//                                     >
+//                                         ✏️
+//                                     </button>
+//                                     <button
+//                                         className="delete-button"
+//                                         onClick={() => handleOpenDeleteModal(id)}
+//                                     >
+//                                         🗑️
+//                                     </button>
+//                                 </td>
+//                             </tr>
+//                         ))}
+//                     </tbody>
+//                 </table>
+//             )}
+
+//             <button
+//                 className="back-button"
+//                 onClick={() => navigate("/select-branch")}
+//             >
+//                 Back
+//             </button>
+
+//             {isConfirmModalOpen && (
+//                 <ConfirmationModal
+//                     isOpen={isConfirmModalOpen}
+//                     onClose={handleCloseDeleteModal}
+//                     onConfirm={handleConfirmDelete}
+//                     message="Are you sure you want to delete this employee?"
+//                 />
+//             )}
+
+//             {editEmployee && (
+//                 <EditEmployee
+//                     employeeId={editEmployee.id}
+//                     onEdit={handleEditEmployee} // ส่งฟังก์ชันแก้ไขไปยัง EditEmployee
+//                 />
+//             )}
+//         </div>
+//     );
+// };
+
+// export default EmployeeList;

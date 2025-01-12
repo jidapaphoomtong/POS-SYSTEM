@@ -228,6 +228,38 @@ namespace backend.Services.EmployeeService
             }
         }
 
+        public async Task<ServiceResponse<Employee>> GetEmployeeById(string branchId, string employeeId)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(branchId))
+                {
+                    throw new ArgumentException("Branch ID cannot be null or empty.", nameof(branchId));
+                }
+                if (string.IsNullOrWhiteSpace(employeeId))
+                {
+                    throw new ArgumentException("Employee ID cannot be null or empty.", nameof(employeeId));
+                }
+
+                var branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                var employeeDoc = branchDoc.Collection("employees").Document(employeeId);
+
+                DocumentSnapshot snapshot = await employeeDoc.GetSnapshotAsync();
+
+                if (!snapshot.Exists)
+                {
+                    return ServiceResponse<Employee>.CreateFailure("Employee not found.");
+                }
+
+                var employee = snapshot.ConvertTo<Employee>();
+                return ServiceResponse<Employee>.CreateSuccess(employee, "Employee data retrieved successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<Employee>.CreateFailure($"An error occurred while retrieving employee: {ex.Message}");
+            }
+        }
+
         public async Task<ServiceResponse<string>> UpdateEmployee(string branchId, string employeeId, Employee updatedEmployee)
         {
             try

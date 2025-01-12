@@ -16,6 +16,7 @@ namespace backend.Services.EmployeeService
         Task<ServiceResponse<string>> AddEmployee(string branchId, Employee employee);
         Task<ServiceResponse<List<object>>> GetEmployees(string branchId);
         Task<ServiceResponse<Employee>> GetEmployeeByEmail(string branchId ,string email);
+        Task<ServiceResponse<Employee>> GetEmployeeById(string branchId, string employeeId);
         Task<ServiceResponse<string>> UpdateEmployee(string branchId, string employeeId, Employee updatedEmployee);
         Task<ServiceResponse<string>> DeleteEmployee(string branchId, string employeeId);
         Task<ServiceResponse<string>> DeleteAllEmployees(string branchId);
