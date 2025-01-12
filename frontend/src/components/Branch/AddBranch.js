@@ -36,7 +36,7 @@ const AddBranch = ({ onAddSuccess }) => {
                 return;
             }
         
-            const response = await axios.post(`http://localhost:5293/api/Admin/add-branch`, formData, {
+            const response = await axios.post(`http://localhost:5293/api/Branch/add-branch`, formData, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,

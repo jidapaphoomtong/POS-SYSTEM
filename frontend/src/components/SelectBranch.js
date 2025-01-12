@@ -25,7 +25,7 @@ export default function SelectBranch() {
                 try {
                     // console.log("Fetching branches...");
                     setIsLoading(true);
-                    const response = await axios.get("http://localhost:5293/api/Admin/branches", {
+                    const response = await axios.get("http://localhost:5293/api/Branch/branches", {
                         headers: {
                             "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         },
