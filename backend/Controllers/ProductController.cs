@@ -53,6 +53,17 @@ namespace backend.Controllers
             }
         }
 
+        [HttpGet("{branchId}/products/{productId}")]
+        public async Task<IActionResult> GetProductById(string branchId, string productId)
+        {
+            var result = await _productService.GetProductById(branchId, productId);
+            if (result.Success)
+            {
+                return Ok(result.Data);  // ส่งข้อมูลสินค้ากลับ
+            }
+            return NotFound(result.Message);
+        }
+
         [CustomAuthorizeRole("Admin, Manager")]
         [HttpPut("branches/{branchId}/products/{productId}")]
         public async Task<IActionResult> UpdateProduct(string branchId, string productId, [FromBody] Products updatedProduct)
@@ -81,6 +92,28 @@ namespace backend.Controllers
             {
                 return BadRequest(new { message = ex.Message });
             }
+        }
+
+        [HttpPost("{branchId}/products/{productId}/addstock")]
+        public async Task<IActionResult> AddStock(string branchId, string productId, [FromBody] int quantity)
+        {
+            var result = await _productService.AddStock(branchId, productId, quantity);
+            if (result.Success)
+            {
+                return Ok(result.Message);  // ส่งข้อความสำเร็จ
+            }
+            return BadRequest(result.Message);
+        }
+
+        [HttpPost("{branchId}/products/{productId}/reducestock")]
+        public async Task<IActionResult> ReduceStock(string branchId, string productId, [FromBody] int quantity)
+        {
+            var result = await _productService.ReduceStock(branchId, productId, quantity);
+            if (result.Success)
+            {
+                return Ok(result.Message);  // ส่งข้อความสำเร็จ
+            }
+            return BadRequest(result.Message);
         }
     }
 }

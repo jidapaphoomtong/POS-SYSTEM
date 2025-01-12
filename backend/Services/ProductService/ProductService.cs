@@ -142,6 +142,32 @@ namespace backend.Services.ProductService
             }
         }
 
+        public async Task<ServiceResponse<Products>> GetProductById(string branchId, string productId)
+        {
+            try
+            {
+                DocumentReference productDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("products")
+                    .Document(productId);
+
+                DocumentSnapshot snapshot = await productDoc.GetSnapshotAsync();
+
+                if (!snapshot.Exists)
+                {
+                    return ServiceResponse<Products>.CreateFailure("Product not found.");
+                }
+
+                var product = snapshot.ConvertTo<Products>();
+                return ServiceResponse<Products>.CreateSuccess(product, "Product fetched successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<Products>.CreateFailure($"Failed to fetch product: {ex.Message}");
+            }
+        }
+
         public async Task<ServiceResponse<string>> UpdateProduct(string branchId, string productId, Products updatedProduct)
         {
             try
@@ -168,6 +194,38 @@ namespace backend.Services.ProductService
             }
         }
 
+        public async Task<ServiceResponse<string>> SellProduct(string branchId, string productId, int quantity)
+        {
+            try
+            {
+                DocumentReference productDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("products")
+                    .Document(productId);
+
+                var snapshot = await productDoc.GetSnapshotAsync();
+                var currentStock = snapshot.GetValue<int>("stock");
+
+                if (currentStock < quantity)
+                {
+                    return ServiceResponse<string>.CreateFailure("Not enough stock available.");
+                }
+
+                // ลดจำนวน Stock
+                await productDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "stock", currentStock - quantity }
+                });
+
+                return ServiceResponse<string>.CreateSuccess(productId, "Product sold and stock updated successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to sell product: {ex.Message}");
+            }
+        }
+
         public async Task<ServiceResponse<string>> DeleteProduct(string branchId, string productId)
         {
             try
@@ -185,6 +243,71 @@ namespace backend.Services.ProductService
             catch (Exception ex)
             {
                 return ServiceResponse<string>.CreateFailure($"Failed to delete product: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<string>> AddStock(string branchId, string productId, int quantity)
+        {
+            try
+            {
+                DocumentReference productDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("products")
+                    .Document(productId);
+
+                var snapshot = await productDoc.GetSnapshotAsync();
+                if (!snapshot.Exists)
+                {
+                    return ServiceResponse<string>.CreateFailure("Product not found.");
+                }
+
+                var currentStock = snapshot.GetValue<int>("stock");
+                await productDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "stock", currentStock + quantity }
+                });
+
+                return ServiceResponse<string>.CreateSuccess(productId, "Stock added successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to add stock: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<string>> ReduceStock(string branchId, string productId, int quantity)
+        {
+            try
+            {
+                DocumentReference productDoc = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("products")
+                    .Document(productId);
+
+                var snapshot = await productDoc.GetSnapshotAsync();
+                if (!snapshot.Exists)
+                {
+                    return ServiceResponse<string>.CreateFailure("Product not found.");
+                }
+
+                var currentStock = snapshot.GetValue<int>("stock");
+                if (currentStock < quantity)
+                {
+                    return ServiceResponse<string>.CreateFailure("Not enough stock available.");
+                }
+
+                await productDoc.UpdateAsync(new Dictionary<string, object>
+                {
+                    { "stock", currentStock - quantity }
+                });
+
+                return ServiceResponse<string>.CreateSuccess(productId, "Stock reduced successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to reduce stock: {ex.Message}");
             }
         }
     }

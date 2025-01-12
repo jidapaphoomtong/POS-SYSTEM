@@ -1,35 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavBar from "../components/bar/Navbar";
 import SideBar from "../components/bar/Sidebar";
 import "../styles/Sale.css";
+import axios from 'axios';
+import Cookies from 'js-cookie';
 
 export default function Sale() {
-    const [categories, setCategories] = useState([
-        { name: "All", count: 116 },
-        { name: "Pizza", count: 20 },
-        { name: "Burger", count: 15 },
-        { name: "Chicken", count: 10 },
-        { name: "Bakery", count: 18 },
-        { name: "Beverage", count: 12 },
-        { name: "Seafood", count: 16 },
-    ]);
-    
-    const [items, setItems] = useState([
-        { id: 1, image: "https://via.placeholder.com/100", name: "Fried Chicken Original", price: 35 },
-        { id: 2, image: "https://via.placeholder.com/100", name: "Cheese Ball", price: 25 },
-        { id: 3, image: "https://via.placeholder.com/100", name: "French Fries", price: 10 },
-        { id: 4, image: "https://via.placeholder.com/100", name: "Fried Chicken Original", price: 35 },
-        { id: 5, image: "https://via.placeholder.com/100", name: "Cheese Ball", price: 25 },
-        { id: 6, image: "https://via.placeholder.com/100", name: "French Fries", price: 10 },
-        { id: 7, image: "https://via.placeholder.com/100", name: "Fried Chicken Original", price: 35 },
-        { id: 8, image: "https://via.placeholder.com/100", name: "Cheese Ball", price: 25 },
-        { id: 9, image: "https://via.placeholder.com/100", name: "French Fries", price: 10 },
-        { id: 10, image: "https://via.placeholder.com/100", name: "French Fries", price: 10 },
-        // เพิ่มสินค้าอื่น ๆ ได้ที่นี่
-    ]);
-
+    const [categories, setCategories] = useState([]);
+    const [items, setItems] = useState([]);
     const [selectedItems, setSelectedItems] = useState({});
     
+    useEffect(() => {
+        // ดึงข้อมูลสินค้าและหมวดหมู่จาก API
+        const fetchData = async () => {
+            const token = Cookies.get("authToken");
+            const response = await axios.get('http://localhost:5293/api/products', {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setItems(response.data); // สมมติว่า response.data มีสินค้า
+            // ต้องการดึง categories ก็ให้ทำการดึงข้อมูลตามความเหมาะสม
+        };
+        fetchData();
+    }, []);
+
     const handleSelectItem = (item) => {
         setSelectedItems((prevItems) => {
             const newItems = { ...prevItems };
@@ -52,6 +45,21 @@ export default function Sale() {
 
     const calculateTotal = () => {
         return Object.values(selectedItems).reduce((total, item) => total + item.price * item.quantity, 0);
+    };
+
+    const handlePlaceOrder = async () => {
+        const token = Cookies.get("authToken");
+        for (const item of Object.values(selectedItems)) {
+            const response = await axios.post(`http://localhost:5293/api/product/branchId/products/${item.id}/reducestock`, item.quantity, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!response.data.success) {
+                alert("Failed to reduce stock for some items, please check!");
+                return;
+            }
+        }
+        alert('Order placed successfully!');
+        setSelectedItems({}); // Clear selected items after order
     };
 
     return (
@@ -93,7 +101,7 @@ export default function Sale() {
                         ))}
                         <hr />
                         <p>Total: ${calculateTotal()}</p>
-                        <button onClick={() => alert('Order placed!')}>Place Order</button>
+                        <button onClick={handlePlaceOrder}>Place Order</button>
                     </div>
                 </div>
             </div>
