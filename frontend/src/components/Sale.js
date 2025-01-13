@@ -21,13 +21,13 @@ export default function Sale() {
                 alert("Branch ID is missing!");
                 return;
             }
-            
+
             setLoading(true); // Start loading
             try {
-                const productResponse = await axios.get(`http://localhost:5293/api/products/branches/${branchId}/products`, {
+                const productResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/products/branches/${branchId}/products`, {
                     headers: { Authorization: `Bearer ${token}` },  
                 });
-                const categoryResponse = await axios.get(`http://localhost:5293/api/categories/branches/${branchId}/getCategory`, {
+                const categoryResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/categories/branches/${branchId}/getCategory`, {
                     headers: { Authorization: `Bearer ${token}` },  
                 });
                 setItems(productResponse.data);
@@ -83,7 +83,7 @@ export default function Sale() {
         const token = Cookies.get("authToken");
         const branchId = Cookies.get("branchId");
         for (const item of Object.values(selectedItems)) {
-            const response = await axios.post(`http://localhost:5293/api/products/${branchId}/products/${item.id}/reducestock`, { quantity: item.quantity }, {
+            const response = await axios.post(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/products/${branchId}/products/${item.id}/reducestock`, { quantity: item.quantity }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!response.data.success) {
