@@ -61,7 +61,7 @@ export default function SelectBranch() {
         <div className="container">
             <h1 className="header">Select Department</h1>
             {isLoading ? (
-                <p>Loading branches...</p> // แสดง Loading ขณะกำลังโหลด
+                <div className="spinner"></div>
             ) : (
                 <>
                     <div className="search-container">

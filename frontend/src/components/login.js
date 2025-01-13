@@ -5,20 +5,21 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import { Link, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
+import { jwtDecode } from "jwt-decode";
 
 const Login = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [branchId, setBranchId] = useState(""); // เพิ่มการจัดการ branchId
     const [isLoading, setIsLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate();
-    
 
     const handleLogin = async (e) => {
         e.preventDefault();
         setIsLoading(true);
 
-        if (!email || !password) {
+        if (!email || !password ) { // ตรวจสอบให้แน่ใจว่าทุกฟิลด์ถูกกรอก
             toast.error("Email and Password are required.");
             setIsLoading(false);
             return;
@@ -28,42 +29,38 @@ const Login = () => {
             // ส่งคำขอ Login ไปยัง Backend
             const response = await axios.post(
                 "http://localhost:5293/api/Auth/login",
-                { email, password },
+                { email, password, branchId }, // รวม branchId ไป
                 {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        
                     },
                     withCredentials: true 
                 }
             );
-            // console.log("Login Response:", response.data); // ใช้เพื่อดู Response
 
-            const { role } = response.data; // ดึง Role จาก Response
-            console.log("User Role:", role); // Debug Role เพื่อดูว่ามีค่าหรือไม่
-
+            const { role } = response.data; 
             const token = response.data.token;
-            // console.log("Login successful, JWT Token received:", token);
-
-            // เก็บ JWT Token ลงใน Cookie
             Cookies.set("authToken", token, { expires: 1, secure: true, sameSite: "Strict" });
+            Cookies.set("branchId", response.data.branchId, { expires: 1, secure: true, sameSite: "Strict" });
 
             // นำทางตาม Role
             if (role === "Admin") {
-                console.log("Redirecting to: /select-branch");
                 navigate("/select-branch");
+
             } else if (role === "Manager" || role === "Employee") {
-                console.log("Redirecting to: /sale");
-                navigate("/sale");
+                const decodedToken = jwtDecode(token);
+                const emailFromToken = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || 'No email found';
+                const roleFromToken = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'No role found';
+                navigate(`/sale?branch=${branchId}`); 
+
             } else {
-                console.log("Redirecting to: undefined");
                 toast.error("Unknown role. Please contact support.");
             }
         } catch (error) {
             console.error("Login failed:", error.response?.data || error.message);
-
             if (error.response?.status === 401) {
                 toast.error("Invalid login credentials.");
+
             } else {
                 toast.error("Unable to login. Please try again.");
             }
@@ -81,7 +78,7 @@ const Login = () => {
                 <img src={admin} className="avatar" alt="Admin Avatar" />
                 <form onSubmit={handleLogin}>
                     <input
-                        type="text-form"
+                        type="text"
                         placeholder="Email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -105,6 +102,13 @@ const Login = () => {
                             {showPassword ? "Hide" : "Show"}
                         </button>
                     </div>
+                    <input
+                        type="text" 
+                        placeholder="Branch ID" 
+                        value={branchId}
+                        onChange={(e) => setBranchId(e.target.value)}
+                        className="form-input"
+                    />
                     <button type="submit" className="btn" disabled={isLoading}>
                         {isLoading ? "Loading..." : "Login"}
                     </button>

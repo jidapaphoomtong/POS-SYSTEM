@@ -6,7 +6,8 @@ import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
 
 const Register = () => {
-    const [fullName, setFullName] = useState("");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -20,8 +21,8 @@ const Register = () => {
         const response = await axios.post(
             "http://localhost:5293/api/Auth/register",
             {
-            firstName: fullName.split(" ")[0], // แยก Firstname
-            lastName: fullName.split(" ")[1] || "", // แยก Lastname หรือกำหนด Default เป็นค่าว่าง
+            firstName, // แยก Firstname
+            lastName, // แยก Lastname หรือกำหนด Default เป็นค่าว่าง
             email,
             password,
             },
@@ -54,8 +55,15 @@ const Register = () => {
             <input
                 type="text-form"
                 placeholder="Full Name... (e.g. John Doe)"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                required
+            />
+            <input
+                type="text-form"
+                placeholder="Full Name... (e.g. John Doe)"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
                 required
             />
             <input

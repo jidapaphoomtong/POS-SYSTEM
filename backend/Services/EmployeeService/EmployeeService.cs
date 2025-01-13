@@ -94,15 +94,13 @@ namespace backend.Services.EmployeeService
         {
             try
             {
-                // ตรวจสอบค่าที่ส่งเข้ามา
                 if (string.IsNullOrWhiteSpace(branchId) || employee == null || 
                     string.IsNullOrWhiteSpace(employee.email) || 
-                    string.IsNullOrWhiteSpace(employee.passwordHash)) // ปรับให้ตรวจสอบ password
+                    string.IsNullOrWhiteSpace(employee.passwordHash))
                 {
                     throw new ArgumentException("BranchId, Employee object, email, and password cannot be null or empty.");
                 }
 
-                // ตรวจสอบว่า Branch มีอยู่ใน Firestore หรือไม่
                 DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
                 DocumentSnapshot branchSnapshot = await branchDoc.GetSnapshotAsync();
                 if (!branchSnapshot.Exists)
@@ -110,57 +108,42 @@ namespace backend.Services.EmployeeService
                     return ServiceResponse<string>.CreateFailure("Branch does not exist.");
                 }
 
-                // ตรวจสอบว่า Email ซ้ำหรือไม่
                 if (await IsEmailRegistered(employee.email))
                 {
                     return ServiceResponse<string>.CreateFailure("Email is already registered.");
                 }
 
-                // สร้าง Employee ID ใหม่
                 string employeeId = await GetNextId($"employee-sequence-{branchId}");
 
-                // กำหนด Employee ID และ Branch ID
+                // Prepare the employee object for Firestore
                 employee.Id = employeeId;
                 employee.branchId = branchId;
 
-                // ถ้า Role ยังไม่ถูกตั้งค่า โดยค่าเริ่มต้นให้ใช้ Employee
-                if (employee.roles == null || employee.roles.Count == 0)
-                {
-                    employee.roles = new List<Role>
-                    {
-                        new Role { Id = 1, Name = "Employee" } // Default Role เป็น Employee
-                    };
-                }
-
-                // สร้าง salt ใหม่
                 string salt = GenerateSalt();
-                // เข้ารหัสรหัสผ่านด้วย salt
                 string hashedPassword = HashPassword(employee.passwordHash, salt);
-                employee.passwordHash = hashedPassword; // นำมาเก็บไว้ใน password
+                employee.passwordHash = hashedPassword;
 
-                // สร้างข้อมูลที่ต้องบันทึก
                 var data = new
                 {
                     id = employee.Id,
                     firstName = employee.firstName,
                     lastName = employee.lastName,
                     email = employee.email,
-                    passwordHash = hashedPassword, // เก็บรหัสที่เข้ารหัสแล้ว
-                    salt = salt, // เก็บ salt ถ้าคุณต้องการ
-                    roles = employee.roles, // ใช้ Role ที่ตั้งเอาไว้อยู่
+                    passwordHash = hashedPassword,
+                    salt = salt,
+                    roles = new List<Role> { new Role { Id = 1, Name = "Employee" } }, // Default role
                     branchId = employee.branchId
                 };
 
-                // อ้างถึง Document ID
                 DocumentReference employeeDoc = branchDoc.Collection("employees").Document(employeeId);
-
-                // บันทึก Employee ลงใน Firestore
                 await employeeDoc.SetAsync(data);
 
                 return ServiceResponse<string>.CreateSuccess(employeeId, "Employee added successfully!");
             }
             catch (Exception ex)
             {
+                // Log the error message or detail if possible
+                Console.WriteLine(ex);
                 return ServiceResponse<string>.CreateFailure($"An error occurred while adding the employee: {ex.Message}");
             }
         }
@@ -264,7 +247,13 @@ namespace backend.Services.EmployeeService
         {
             try
             {
-                // อ้างอิง Document ใน Firestore
+                // Check that all necessary parameters are provided
+                if (string.IsNullOrWhiteSpace(branchId) || string.IsNullOrWhiteSpace(employeeId) || updatedEmployee == null)
+                {
+                    throw new ArgumentException("BranchId, EmployeeId, and Employee object cannot be null or empty.");
+                }
+
+                // Reference the employee document in Firestore
                 DocumentReference employeeDoc = _firestoreDb
                     .Collection("branches")
                     .Document(branchId)
@@ -273,23 +262,16 @@ namespace backend.Services.EmployeeService
 
                 var snapshot = await employeeDoc.GetSnapshotAsync();
 
-                // ตรวจสอบว่ามีเอกสารใน Firestore หรือไม่
+                // Check if the employee document exists
                 if (!snapshot.Exists)
                 {
                     return ServiceResponse<string>.CreateFailure($"Employee with ID {employeeId} not found.");
                 }
 
-                // Role Validation
-                var allowedRoles = new List<string> { "Admin", "Manager" };
-                if (updatedEmployee.roles != null && updatedEmployee.roles.Any(r => !allowedRoles.Contains(r.Name.ToLower())))
-                {
-                    throw new ArgumentException("One or more roles are invalid.");
-                }
-
-                // ดึงข้อมูลเดิมจาก Firestore
+                // Retrieve existing data from Firestore
                 var existingData = snapshot.ToDictionary();
 
-                // รักษาข้อมูลเดิมที่สำคัญ เช่น passwordHash และ salt
+                // Maintain critical existing data, such as passwordHash and salt
                 if (!existingData.ContainsKey("passwordHash") || !existingData.ContainsKey("salt"))
                 {
                     return ServiceResponse<string>.CreateFailure("Existing password or salt data is missing.");
@@ -298,26 +280,27 @@ namespace backend.Services.EmployeeService
                 var passwordHash = existingData["passwordHash"].ToString();
                 var salt = existingData["salt"].ToString();
 
-                // เตรียมข้อมูลใหม่สำหรับอัปเดต
+                // Prepare the data for update
                 var updateData = new Dictionary<string, object>
                 {
                     { "id", employeeId },
                     { "firstName", string.IsNullOrWhiteSpace(updatedEmployee.firstName) ? existingData["firstName"] : updatedEmployee.firstName },
                     { "lastName", string.IsNullOrWhiteSpace(updatedEmployee.lastName) ? existingData["lastName"] : updatedEmployee.lastName },
                     { "email", string.IsNullOrWhiteSpace(updatedEmployee.email) ? existingData["email"] : updatedEmployee.email },
-                    { "passwordHash", passwordHash }, // ใช้ค่าเก่า
-                    { "salt", salt },                 // ใช้ค่าเก่า
-                    { "role", updatedEmployee.roles?.Select(r => new { Id = r.Id, Name = r.Name }).ToList() ?? existingData["role"] }
+                    { "passwordHash", passwordHash }, // Use the old password hash
+                    { "salt", salt },                 // Use the old salt
+                    { "roles", updatedEmployee.roles?.Select(r => new { Id = r.Id, Name = r.Name }).ToList() ?? existingData["roles"] }
                 };
 
-                // อัปเดตข้อมูลใน Firestore
+                // Update the document in Firestore
                 await employeeDoc.SetAsync(updateData, SetOptions.MergeAll);
 
                 return ServiceResponse<string>.CreateSuccess(employeeId, "Employee updated successfully!");
             }
             catch (Exception ex)
             {
-                // ส่งข้อผิดพลาดในกรณีที่ล้มเหลว
+                // Log the error for debugging
+                Console.WriteLine($"Error updating employee: {ex.Message}");
                 return ServiceResponse<string>.CreateFailure($"Failed to update employee: {ex.Message}");
             }
         }
