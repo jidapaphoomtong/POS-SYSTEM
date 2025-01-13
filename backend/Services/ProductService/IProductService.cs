@@ -8,10 +8,6 @@ namespace backend.Services.ProductService
 {
     public interface IProductService
     {
-        string GenerateSalt();
-        bool VerifyPassword(string enteredPassword, string storedHash, string storedSalt);
-        string HashPassword(string password, string salt);
-        Task<bool> IsEmailRegistered(string email);
         Task<string> GetNextId(string sequenceName);
         Task<ServiceResponse<string>> AddProduct(string branchId, Products product);
         Task<ServiceResponse<List<object>>> GetProducts(string branchId);

@@ -18,52 +18,6 @@ namespace backend.Services.ProductService
             _firestoreDb = firestoreDb;
         }
 
-        public string GenerateSalt()
-        {
-            byte[] salt = new byte[16];
-            using (var rng = RandomNumberGenerator.Create())
-            {
-                rng.GetBytes(salt);
-            }
-
-            return Convert.ToBase64String(salt);
-        }
-
-        public string HashPassword(string password, string salt)
-        {
-            if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Password cannot be null or whitespace.", nameof(password));
-            if (string.IsNullOrWhiteSpace(salt)) throw new ArgumentException("Salt cannot be null or whitespace.", nameof(salt));
-
-            var saltBytes = Convert.FromBase64String(salt);
-            var hashed = KeyDerivation.Pbkdf2(
-                password: password,
-                salt: saltBytes,
-                prf: KeyDerivationPrf.HMACSHA256,
-                iterationCount: 10000,
-                numBytesRequested: 32
-            );
-            return Convert.ToBase64String(hashed);
-        }
-
-        public bool VerifyPassword(string enteredPassword, string storedHash, string storedSalt)
-        {
-            if (string.IsNullOrWhiteSpace(enteredPassword)) throw new ArgumentException("Entered password cannot be null or whitespace.");
-            if (string.IsNullOrWhiteSpace(storedHash) || string.IsNullOrWhiteSpace(storedSalt))
-                return false;
-
-            var hashOfEnteredPassword = HashPassword(enteredPassword, storedSalt);
-            return hashOfEnteredPassword == storedHash;
-        }
-
-        public async Task<bool> IsEmailRegistered(string email)
-        {
-            if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be null or whitespace.", nameof(email));
-
-            var userCollection = _firestoreDb.Collection("employees");
-            var snapshot = await userCollection.WhereEqualTo("email", email).GetSnapshotAsync();
-            return snapshot.Documents.Any();
-        }
-        
         public async Task<string> GetNextId(string sequenceName)
         {
             try
