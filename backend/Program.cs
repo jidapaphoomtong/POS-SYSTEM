@@ -49,7 +49,7 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        builder => builder.WithOrigins("http://localhost:3000", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุโดเมนที่อนุญาต
+        builder => builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุโดเมนที่อนุญาต
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials()); // เปิดใช้งาน Cookie
@@ -207,9 +207,6 @@ builder.Services.AddControllers(options =>
     });
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
-
-// ลงทะเบียน Action Filters (ตัวกรอง)
-// builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
 builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
 
 // Explicitly configure URLs to listen on
