@@ -14,7 +14,7 @@ namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [DisableCors]
+    // [DisableCors]
     [LogAction]
     public class EmployeeController : Controller
     {
@@ -103,7 +103,12 @@ namespace backend.Controllers
         [HttpGet("getEmployeeByEmail")]
         public async Task<IActionResult> GetEmployeeByEmail([FromQuery] string branchId, string email)
         {
-            var response = await _employeeService.GetEmployeeByEmail(branchId ,email);
+            if (string.IsNullOrWhiteSpace(branchId) || string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest(new { Message = "Branch ID and Email are required." });
+            }
+
+            var response = await _employeeService.GetEmployeeByEmail(branchId, email);
 
             if (response.Success)
             {
@@ -134,12 +139,26 @@ namespace backend.Controllers
         {
             try
             {
-                await _employeeService.UpdateEmployee(branchId, employeeId, updatedEmployee);
-                return Ok(new { message = "Employee updated successfully" });
+                // ตรวจสอบข้อมูลที่จำเป็น
+                if (string.IsNullOrWhiteSpace(branchId) || string.IsNullOrWhiteSpace(employeeId) || updatedEmployee == null)
+                {
+                    return BadRequest(new { Success = false, Message = "BranchId, EmployeeId, and Employee object cannot be null or empty." });
+                }
+
+                // ดึงข้อมูลพนักงานเดิมจากฐานข้อมูล
+                var employeeResponse = await _employeeService.UpdateEmployee(branchId, employeeId, updatedEmployee);
+                if (!employeeResponse.Success)
+                {
+                    return NotFound(new { Success = false, Message = employeeResponse.Message });
+                }
+
+                return Ok(new { Success = true, Message = employeeResponse.Message });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                // Log the error for debugging
+                Console.WriteLine($"Error updating employee: {ex.Message}");
+                return StatusCode(500, new { Success = false, Message = $"Failed to update employee: {ex.Message}" });
             }
         }
 

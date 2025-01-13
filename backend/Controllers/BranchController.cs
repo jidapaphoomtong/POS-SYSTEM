@@ -14,7 +14,7 @@ namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [DisableCors]
+    // [DisableCors]
     [LogAction]
     public class BranchController : Controller
     {

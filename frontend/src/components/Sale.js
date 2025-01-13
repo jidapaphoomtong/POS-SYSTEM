@@ -9,19 +9,43 @@ export default function Sale() {
     const [categories, setCategories] = useState([]);
     const [items, setItems] = useState([]);
     const [selectedItems, setSelectedItems] = useState({});
-    
+    const [searchTerm, setSearchTerm] = useState("");
+    const [loading, setLoading] = useState(false);
+
     useEffect(() => {
-        // ดึงข้อมูลสินค้าและหมวดหมู่จาก API
         const fetchData = async () => {
             const token = Cookies.get("authToken");
-            const response = await axios.get('http://localhost:5293/api/products', {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-            setItems(response.data); // สมมติว่า response.data มีสินค้า
-            // ต้องการดึง categories ก็ให้ทำการดึงข้อมูลตามความเหมาะสม
+            const branchId = Cookies.get("branchId");
+
+            if (!branchId) {
+                alert("Branch ID is missing!");
+                return;
+            }
+
+            setLoading(true); // Start loading
+            try {
+                const productResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/products/branches/${branchId}/products`, {
+                    headers: { Authorization: `Bearer ${token}` },  
+                });
+                const categoryResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/categories/branches/${branchId}/getCategory`, {
+                    headers: { Authorization: `Bearer ${token}` },  
+                });
+                setItems(productResponse.data);
+                setCategories(categoryResponse.data);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+                alert("Failed to fetch data!");
+            }
+            setLoading(false); // End loading
         };
+
         fetchData();
     }, []);
+
+    const handleCategorySelect = (categoryId) => {
+        const filteredItems = items.filter(item => item.categoryId === categoryId);
+        setItems(filteredItems.length ? filteredItems : items);
+    };
 
     const handleSelectItem = (item) => {
         setSelectedItems((prevItems) => {
@@ -34,6 +58,14 @@ export default function Sale() {
             return newItems;
         });
     };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const filteredItems = items.filter(item => 
+        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const handleRemoveItem = (id) => {
         setSelectedItems((prevItems) => {
@@ -49,8 +81,9 @@ export default function Sale() {
 
     const handlePlaceOrder = async () => {
         const token = Cookies.get("authToken");
+        const branchId = Cookies.get("branchId");
         for (const item of Object.values(selectedItems)) {
-            const response = await axios.post(`http://localhost:5293/api/product/branchId/products/${item.id}/reducestock`, item.quantity, {
+            const response = await axios.post(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/products/${branchId}/products/${item.id}/reducestock`, { quantity: item.quantity }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             if (!response.data.success) {
@@ -73,17 +106,23 @@ export default function Sale() {
                             className="search-bar"
                             type="text"
                             placeholder="Search for items..."
+                            value={searchTerm}
+                            onChange={handleSearchChange}
                         />
                     </div>
                     <div className="categories">
-                        {categories.map((category, index) => (
-                            <button key={index} className="category-btn">
+                        {categories.map((category) => (
+                            <button 
+                                key={category.id} 
+                                className="category-btn"
+                                onClick={() => handleCategorySelect(category.id)}
+                            >
                                 {category.name} <span>{category.count} items</span>
                             </button>
                         ))}
                     </div>
                     <div className="items-grid">
-                        {items.map((item) => (
+                        {filteredItems.map((item) => (
                             <div key={item.id} className="item-card" onClick={() => handleSelectItem(item)}>
                                 <img src={item.image} alt={item.name} />
                                 <p>{item.name}</p>

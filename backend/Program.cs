@@ -6,6 +6,7 @@ using backend.Services;
 // using backend.Services.AdminService;
 using backend.Services.AuthService;
 using backend.Services.BranchService;
+using backend.Services.CategoryService;
 using backend.Services.EmployeeService;
 using backend.Services.ProductService;
 using backend.Services.Tokenservice;
@@ -15,8 +16,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
+using Google.Cloud.Firestore;
 
-var AllowSpecificOrigin = "_AllowSpecificOrigin";  // ชื่อนี้ต้องตรงกันเมื่อใช้ใน app.UseCors()
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,15 +45,14 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
     return new FirestoreDB(settings);
 });
 
-
 // เพิ่มการตั้งค่า CORS
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(AllowSpecificOrigin, builder =>
-        builder.WithOrigins("http://localhost:3000", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app")
-        .AllowAnyMethod()
-        .AllowAnyHeader()
-        .AllowCredentials());
+    options.AddPolicy("AllowSpecificOrigin",
+        builder => builder.WithOrigins("http://localhost:3000", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุโดเมนที่อนุญาต
+                          .AllowAnyMethod()
+                          .AllowAnyHeader()
+                          .AllowCredentials()); // เปิดใช้งาน Cookie
 });
 
 builder.Services.AddEndpointsApiExplorer();
@@ -87,6 +89,7 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IBranchService, BranchService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
 // builder.Services.AddScoped<IAdminService, AdminService>();
 // builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
 
@@ -200,14 +203,14 @@ builder.Services.AddControllers(options =>
                         .RequireAuthenticatedUser()
                         .Build();
         options.Filters.Add(new Microsoft.AspNetCore.Mvc.Authorization.AuthorizeFilter(policy));
-        // options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
+        options.Filters.Add<backend.Filters.CheckHeaderAttribute>();
     });
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration); // ให้บริการ IConfiguration
 
 // ลงทะเบียน Action Filters (ตัวกรอง)
 // builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
-// builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
+builder.Services.AddScoped<CheckHeaderAttribute>(); // ลงทะเบียน CheckHeaderAttribute
 
 // Explicitly configure URLs to listen on
 builder.WebHost.UseUrls("http://*:5293");
@@ -225,22 +228,22 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.UseHttpsRedirection();
-app.UseCors("AllowSpecificOrigin");
-
 app.Use(async (context, next) =>
 {
-    if (context.Request.Method == "OPTIONS")
+    if (context.Request.Method == HttpMethods.Options)
     {
-        context.Response.Headers.Add("Access-Control-Allow-Origin", "*"); // อาจต้องใช้ '*' หากคุณไม่จำกัดโดเมน
+        context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
         context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
-        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, x-posapp-header");
+        context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, , x-posapp-header");
+        context.Response.Headers.Add("Access-Control-Allow-Credentials", "true"); // ต้องเพิ่มค่าตรงนี้
         context.Response.StatusCode = 204; // No Content
         return;
     }
     await next();
 });
 
+app.UseHttpsRedirection();
+app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
 

@@ -25,7 +25,7 @@ export default function SelectBranch() {
                 try {
                     // console.log("Fetching branches...");
                     setIsLoading(true);
-                    const response = await axios.get("http://localhost:5293/api/Branch/branches", {
+                    const response = await axios.get("https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Branch/branches", {
                         headers: {
                             "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         },
@@ -61,7 +61,7 @@ export default function SelectBranch() {
         <div className="container">
             <h1 className="header">Select Department</h1>
             {isLoading ? (
-                <p>Loading branches...</p> // แสดง Loading ขณะกำลังโหลด
+                <div className="spinner"></div>
             ) : (
                 <>
                     <div className="search-container">

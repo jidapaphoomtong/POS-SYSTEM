@@ -24,7 +24,7 @@ namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [DisableCors]
+    // [DisableCors]
     [LogAction]
     // [ServiceFilter(typeof(CheckHeaderAttribute))]
     public class AuthController : ControllerBase
@@ -121,7 +121,7 @@ namespace backend.Controllers
             if (userSnapshot != null)
             {
                 var user = userSnapshot.ToDictionary();
-                Console.WriteLine(JsonConvert.SerializeObject(user));
+                // Console.WriteLine(JsonConvert.SerializeObject(user));
 
                 if (!_authService.VerifyPassword(userLogin.Password, user["passwordHash"].ToString(), user["salt"].ToString()))
                 {
@@ -133,10 +133,10 @@ namespace backend.Controllers
                     : RoleName.Employee;
 
                 // ตรวจสอบ branchId (กรณีที่ต้องการ)
-                if (user.ContainsKey("branchId"))
-                {
-                    branchId = user["branchId"].ToString();
-                }
+                // if (user.ContainsKey("branchId"))
+                // {
+                //     branchId = user["branchId"].ToString();
+                // }
                 
             }
             else
@@ -163,16 +163,7 @@ namespace backend.Controllers
                 }
 
                 // // ตรวจสอบบทบาทของพนักงาน
-                if (employee.roles != null && employee.roles.Any())
-                {
-                    role = employee.roles.First().Name; // ดึงชื่อบทบาทจาก Role แรก
-                }
-                else
-                {
-                    role = RoleName.Employee; // ถ้าไม่มี ให้ใช้ค่าเริ่มต้น
-                }
-                
-                // role = RoleName.Employee; 
+                role = employee.roles != null && employee.roles.Any() ? employee.roles.First().Name : RoleName.Employee;
                 branchId = employee.branchId;
             }
 

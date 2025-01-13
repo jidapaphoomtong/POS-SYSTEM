@@ -14,7 +14,7 @@ namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [DisableCors]
+    // [DisableCors]
     [LogAction]
     public class ProductController : Controller
     {
@@ -53,6 +53,7 @@ namespace backend.Controllers
             }
         }
 
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
         [HttpGet("{branchId}/products/{productId}")]
         public async Task<IActionResult> GetProductById(string branchId, string productId)
         {
@@ -94,6 +95,7 @@ namespace backend.Controllers
             }
         }
 
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpPost("{branchId}/products/{productId}/addstock")]
         public async Task<IActionResult> AddStock(string branchId, string productId, [FromBody] int quantity)
         {
@@ -105,6 +107,7 @@ namespace backend.Controllers
             return BadRequest(result.Message);
         }
 
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpPost("{branchId}/products/{productId}/reducestock")]
         public async Task<IActionResult> ReduceStock(string branchId, string productId, [FromBody] int quantity)
         {

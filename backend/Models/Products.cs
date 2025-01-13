@@ -22,5 +22,9 @@ namespace backend.Models
         public int stock { get; set; }
         [FirestoreProperty]
         public double price { get; set; }
+        [FirestoreProperty]
+        public string categoryId { get; set; }
+        [FirestoreProperty]
+        public string branchId { get; set; } // เพิ่มฟิลด์สำหรับ branchId
     }
 }
