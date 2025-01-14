@@ -53,7 +53,7 @@ const EmployeeDetail = () => {
         <div className="employee-detail-container">
             <h2>{employee.firstName} {employee.lastName}</h2>
             <p>Email: {employee.email}</p>
-            <p>Position: {employee.position}</p>
+            <p>Position: {employee.roles}</p>
             {/* เพิ่มข้อมูลเพิ่มเติมที่ต้องการแสดง */}
             <button onClick={() => navigate(-1)}>Back</button>
         </div>

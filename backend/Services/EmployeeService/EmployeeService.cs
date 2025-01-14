@@ -300,7 +300,7 @@ namespace backend.Services.EmployeeService
             catch (Exception ex)
             {
                 // Log the error for debugging
-                Console.WriteLine($"Error updating employee: {ex.Message}");
+                // Console.WriteLine($"Error updating employee: {ex.Message}");
                 return ServiceResponse<string>.CreateFailure($"Failed to update employee: {ex.Message}");
             }
         }

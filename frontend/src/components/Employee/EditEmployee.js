@@ -8,12 +8,17 @@ const EditEmployee = () => {
     const navigate = useNavigate();
     const { employeeId } = useParams(); // ดึง Employee ID จาก URL
     const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    // ตรวจสอบการกำหนดค่าคงที่ใหม่
+    const existingSalt = "";  // ต้องมีการกำหนดค่า
+    const existingPasswordHash = ""; // ต้องมีการกำหนดค่า
 
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
         email: "",
     });
+
+    const [roles, setRoles] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
@@ -34,22 +39,23 @@ const EditEmployee = () => {
                         Authorization: `Bearer ${token}`,
                     },
                     withCredentials: true,
-                }); console.log(response);
-
-                if (response.status === 200) {
-                    if (response.success) {
-                        // const { firstName, lastName, email } = response.data;
-                        // setFormData({ firstName, lastName, email });
-                        setFormData({
-                            firstName: response.data.firstName,
-                            lastName: response.data.lastName,
-                            email: response.data.email,
-                        });
-                    }
-                    console.log(response.data)
+                });
+        
+                console.log(response.data); // เพิ่มบรรทัดนี้เพื่อตรวจสอบข้อมูล
+        
+                // ตรวจสอบว่า response.data มีข้อมูลตามที่เราต้องการหรือไม่
+                if (response.status === 200 && response.data) {
+                    setFormData({
+                        firstName: response.data.firstName,
+                        lastName: response.data.lastName,
+                        email: response.data.email,
+                        id: response.data.id, // เก็บ ID ที่ถูกต้อง
+                    });
+                    setRoles(response.data.roles); // เก็บ roles ไว้
                 }
             } catch (error) {
                 alert("Failed to fetch employee details.");
+                console.error('Error fetching employee details:', error);
                 navigate(`/EmployeeList?branch=${branchId}`);
             } finally {
                 setIsLoading(false);
@@ -65,29 +71,47 @@ const EditEmployee = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+    
+        // ตรวจสอบให้แน่ใจว่าฟิลด์ที่สำคัญครบถ้วน
         if (!formData.firstName || !formData.lastName || !formData.email) {
             alert("Please fill out all fields!");
             return;
         }
-
+    
         setIsLoading(true);
         const token = Cookies.get("authToken");
-
+    
+        // เตรียม object ที่จะส่งไป
+        const employeeData = {
+            id: formData.id,  // ใช้ id ที่ถูกต้อง
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            roles: roles, // ใช้ roles ที่ดึงมาจาก API
+            branchId: branchId,
+            // ควรรวม salt และ passwordHash หากจำเป็น
+            salt: existingSalt,  // ดึงค่าจากที่เก็บข้อมูล
+            passwordHash: existingPasswordHash // ดึงค่าจากที่เก็บข้อมูล
+        };
+    
+        console.log('Employee Data:', employeeData); // ดูข้อมูลก่อนส่ง
+    
         try {
-            const response = await axios.put(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/employees/${employeeId}`, formData, {
+            const response = await axios.put(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/branches/${branchId}/employees/${employeeId}`, employeeData, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
-
+    
             if (response.status === 200) {
                 alert("Employee updated successfully!");
                 navigate(`/EmployeeList?branch=${branchId}`);
             }
         } catch (error) {
             alert("Failed to update employee.");
+            console.error("Error updating employee:", error.response ? error.response.data : error.message);
         } finally {
             setIsLoading(false);
         }
