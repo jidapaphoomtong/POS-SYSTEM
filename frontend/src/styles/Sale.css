@@ -12,6 +12,32 @@
     overflow: hidden;
 }
 
+.main-content {
+    display: flex; /* ใช้ Flexbox */
+    flex-direction: column; /* เรียงในแนวตั้ง */
+    padding: 20px; /* เพิ่ม Padding รอบนอก */
+}
+
+.main-content-order {
+    display: grid;
+    grid-template-columns: 1fr 300px; /* สินค้าอยู่ทางซ้าย, Order Summary อยู่ทางขวา */
+    gap: 20px; /* ระยะห่างระหว่างสองส่วน */
+}
+
+.order-summary {
+    width: 300px; /* ขนาดที่ต้องการสำหรับ Order Summary */
+    background-color: #fff; /* เพิ่มพื้นหลังให้มองเห็นได้ชัด */
+    padding: 15px; /* เพิ่มการ padding รอบๆ */
+    border-radius: 10px; /* ขอบมน */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* เงาเบา ๆ */
+}
+
+.items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* สินค้าในรูปแบบกริด */
+    gap: 20px; /* ระยะห่างระหว่างสินค้า */
+}
+
 /* Sidebar */
 .sidebar {
     grid-column: 1 / 2;
@@ -43,11 +69,11 @@
 }
 
 .categories {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px; /* ช่องว่างระหว่างปุ่ม */
-    justify-content: center; /* วางปุ่มให้อยู่ตรงกลาง */
-    margin-bottom: 20px;
+    display: flex; 
+    justify-content: center; /* จัดกลาง */
+    flex-wrap: wrap; /* ให้หมวดหมู่เลื่อนได้ถ้าพื้นที่ไม่พอ */
+    gap: 15px; /* ระยะห่างระหว่างปุ่มหมวดหมู่ */
+    margin-bottom: 20px; /* เพิ่มระยะห่างด้านล่าง */
 }
 
 .category-btn {
