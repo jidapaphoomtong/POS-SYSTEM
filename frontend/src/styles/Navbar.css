@@ -12,9 +12,9 @@
   .navbar-container {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    max-width: 1200px;
+    justify-content: flex-end; /* ทำให้เนื้อหาทั้งหมดอยู่ที่ขวาสุด */
+    width: 100%; /* ใช้พื้นที่ทั้งหมด */
+    max-width: 1200px; /* สามารถกำหนดขนาดสูงสุดได้ */
   }
   
   /* Search Bar */
