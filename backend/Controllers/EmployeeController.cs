@@ -32,17 +32,19 @@ namespace backend.Controllers
             try
             {
                 // ตรวจสอบสิทธิ์ของผู้ใช้
-                var userName = User.FindFirst(ClaimTypes.Name)?.Value; 
                 var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-
                 if (string.IsNullOrEmpty(userRole) || userRole != "Admin")
                 {
                     return Forbid("You do not have permission to add employees.");
                 }
 
-                // สร้าง Salt และ Hash Password
-                string salt = GenerateSalt();
-                string hashedPassword = HashPassword(employee.passwordHash, salt);
+                // ตรวจสอบข้อมูลที่จำเป็น
+                if (string.IsNullOrWhiteSpace(branchId) || employee == null || 
+                    string.IsNullOrWhiteSpace(employee.email) || 
+                    string.IsNullOrWhiteSpace(employee.passwordHash))
+                {
+                    return BadRequest("BranchId, email, and password cannot be null or empty.");
+                }
 
                 // เรียกใช้งาน Service Layer เพื่อเพิ่มพนักงาน
                 var response = await _employeeService.AddEmployee(branchId, employee);

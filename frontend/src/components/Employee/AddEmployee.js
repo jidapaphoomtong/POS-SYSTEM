@@ -6,12 +6,13 @@ import { useNavigate } from "react-router-dom";
 
 const AddEmployee = () => {
     const navigate = useNavigate();
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง branchId จาก URL
+    const branchId = new URLSearchParams(window.location.search).get("branch");
 
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
-        email: ""
+        email: "",
+        password: "",
     });
 
     const [isLoading, setIsLoading] = useState(false);
@@ -22,38 +23,49 @@ const AddEmployee = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        const branchId = new URLSearchParams(window.location.search).get("branch"); // Ensure branchId is set
-
-        if (!formData.firstName || !formData.lastName || !formData.email) {
+    
+        // ตรวจสอบว่าทุกฟิลด์ถูกกรอกครบถ้วน
+        if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
             alert("Please fill out all fields!");
             return;
         }
-
+    
         setIsLoading(true);
-
+    
+        const token = Cookies.get("authToken");
+        if (!token) {
+            alert("No token found. Please log in again.");
+            setIsLoading(false);
+            return;
+        }
+    
+        const employeeData = {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            email: formData.email,
+            passwordHash: formData.password, // ตรวจสอบการเปลี่ยนชื่อให้ถูกต้อง
+            branchId: branchId, // รวม branchId ใน объект employeeData
+        };
+    
+        console.log('Employee Data:', employeeData); // พิมพ์ค่าที่ส่งเพื่อการแก้ไข
+    
         try {
-            const token = Cookies.get("authToken");
-            if (!token) {
-                alert("No token found. Please log in again.");
-                return;
-            }
-
-            const response = await axios.post(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/add-employee`, {
-                ...formData,
-                branchId: branchId, // ส่ง branchId
-            }, {
-                headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-                withCredentials: true,
-            });
-
+            const response = await axios.post(
+                `https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/add-employee/${branchId}`,
+                employeeData, // ส่งข้อมูล
+                {
+                    headers: {
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                    },
+                    withCredentials: true,
+                }
+            );
+    
             if (response.status === 200) {
                 alert("Employee added successfully!");
-                navigate(`/EmployeeList?branch=${branchId}`); // นำทางกลับไปที่ EmployeeList
+                navigate(`/EmployeeList?branch=${branchId}`);
             }
         } catch (error) {
             console.error("Error adding employee:", error);
@@ -67,35 +79,51 @@ const AddEmployee = () => {
         <div className="add-employee-container">
             <h2>Add Employee</h2>
             <form onSubmit={handleSubmit} className="add-employee-form">
-                <input
-                    type="text"
-                    name="firstName"
-                    placeholder="First Name"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    required
+                <input 
+                    type="text" 
+                    name="firstName" 
+                    placeholder="First Name" 
+                    value={formData.firstName} 
+                    onChange={handleChange} 
+                    required 
                 />
-                <input
-                    type="text"
-                    name="lastName"
-                    placeholder="Last Name"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    required
+                <input 
+                    type="text" 
+                    name="lastName" 
+                    placeholder="Last Name" 
+                    value={formData.lastName} 
+                    onChange={handleChange} 
+                    required 
                 />
-                <input
-                    type="text"
-                    name="email"
-                    placeholder="Email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
+                <input 
+                    type="text" 
+                    name="email" 
+                    placeholder="Email" 
+                    value={formData.email} 
+                    onChange={handleChange} 
+                    required 
+                />
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Password" 
+                    value={formData.password} 
+                    onChange={handleChange} 
+                    required 
                 />
                 <div className="form-buttons">
-                    <button type="button" onClick={() => navigate(`/EmployeeList?branch=${branchId}`)} className="cancel-button">
+                    <button 
+                        type="button" 
+                        onClick={() => navigate(`/EmployeeList?branch=${branchId}`)} 
+                        className="cancel-button"
+                    >
                         Cancel
                     </button>
-                    <button type="submit" className="save-button">
+                    <button 
+                        type="submit" 
+                        className="save-button" 
+                        disabled={isLoading}
+                    >
                         {isLoading ? "Saving..." : "Save"}
                     </button>
                 </div>

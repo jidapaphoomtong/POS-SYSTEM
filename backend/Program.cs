@@ -229,7 +229,7 @@ app.Use(async (context, next) =>
 {
     if (context.Request.Method == HttpMethods.Options)
     {
-        context.Response.Headers.Add("Access-Control-Allow-Origin", "https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app");
+        context.Response.Headers.Add("Access-Control-Allow-Origin","https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app");
         context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, , x-posapp-header");
         context.Response.Headers.Add("Access-Control-Allow-Credentials", "true"); // ต้องเพิ่มค่าตรงนี้
