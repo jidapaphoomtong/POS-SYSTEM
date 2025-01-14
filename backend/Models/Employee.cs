@@ -15,6 +15,10 @@ namespace backend.Models
         public string lastName { get; set; } = string.Empty;
         [FirestoreProperty]
         public string email { get; set; } = string.Empty;
+        // [FirestoreProperty]
+        // public string phone { get; set; } = string.Empty; // Phone
+        // [FirestoreProperty]
+        // public int age { get; set; } // Age
         [FirestoreProperty]
         public string passwordHash { get; set; } = string.Empty;
         [FirestoreProperty]
@@ -23,9 +27,5 @@ namespace backend.Models
         public string branchId { get; set; } // เพิ่มฟิลด์สำหรับ branchId
         [FirestoreProperty]
         public string salt { get; set; } // เพิ่ม property นี้
-        // [FirestoreProperty]
-        // public Timestamp CreatedAt { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
-        // [FirestoreProperty]
-        // public Timestamp UpdatedAt { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
     }
 }

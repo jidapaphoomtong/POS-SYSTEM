@@ -11,27 +11,59 @@ export default function Sale() {
     const [selectedItems, setSelectedItems] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
+    const [showOrderSummary, setShowOrderSummary] = useState(false);  
 
     useEffect(() => {
         const fetchData = async () => {
             const token = Cookies.get("authToken");
-            const branchId = Cookies.get("branchId");
-
+            const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+            
             if (!branchId) {
                 alert("Branch ID is missing!");
                 return;
             }
 
             setLoading(true); // Start loading
+
             try {
-                const productResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/products/branches/${branchId}/products`, {
-                    headers: { Authorization: `Bearer ${token}` },  
+                // Fetch Products
+                const productResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Product/branches/${branchId}/products`, {
+                    headers: { 
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        Authorization: `Bearer ${token}` 
+                    },
+                    withCredentials: true,
                 });
-                const categoryResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/categories/branches/${branchId}/getCategory`, {
-                    headers: { Authorization: `Bearer ${token}` },  
+
+                if (productResponse.data.success) {
+                    const products = productResponse.data.data.map(item => ({
+                        Id: item.data.Id,
+                        ImgUrl: item.data.ImgUrl,
+                        productName: item.data.productName,
+                        description: item.data.description,
+                        stock: item.data.stock,
+                        price: item.data.price,
+                        categoryId: item.data.categoryId,
+                        branchId: item.data.branchId,
+                    }));
+                    setItems(products); // Set the products in state
+                } else {
+                    alert(productResponse.data.message);
+                }
+
+                // Fetch Categories
+                const categoryResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Category/branches/${branchId}/getCategory`, {
+                    headers: { 
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        Authorization: `Bearer ${token}` 
+                    },
+                    withCredentials: true,  
                 });
-                setItems(productResponse.data);
-                setCategories(categoryResponse.data);
+                
+                if (categoryResponse.data.success) {
+                    setCategories(categoryResponse.data.data); // Set categories
+                }
+
             } catch (error) {
                 console.error("Failed to fetch data:", error);
                 alert("Failed to fetch data!");
@@ -50,11 +82,27 @@ export default function Sale() {
     const handleSelectItem = (item) => {
         setSelectedItems((prevItems) => {
             const newItems = { ...prevItems };
-            if (newItems[item.id]) {
-                newItems[item.id].quantity += 1;
+            if (newItems[item.Id]) {
+                newItems[item.Id].quantity += 1 ;
             } else {
-                newItems[item.id] = { ...item, quantity: 1 };
+                newItems[item.Id] = { ...item, quantity: 1 };
             }
+            return newItems;
+        });
+    
+        setShowOrderSummary(true);
+    };
+
+    const handleRemoveItem = (id) => {
+        setSelectedItems(prevItems => {
+            const newItems = { ...prevItems };
+            delete newItems[id];
+    
+            // ตรวจสอบว่าหากไม่มีสินค้าใน selectedItems ให้ซ่อน Order Summary
+            if (Object.keys(newItems).length === 0) {
+                setShowOrderSummary(false);
+            }
+            
             return newItems;
         });
     };
@@ -64,16 +112,8 @@ export default function Sale() {
     };
 
     const filteredItems = items.filter(item => 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        item.productName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-
-    const handleRemoveItem = (id) => {
-        setSelectedItems((prevItems) => {
-            const newItems = { ...prevItems };
-            delete newItems[id];
-            return newItems;
-        });
-    };
 
     const calculateTotal = () => {
         return Object.values(selectedItems).reduce((total, item) => total + item.price * item.quantity, 0);
@@ -82,9 +122,14 @@ export default function Sale() {
     const handlePlaceOrder = async () => {
         const token = Cookies.get("authToken");
         const branchId = Cookies.get("branchId");
+        
         for (const item of Object.values(selectedItems)) {
-            const response = await axios.post(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/products/${branchId}/products/${item.id}/reducestock`, { quantity: item.quantity }, {
-                headers: { Authorization: `Bearer ${token}` },
+            const response = await axios.post(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Product/${branchId}/products/${item.Id}/reducestock`, { quantity: item.quantity }, {
+                headers: { 
+                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                    Authorization: `Bearer ${token}` 
+                },
+                withCredentials: true,
             });
             if (!response.data.success) {
                 alert("Failed to reduce stock for some items, please check!");
@@ -101,6 +146,8 @@ export default function Sale() {
             <div className="content">
                 <SideBar />
                 <div className="main-content">
+                    {loading && <div>Loading...</div>} {/* Loading indicator */}
+                    
                     <div className="search-container">
                         <input
                             className="search-bar"
@@ -110,6 +157,7 @@ export default function Sale() {
                             onChange={handleSearchChange}
                         />
                     </div>
+                    
                     <div className="categories">
                         {categories.map((category) => (
                             <button 
@@ -117,30 +165,39 @@ export default function Sale() {
                                 className="category-btn"
                                 onClick={() => handleCategorySelect(category.id)}
                             >
-                                {category.name} <span>{category.count} items</span>
+                                {category.name} <span>{category.count}</span>
                             </button>
                         ))}
                     </div>
+                    <div className="main-content-order">
                     <div className="items-grid">
                         {filteredItems.map((item) => (
-                            <div key={item.id} className="item-card" onClick={() => handleSelectItem(item)}>
-                                <img src={item.image} alt={item.name} />
-                                <p>{item.name}</p>
-                                <p>${item.price}</p>
+                            <div key={item.Id} className="item-card" onClick={() => handleSelectItem(item)}>
+                                <img src={item.ImgUrl} alt={item.productName} />
+                                <p>{item.productName}</p>
+                                <p>{item.price} บาท</p>
                             </div>
                         ))}
                     </div>
-                    <div className="order-summary">
-                        <h2>ORDER SUMMARY</h2>
-                        {Object.values(selectedItems).map(item => (
-                            <div key={item.id} className="order-item">
-                                <p>{item.name} - ${item.price} x {item.quantity}</p>
-                                <button onClick={() => handleRemoveItem(item.id)}>❌</button>
-                            </div>
-                        ))}
-                        <hr />
-                        <p>Total: ${calculateTotal()}</p>
-                        <button onClick={handlePlaceOrder}>Place Order</button>
+                    
+                    {showOrderSummary && ( // แสดง Order Summary ถ้ามีการเลือกสินค้า
+                        <div className="order-summary">
+                            <h2>ORDER SUMMARY</h2>
+                            {Object.values(selectedItems).length > 0 ? ( // ตรวจสอบว่ามีการเลือกสินค้าหรือไม่
+                                Object.values(selectedItems).map(item => (
+                                    <div key={item.Id} className="order-item">
+                                        <p>{item.productName} : ฿{item.price} x {item.quantity}</p>
+                                        <button onClick={() => handleRemoveItem(item.Id)}>❌</button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p>No items selected</p> // แจ้งเตือนเมื่อไม่มีรายการที่เลือก
+                            )}
+                            <hr />
+                            <p>Total: {calculateTotal()} บาท</p>
+                            <button onClick={handlePlaceOrder}>Place Order</button>
+                        </div>
+                    )}
                     </div>
                 </div>
             </div>

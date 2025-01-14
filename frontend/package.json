@@ -8,6 +8,7 @@
     "cra-template": "1.2.0",
     "dotenv": "^16.4.7",
     "firebase": "^11.1.0",
+    "http-proxy-middleware": "^3.0.3",
     "js-cookie": "^3.0.5",
     "jwt-decode": "^4.0.0",
     "react": "^19.0.0",
