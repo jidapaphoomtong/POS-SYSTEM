@@ -9,6 +9,8 @@ namespace backend.Models
     {
         [FirestoreProperty]
         public string Id { get; set; } = string.Empty; // ไอดีพนักงาน
+        // [FirestoreProperty]
+        // public string ImgUrl { get; set; } = string.Empty; // ไอดีพนักงาน
         [FirestoreProperty]
         public string firstName { get; set; } = string.Empty;
         [FirestoreProperty]

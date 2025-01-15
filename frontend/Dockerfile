@@ -1,23 +1,43 @@
-# Start your image with a node base image
-FROM node:18-alpine
+# -----------------------------
+# Stage 1: Build React App
+# -----------------------------
+FROM node:18-alpine AS builder
 
-# The /app directory should act as the main application directory
 WORKDIR /app
 
-# Copy the app package and package-lock.json file
+# คัดลอก package.json และ package-lock.json (ถ้ามี)
 COPY package*.json ./
 
-# Copy local directories to the current local directory of our docker image (/app)
-COPY ./src ./src
-COPY ./public ./public
+# ติดตั้ง dependencies สำหรับ build
+RUN npm install
 
-# Install node packages, install serve, build the app, and remove dependencies at the end
-RUN npm install \
-    && npm install -g serve \
-    && npm run build \
-    && rm -fr node_modules
+# คัดลอก source code ทั้งหมด
+COPY . .
 
+# สร้าง production build ของ React App
+RUN npm run build
+
+# -----------------------------
+# Stage 2: Deploy ด้วย Express Server
+# -----------------------------
+FROM node:18-alpine
+
+WORKDIR /app
+
+# คัดลอกไฟล์ package.json เพื่อทำการติดตั้ง production dependencies
+COPY package*.json ./
+
+# ติดตั้ง dependencies แบบ production
+RUN npm install --only=production
+
+# คัดลอกไฟล์ build ที่ได้จาก Stage 1
+COPY --from=builder /app/build ./build
+
+# คัดลอกไฟล์ server.js เพื่อใช้งาน Express server
+COPY server.js ./
+
+# เปิด port 3000
 EXPOSE 3000
 
-# Start the app using serve command
-CMD [ "serve", "-s", "build" ]
+# รัน Express server
+CMD [ "npm", "start" ]

@@ -14,15 +14,15 @@ namespace backend.Services
                 new {
                     Type = "service_account",
                     project_id = settings.PROJECT_ID,
-                    private_key = settings.PrivateKey.Replace("\\n","\n"),
-                    client_email = settings.ClientEmail,
+                    private_key = settings.PRIVATE_KEY.Replace("\\n","\n"),
+                    client_email = settings.CLIENT_EMAIL,
                 }
             );
 
             _db = new FirestoreDbBuilder
             {
                 ProjectId = settings.PROJECT_ID,
-                DatabaseId = settings.DatabaseId,
+                DatabaseId = settings.DATABASE_ID,
                 JsonCredentials = apiKeyJson,
             }.Build();
         }
