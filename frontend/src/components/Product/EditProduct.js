@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 const EditProduct = () => {
     const navigate = useNavigate();
     const { productId } = useParams(); // ดึง Product ID จาก URL
+    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
 
     const [formData, setFormData] = useState({
         productName: "",

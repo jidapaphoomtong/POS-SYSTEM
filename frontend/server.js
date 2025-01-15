@@ -10,7 +10,7 @@ const app = express();
 app.use(
     '/api',
     createProxyMiddleware({
-        target: 'https://jidapa-backend-service-570827139477.asia-southeast1.run.app/api', // เปลี่ยน URL backend ที่คุณต้องการ
+        target: 'https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api', // เปลี่ยน URL backend ที่คุณต้องการ
         changeOrigin: true,
     })
 );
