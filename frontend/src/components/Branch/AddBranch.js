@@ -36,7 +36,7 @@ const AddBranch = ({ onAddSuccess }) => {
                 return;
             }
         
-            const response = await axios.post(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Branch/add-branch`, formData, {
+            const response = await axios.post(`/api/Branch/add-branch`, formData, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,

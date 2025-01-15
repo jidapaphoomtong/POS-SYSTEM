@@ -36,7 +36,7 @@ configSection.Bind(settings);
 builder.Services.AddSingleton<IConfiguration>(_ => configuration);
 
 // โหลดค่าการตั้งค่า Firestore จาก appsettings.json
-builder.Services.Configure<FirestoreSettings>(builder.Configuration.GetSection("FirestoreSettings"));
+builder.Services.Configure<FirestoreSettings>(builder.Configuration.GetSection("FIREBASE"));
 
 // ลงทะเบียน FirestoreDB เป็น Service ด้วย DI
 builder.Services.AddSingleton<FirestoreDB>(sp =>
@@ -49,7 +49,7 @@ builder.Services.AddSingleton<FirestoreDB>(sp =>
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowSpecificOrigin",
-        builder => builder.WithOrigins("https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app") // ระบุโดเมนที่อนุญาต
+        builder => builder.WithOrigins("http://localhost:3000") // ระบุโดเมนที่อนุญาต
                           .AllowAnyMethod()
                           .AllowAnyHeader()
                           .AllowCredentials()); // เปิดใช้งาน Cookie
@@ -229,7 +229,7 @@ app.Use(async (context, next) =>
 {
     if (context.Request.Method == HttpMethods.Options)
     {
-        context.Response.Headers.Add("Access-Control-Allow-Origin","https://jidapa-frontend-service-qh6is2mgxa-as.a.run.app");
+        context.Response.Headers.Add("Access-Control-Allow-Origin","http://localhost:3000");
         context.Response.Headers.Add("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
         context.Response.Headers.Add("Access-Control-Allow-Headers", "Content-Type, Authorization, , x-posapp-header");
         context.Response.Headers.Add("Access-Control-Allow-Credentials", "true"); // ต้องเพิ่มค่าตรงนี้

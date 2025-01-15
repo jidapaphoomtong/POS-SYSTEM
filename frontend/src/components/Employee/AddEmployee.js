@@ -43,16 +43,16 @@ const AddEmployee = () => {
             firstName: formData.firstName,
             lastName: formData.lastName,
             email: formData.email,
-            passwordHash: formData.password, // ตรวจสอบการเปลี่ยนชื่อให้ถูกต้อง
-            branchId: branchId, // รวม branchId ใน объект employeeData
+            passwordHash: formData.password,
+            branchId: branchId,
         };
-    
-        console.log('Employee Data:', employeeData); // พิมพ์ค่าที่ส่งเพื่อการแก้ไข
+
+        console.log(employeeData)
     
         try {
             const response = await axios.post(
-                `https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/add-employee/${branchId}`,
-                employeeData, // ส่งข้อมูล
+                `/api/Employee/add-employee/${branchId}`,
+                employeeData, // ส่งข้อมูลพนักงาน
                 {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
