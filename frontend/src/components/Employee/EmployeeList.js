@@ -28,7 +28,7 @@ const EmployeeList = () => {
 
             setIsLoading(true);
             try {
-                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/branches/${branchId}/employees`, {
+                const response = await axios.get(`/api/Employee/branches/${branchId}/employees`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -78,28 +78,28 @@ const EmployeeList = () => {
         };
         
         const handleConfirmDelete = async () => {
-        const token = Cookies.get("authToken");
-        
-        try {
-            const response = await axios.delete(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/employees/${deleteEmployeeId}`, {
-            headers: {
-            "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-            Authorization: `Bearer ${token}`,
-        },
-            withCredentials: true,
-        });
-        
-        if (response.status === 200) {
-            alert("Employee deleted successfully!");
-            setEmployees((prevEmployees) => prevEmployees.filter((employee) => employee.id !== deleteEmployeeId));
-            handleCloseDeleteModal();
-        } else {
-            alert("Failed to delete employee.");
-        }
-        } catch (error) {
-            console.error("Failed to delete employee:", error);
-            alert("Failed to delete employee: " + (error.response?.data?.message || "Unknown error"));
-        }
+            const token = Cookies.get("authToken");
+            
+            try {
+                const response = await axios.delete(`/api/Employee/branches/${branchId}/employees/${deleteEmployeeId}`, { // ตรวจสอบ URL นี้
+                    headers: {
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        Authorization: `Bearer ${token}`,
+                    },
+                    withCredentials: true,
+                });
+                
+                if (response.status === 200) {
+                    alert("Employee deleted successfully!");
+                    setEmployees((prevEmployees) => prevEmployees.filter((employee) => employee.id !== deleteEmployeeId));
+                    handleCloseDeleteModal();
+                } else {
+                    alert("Failed to delete employee.");
+                }
+            } catch (error) {
+                console.error("Failed to delete employee:", error);
+                alert("Failed to delete employee: " + (error.response?.data?.message || "Unknown error"));
+            }
         };
         
         // Extract branchId for navigation

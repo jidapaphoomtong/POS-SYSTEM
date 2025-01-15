@@ -33,7 +33,7 @@ const EditEmployee = () => {
         const fetchEmployee = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/getEmployeeById?branchId=${branchId}&employeeId=${employeeId}`, {
+                const response = await axios.get(`/api/Employee/getEmployeeById?branchId=${branchId}&employeeId=${employeeId}`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -41,7 +41,7 @@ const EditEmployee = () => {
                     withCredentials: true,
                 });
         
-                console.log(response.data); // เพิ่มบรรทัดนี้เพื่อตรวจสอบข้อมูล
+                console.log(response); // เพิ่มบรรทัดนี้เพื่อตรวจสอบข้อมูล
         
                 // ตรวจสอบว่า response.data มีข้อมูลตามที่เราต้องการหรือไม่
                 if (response.status === 200 && response.data) {
@@ -97,7 +97,7 @@ const EditEmployee = () => {
         console.log('Employee Data:', employeeData); // ดูข้อมูลก่อนส่ง
     
         try {
-            const response = await axios.put(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/branches/${branchId}/employees/${employeeId}`, employeeData, {
+            const response = await axios.put(`/api/Employee/branches/${branchId}/employees/${employeeId}`, employeeData, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,

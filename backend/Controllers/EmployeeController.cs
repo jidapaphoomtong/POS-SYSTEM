@@ -178,7 +178,8 @@ namespace backend.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
-[CustomAuthorizeRole("Admin")]
+
+        [CustomAuthorizeRole("Admin")]
         [HttpDelete("deleteall/{branchId}")]
         public async Task<IActionResult> DeleteAllEmployees(string branchId)
         {

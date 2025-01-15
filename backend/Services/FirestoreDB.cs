@@ -13,7 +13,7 @@ namespace backend.Services
             string apiKeyJson = JsonConvert.SerializeObject(
                 new {
                     Type = "service_account",
-                    project_id = settings.ProjectId,
+                    project_id = settings.PROJECT_ID,
                     private_key = settings.PrivateKey.Replace("\\n","\n"),
                     client_email = settings.ClientEmail,
                 }
@@ -21,7 +21,7 @@ namespace backend.Services
 
             _db = new FirestoreDbBuilder
             {
-                ProjectId = settings.ProjectId,
+                ProjectId = settings.PROJECT_ID,
                 DatabaseId = settings.DatabaseId,
                 JsonCredentials = apiKeyJson,
             }.Build();

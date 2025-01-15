@@ -27,7 +27,7 @@ export default function Sale() {
 
             try {
                 // Fetch Products
-                const productResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Product/branches/${branchId}/products`, {
+                const productResponse = await axios.get(`/api/Product/branches/${branchId}/products`, {
                     headers: { 
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}` 
@@ -52,7 +52,7 @@ export default function Sale() {
                 }
 
                 // Fetch Categories
-                const categoryResponse = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Category/branches/${branchId}/getCategory`, {
+                const categoryResponse = await axios.get(`/api/Category/branches/${branchId}/getCategory`, {
                     headers: { 
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}` 
@@ -124,7 +124,7 @@ export default function Sale() {
         const branchId = Cookies.get("branchId");
         
         for (const item of Object.values(selectedItems)) {
-            const response = await axios.post(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Product/${branchId}/products/${item.Id}/reducestock`, { quantity: item.quantity }, {
+            const response = await axios.post(`/api/Product/${branchId}/products/${item.Id}/reducestock`, { quantity: item.quantity }, {
                 headers: { 
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}` 
