@@ -28,7 +28,7 @@ const Login = () => {
         try {
             // ส่งคำขอ Login ไปยัง Backend
             const response = await axios.post(
-                "https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Auth/login",
+                "/api/Auth/login",
                 { email, password, branchId }, // รวม branchId ไป
                 {
                     headers: {
