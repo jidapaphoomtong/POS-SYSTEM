@@ -5,6 +5,8 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 
 const AddEmployee = () => {
+    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",

@@ -1,10 +1,10 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import EditProduct from "./EditProduct";
-import ConfirmationModal from "./ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import "../../styles/product.css";
 import Cookies from "js-cookie";
+import ConfirmationModal from "./ConfirmationModal";
 
 const ProductList = () => {
     const [products, setProducts] = useState([]); 
@@ -13,6 +13,7 @@ const ProductList = () => {
     const [editProduct, setEditProduct] = useState(null);
     const [deleteProductId, setDeleteProductId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
 
     // Fetch Product List
     useEffect(() => {

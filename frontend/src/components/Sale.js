@@ -93,6 +93,31 @@ export default function Sale() {
         setShowOrderSummary(true);
     };
 
+    const handleIncreaseQuantity = (itemId) => {
+        setSelectedItems((prevItems) => {
+            const newItems = { ...prevItems };
+            if (newItems[itemId]) {
+                newItems[itemId].quantity += 1; // เพิ่ม quantity ขึ้น 1
+            }
+            return newItems;
+        });
+    };
+    
+    const handleDecreaseQuantity = (itemId) => {
+        setSelectedItems((prevItems) => {
+            const newItems = { ...prevItems };
+            if (newItems[itemId]) {
+                if (newItems[itemId].quantity > 1) {
+                    newItems[itemId].quantity -= 1; // ลด quantity ลง 1 ถ้าค่ามากกว่า 1
+                } else {
+                    delete newItems[itemId]; // ถ้าลดลงจนถึง 1 จะลบสินค้านั้นออกจากรายการ
+                    setShowOrderSummary(false);
+                }
+            }
+            return newItems;
+        });
+    };
+
     const handleRemoveItem = (id) => {
         setSelectedItems(prevItems => {
             const newItems = { ...prevItems };
@@ -180,18 +205,20 @@ export default function Sale() {
                         ))}
                     </div>
                     
-                    {showOrderSummary && ( // แสดง Order Summary ถ้ามีการเลือกสินค้า
+                    {showOrderSummary && ( 
                         <div className="order-summary">
                             <h2>ORDER SUMMARY</h2>
-                            {Object.values(selectedItems).length > 0 ? ( // ตรวจสอบว่ามีการเลือกสินค้าหรือไม่
+                            {Object.values(selectedItems).length > 0 ? (
                                 Object.values(selectedItems).map(item => (
                                     <div key={item.Id} className="order-item">
                                         <p>{item.productName} : ฿{item.price} x {item.quantity}</p>
+                                        <button onClick={() => handleDecreaseQuantity(item.Id)}>➖</button> {/*ลดจำนวน*/}
+                                        <button onClick={() => handleIncreaseQuantity(item.Id)}>➕</button> {/*เพิ่มจำนวน*/}
                                         <button onClick={() => handleRemoveItem(item.Id)}>❌</button>
                                     </div>
                                 ))
                             ) : (
-                                <p>No items selected</p> // แจ้งเตือนเมื่อไม่มีรายการที่เลือก
+                                <p>No items selected</p>
                             )}
                             <hr />
                             <p>Total: {calculateTotal()} บาท</p>
