@@ -17,7 +17,7 @@ const EmployeeDetail = () => {
             const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
 
             try {
-                const response = await axios.get(`https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api/Employee/branches/${branchId}/employees/${employeeId}`, {
+                const response = await axios.get(`/api/Employee/branches/${branchId}/employees/${employeeId}`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
