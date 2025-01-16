@@ -1,9 +1,13 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from 'react-router-dom';
 import NavBar from "../components/bar/Navbar";
 import SideBar from "../components/bar/Sidebar";
 import "../styles/Sale.css";
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import { FcPlus } from "react-icons/fc";
+import { AiFillMinusCircle } from "react-icons/ai";
+import { FaTrash } from "react-icons/fa";
 
 export default function Sale() {
     const [categories, setCategories] = useState([]);
@@ -12,6 +16,9 @@ export default function Sale() {
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
     const [showOrderSummary, setShowOrderSummary] = useState(false);  
+    const [filterItems, setFilterItems] = useState([]); // Updated for filtered items
+    const navigate = useNavigate();
+    const [selectedCategory, setSelectedCategory] = useState("all");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -23,7 +30,7 @@ export default function Sale() {
                 return;
             }
 
-            setLoading(true); // Start loading
+            setLoading(true); 
 
             try {
                 // Fetch Products
@@ -46,7 +53,8 @@ export default function Sale() {
                         categoryId: item.data.categoryId,
                         branchId: item.data.branchId,
                     }));
-                    setItems(products); // Set the products in state
+                    setItems(products);
+                    setFilterItems(products); // Initialize filtered items
                 } else {
                     alert(productResponse.data.message);
                 }
@@ -61,35 +69,40 @@ export default function Sale() {
                 });
                 
                 if (categoryResponse.data.success) {
-                    setCategories(categoryResponse.data.data); // Set categories
+                    setCategories([{ Id: "all", Name: "All" }, ...categoryResponse.data.data]); // Include "All" category
                 }
-
             } catch (error) {
                 console.error("Failed to fetch data:", error);
                 alert("Failed to fetch data!");
+            } finally {
+                setLoading(false);
             }
-            setLoading(false); // End loading
         };
 
         fetchData();
-    }, []);
+    }, [navigate]);
 
     const handleCategorySelect = (categoryId) => {
-        const filteredItems = items.filter(item => item.categoryId === categoryId);
-        setItems(filteredItems.length ? filteredItems : items);
+        setSelectedCategory(categoryId);
+        if (categoryId === "all") {
+            setFilterItems(items); // Show all products
+        } else {
+            const filtered = items.filter(item => item.categoryId === categoryId);
+            setFilterItems(filtered); // Show filtered products
+        }
     };
 
     const handleSelectItem = (item) => {
         setSelectedItems((prevItems) => {
             const newItems = { ...prevItems };
             if (newItems[item.Id]) {
-                newItems[item.Id].quantity += 1 ;
+                newItems[item.Id].quantity += 1;
             } else {
                 newItems[item.Id] = { ...item, quantity: 1 };
             }
             return newItems;
         });
-    
+        
         setShowOrderSummary(true);
     };
 
@@ -97,20 +110,20 @@ export default function Sale() {
         setSelectedItems((prevItems) => {
             const newItems = { ...prevItems };
             if (newItems[itemId]) {
-                newItems[itemId].quantity += 1; // เพิ่ม quantity ขึ้น 1
+                newItems[itemId].quantity += 1;
             }
             return newItems;
         });
     };
-    
+
     const handleDecreaseQuantity = (itemId) => {
         setSelectedItems((prevItems) => {
             const newItems = { ...prevItems };
             if (newItems[itemId]) {
                 if (newItems[itemId].quantity > 1) {
-                    newItems[itemId].quantity -= 1; // ลด quantity ลง 1 ถ้าค่ามากกว่า 1
+                    newItems[itemId].quantity -= 1;
                 } else {
-                    delete newItems[itemId]; // ถ้าลดลงจนถึง 1 จะลบสินค้านั้นออกจากรายการ
+                    delete newItems[itemId];
                     setShowOrderSummary(false);
                 }
             }
@@ -122,8 +135,7 @@ export default function Sale() {
         setSelectedItems(prevItems => {
             const newItems = { ...prevItems };
             delete newItems[id];
-    
-            // ตรวจสอบว่าหากไม่มีสินค้าใน selectedItems ให้ซ่อน Order Summary
+
             if (Object.keys(newItems).length === 0) {
                 setShowOrderSummary(false);
             }
@@ -136,33 +148,16 @@ export default function Sale() {
         setSearchTerm(e.target.value);
     };
 
-    const filteredItems = items.filter(item => 
-        item.productName.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
     const calculateTotal = () => {
         return Object.values(selectedItems).reduce((total, item) => total + item.price * item.quantity, 0);
     };
 
-    const handlePlaceOrder = async () => {
-        const token = Cookies.get("authToken");
-        const branchId = Cookies.get("branchId");
-        
-        for (const item of Object.values(selectedItems)) {
-            const response = await axios.post(`/api/Product/${branchId}/products/${item.Id}/reducestock`, { quantity: item.quantity }, {
-                headers: { 
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}` 
-                },
-                withCredentials: true,
-            });
-            if (!response.data.success) {
-                alert("Failed to reduce stock for some items, please check!");
-                return;
-            }
+    const handlePlaceOrder = () => {
+        if (Object.keys(selectedItems).length === 0) {
+            alert("Please select at least one item before placing an order.");
+            return;
         }
-        alert('Order placed successfully!');
-        setSelectedItems({}); // Clear selected items after order
+        navigate('/order', { state: { selectedItems } });
     };
 
     return (
@@ -171,7 +166,7 @@ export default function Sale() {
             <div className="content">
                 <SideBar />
                 <div className="main-content">
-                    {loading && <div>Loading...</div>} {/* Loading indicator */}
+                    {loading && <div>Loading...</div>} 
                     
                     <div className="search-container">
                         <input
@@ -182,49 +177,53 @@ export default function Sale() {
                             onChange={handleSearchChange}
                         />
                     </div>
-                    
+
                     <div className="categories">
                         {categories.map((category) => (
                             <button 
-                                key={category.id} 
+                                key={category.Id} 
                                 className="category-btn"
-                                onClick={() => handleCategorySelect(category.id)}
+                                onClick={() => handleCategorySelect(category.Id)}
                             >
-                                {category.name} <span>{category.count}</span>
+                                {category.Name}
                             </button>
                         ))}
                     </div>
                     <div className="main-content-order">
-                    <div className="items-grid">
-                        {filteredItems.map((item) => (
-                            <div key={item.Id} className="item-card" onClick={() => handleSelectItem(item)}>
-                                <img src={item.ImgUrl} alt={item.productName} />
-                                <p>{item.productName}</p>
-                                <p>{item.price} บาท</p>
-                            </div>
-                        ))}
-                    </div>
-                    
-                    {showOrderSummary && ( 
-                        <div className="order-summary">
-                            <h2>ORDER SUMMARY</h2>
-                            {Object.values(selectedItems).length > 0 ? (
-                                Object.values(selectedItems).map(item => (
-                                    <div key={item.Id} className="order-item">
-                                        <p>{item.productName} : ฿{item.price} x {item.quantity}</p>
-                                        <button onClick={() => handleDecreaseQuantity(item.Id)}>➖</button> {/*ลดจำนวน*/}
-                                        <button onClick={() => handleIncreaseQuantity(item.Id)}>➕</button> {/*เพิ่มจำนวน*/}
-                                        <button onClick={() => handleRemoveItem(item.Id)}>❌</button>
-                                    </div>
-                                ))
-                            ) : (
-                                <p>No items selected</p>
-                            )}
-                            <hr />
-                            <p>Total: {calculateTotal()} บาท</p>
-                            <button onClick={handlePlaceOrder}>Place Order</button>
+                        <div className="items-grid">
+                            {filterItems.filter(item => 
+                                item.productName.toLowerCase().includes(searchTerm.toLowerCase())
+                            ).map((item) => (
+                                <div key={item.Id} className="item-card" onClick={() => handleSelectItem(item)}>
+                                    <img src={item.ImgUrl} alt={item.productName} />
+                                    <p>{item.productName}</p>
+                                    <p>{item.price} บาท</p>
+                                </div>
+                            ))}
                         </div>
-                    )}
+
+                        {showOrderSummary && ( 
+                            <div className="order-summary">
+                                <h2>ORDER SUMMARY</h2>
+                                {Object.values(selectedItems).map(item => (
+                                    <div key={item.Id} className="order-item">
+                                        <p>{item.productName} : {item.price} บาท</p>
+                                        <button className="icon-button" onClick={() => handleDecreaseQuantity(item.Id)}>
+                                            <AiFillMinusCircle className="icon icon-blue" />
+                                        </button>
+                                        <p> x {item.quantity}</p>
+                                        <button className="icon-button" onClick={() => handleIncreaseQuantity(item.Id)}>
+                                            <FcPlus className="icon" />
+                                        </button>
+                                        <button className="icon-button" onClick={() => handleRemoveItem(item.Id)}>
+                                            <FaTrash className="icon icon-red" />
+                                        </button>
+                                    </div>
+                                ))}
+                                <p>Total: {calculateTotal()} บาท</p>
+                                <button onClick={handlePlaceOrder}>Place Order</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>

@@ -1,20 +1,22 @@
 import React, { useState } from "react";
 import axios from "axios";
-import "../../styles/employee.css"; // You can reuse your existing CSS
+import "../../styles/employee.css";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const AddEmployee = () => {
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const token = Cookies.get("authToken");
+    const { branchId } = useParams(); // useParams() จาก react-router-dom
+    // console.log("Branch ID:", branchId); // เพิ่มการล็อกเพื่อตรวจสอบค่า
 
     const [formData, setFormData] = useState({
         firstName: "",
         lastName: "",
         email: "",
         passwordHash: "",
-        branchId: "", // Assuming you need branchId to add an employee
+        salt : "",
     });
-    
+
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -24,23 +26,36 @@ const AddEmployee = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-
-        // Validation
-        if (!formData.firstName || !formData.lastName || !formData.email || !formData.passwordHash || !formData.branchId) {
+    
+        // ตรวจสอบข้อมูลก่อนส่ง
+        if (!formData.firstName || !formData.lastName || !formData.email || !formData.passwordHash) {
             alert("Please fill out all fields!");
             return;
         }
-
+    
         setIsLoading(true);
-
+        console.log("Sending Form Data:", { ...formData, branchId }); // สำหรับตรวจสอบการส่ง
+    
         try {
-            const token = Cookies.get("authToken");
             if (!token) {
                 alert("No token found. Please log in again.");
                 return;
             }
-        
-            const response = await axios.post(`/api/Employee/add-employee/${formData.branchId}`, formData, {
+            
+            // // ถอดรหัส Token เพื่อตรวจสอบบทบาท
+            // const decodedToken = jwt_decode(token);
+            // const userRole = decodedToken.role; // ขึ้นอยู่กับโครงสร้างของ token ของคุณ
+            // if (userRole !== "Admin" && userRole !== "Manager") {
+            //     alert("You do not have permission to add employees.");
+            //     return;
+            // }
+            
+            // แก้ไข URL ให้ถูกต้อง
+            const response = await axios.post(`/api/Employee/add-employee/${branchId}`, {
+                ...formData,
+                branchId,
+                salt: formData.salt,
+            }, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
@@ -48,17 +63,17 @@ const AddEmployee = () => {
                 },
                 withCredentials: true,
             });
-        
+    
             if (response.status === 200) {
                 alert("Employee added successfully!");
-                navigate("/EmployeeList"); // Redirect to the employee list page
+                navigate(`/EmployeeList?branch=${branchId}`);
             } else {
                 alert(`Request failed with status: ${response.status}`);
             }
         } catch (error) {
-            console.error("Error adding employee:", error);
+            // console.error("Error adding employee:", error);
             if (error.response) {
-                console.error("Response data:", error.response.data);
+                // console.error("Response data:", error.response.data);
                 alert(error.response.data?.Message || "Failed to add employee.");
             } else if (error.request) {
                 alert("No response from server. Please try again later.");
@@ -106,18 +121,10 @@ const AddEmployee = () => {
                     onChange={handleChange}
                     required
                 />
-                <input
-                    type="text"
-                    name="branchId"
-                    placeholder="Branch ID"
-                    value={formData.branchId}
-                    onChange={handleChange}
-                    required
-                />
                 <div className="form-buttons">
                     <button type="button" onClick={() => navigate(`/EmployeeList?branch=${branchId}`)} className="cancel-button">
-                            Cancel
-                        </button>
+                        Cancel
+                    </button>
                     <button type="submit" disabled={isLoading}>
                         {isLoading ? "Saving..." : "Save"}
                     </button>

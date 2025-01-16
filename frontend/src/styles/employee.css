@@ -127,3 +127,24 @@ input[type="text"] {
     border-radius: 10px;
     box-sizing: border-box; /* ทำให้ padding ไม่กระทบกับขนาด */
 }
+
+.icon {
+    background-color: transparent; /* Ensures buttons have no background */
+    border: none; /* Remove any button borders */
+    color: inherit; /* Color inherits from parent */
+    cursor: pointer; /* Change cursor to pointer */
+}
+
+.icon-button {
+    background-color: transparent; /* Ensure buttons have no background */
+    border: none; /* Remove button border */
+    padding: 0; /* Remove padding to avoid any unwanted space around icons */
+}
+
+.icon-red {
+    color: rgb(170, 0, 0);
+}
+
+.icon-blue {
+    color: rgb(0, 102, 255);
+}

@@ -1,21 +1,34 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import EditProduct from "./EditProduct";
 import { useNavigate } from "react-router-dom";
 import "../../styles/product.css";
 import Cookies from "js-cookie";
 import ConfirmationModal from "./ConfirmationModal";
+import Navbar from "../bar/Navbar";
+import Sidebar from "../bar/Sidebar";
+import { FaEdit, FaTrash } from "react-icons/fa";
 
 const ProductList = () => {
-    const [products, setProducts] = useState([]); 
+    const [products, setProducts] = useState([]);
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
-    const [editProduct, setEditProduct] = useState(null);
     const [deleteProductId, setDeleteProductId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
 
-    // Fetch Product List
+    const getProductStatus = (stock) => {
+        if (stock === "∞") {
+            return { text: "Ready to sell", color: "green", icon: "✅" };
+        }
+        if (stock <= 0) {
+            return { text: "Out of stock", color: "red", icon: "❌" };
+        }
+        if (stock < 25) {
+            return { text: "Low stock", color: "orange", icon: "⚠️" };
+        }
+        return { text: "Ready to sell", color: "green", icon: "✅" };
+    };
+
     useEffect(() => {
         const fetchProducts = async () => {
             const token = Cookies.get("authToken");
@@ -35,7 +48,15 @@ const ProductList = () => {
                     withCredentials: true,
                 });
 
-                setProducts(response.data.data || []);
+                if (response.data.success) {
+                    const productData = response.data.data.map(pro => ({
+                        id: pro.id,
+                        ...pro.data
+                    }));
+                    setProducts(productData);
+                } else {
+                    alert(response.data.message || "Failed to fetch products.");
+                }
             } catch (error) {
                 console.error("Failed to fetch products:", error);
                 if (error.response?.status === 401) {
@@ -50,15 +71,7 @@ const ProductList = () => {
         };
 
         fetchProducts();
-    }, [navigate]);
-
-    const handleEditProduct = (updatedProduct) => {
-        setProducts(
-            products.map((product) =>
-                product.id === updatedProduct.id ? { ...product, ...updatedProduct } : product
-            )
-        );
-    };
+    }, [navigate, branchId]);
 
     const handleOpenDeleteModal = (id) => {
         setDeleteProductId(id);
@@ -72,9 +85,14 @@ const ProductList = () => {
 
     const handleConfirmDelete = async () => {
         const token = Cookies.get("authToken");
+        if (!token) {
+            alert("Your session has expired. Please login again.");
+            navigate("/");
+            return;
+        }
 
         try {
-            const response = await axios.delete(`/api/Product/products/${deleteProductId}`, {
+            const response = await axios.delete(`/api/Product/branches/${branchId}/products/${deleteProductId}`, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
@@ -97,86 +115,72 @@ const ProductList = () => {
 
     return (
         <div className="product-container">
-            <div className="header">
-                <h1>Product Management</h1>
-                <button
-                    className="add-button"
-                    onClick={() => navigate('/add-product')} // นำทางไปยัง AddProduct
-                    disabled={isLoading}
-                >
-                    Add Product
-                </button>
+            <Navbar />
+            <div className="content">
+                <Sidebar />
+                <div className="main-content">
+                    <div className="header">
+                        <h1>Product Management ({products.length})</h1>
+                        <button
+                            className="add-button"
+                            onClick={() => navigate(`/add-product/${branchId}`)}
+                            disabled={isLoading}
+                        >
+                            Add Product
+                        </button>
+                    </div>
+
+                    {isLoading ? (
+                        <p>Loading products...</p>
+                    ) : (
+                        <table className="product-table">
+                            <thead>
+                                <tr>
+                                    <th>Product ID</th>
+                                    <th>Product Image</th>
+                                    <th>Product Name</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {products.map(({ id, ImgUrl, productName, price, stock }) => {
+                                    const status = getProductStatus(stock); // Get product status
+                                    return (
+                                        <tr key={id}>
+                                            <td>{id}</td>
+                                            <td><img src={ImgUrl} alt={productName} style={{ width: "50px", height: "50px" }} /></td>
+                                            <td>{productName}</td>
+                                            <td>{price}</td>
+                                            <td>{stock}</td>
+                                            <td style={{ color: status.color }}>{status.icon} {status.text}</td> {/* Display status */}
+                                            <td>
+                                                <button className="icon-button" onClick={() => navigate(`/edit-product/${id}?branch=${branchId}`)}>
+                                                    <FaEdit className="icon icon-blue" />
+                                                </button>
+                                                <button className="icon-button" onClick={() => handleOpenDeleteModal(id)}>
+                                                    <FaTrash className="icon icon-red" />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    )}
+
+                    {isConfirmModalOpen && (
+                        <ConfirmationModal
+                            isOpen={isConfirmModalOpen}
+                            onClose={handleCloseDeleteModal}
+                            onConfirm={handleConfirmDelete}
+                            message="Are you sure you want to delete this product?"
+                        />
+                    )}
+                </div>
             </div>
-
-            {isLoading ? (
-                <p>Loading products...</p>
-            ) : (
-                <table className="product-table">
-                    <thead>
-                        <tr>
-                            {/* <th>Detail</th> */}
-                            <th>Product ID</th>
-                            <th>Product Name</th>
-                            <th>Product Code</th>
-                            <th>Price</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {products.map(({ id, productName, productCode, price }) => (
-                            <tr key={id}>
-                                <td>
-                                    <a href={`/product/${id}`} className="detail-link">Detail</a>
-                                </td>
-                                <td>{id}</td>
-                                <td>{productName}</td>
-                                <td>{productCode}</td>
-                                <td>{price}</td>
-                                <td className="action-buttons">
-                                    <button
-                                        className="edit-button"
-                                        onClick={() => {
-                                            setEditProduct({ id, productName, productCode, price });
-                                            navigate(`/edit-product/${id}`);
-                                        }}
-                                    >
-                                        ✏️
-                                    </button>
-                                    <button
-                                        className="delete-button"
-                                        onClick={() => handleOpenDeleteModal(id)}
-                                    >
-                                        🗑️
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-
-            <button
-                className="back-button"
-                onClick={() => navigate("/select-branch")}
-            >
-                Back
-            </button>
-
-            {isConfirmModalOpen && (
-                <ConfirmationModal
-                    isOpen={isConfirmModalOpen}
-                    onClose={handleCloseDeleteModal}
-                    onConfirm={handleConfirmDelete}
-                    message="Are you sure you want to delete this product?"
-                />
-            )}
-
-            {editProduct && (
-                <EditProduct
-                    productId={editProduct.id}
-                    onEdit={handleEditProduct} // ส่งฟังก์ชันแก้ไขไปยัง EditProduct
-                />
-            )}
         </div>
     );
 };
