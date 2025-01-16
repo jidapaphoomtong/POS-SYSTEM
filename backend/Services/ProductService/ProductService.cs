@@ -48,6 +48,16 @@ namespace backend.Services.ProductService
         {
             try
             {
+                // ตรวจสอบว่า categoryId มีอยู่
+                var categoryDoc = _firestoreDb.Collection("branches").Document(branchId)
+                                .Collection("categories").Document(product.categoryId);
+                var snapshot = await categoryDoc.GetSnapshotAsync();
+                
+                if (!snapshot.Exists)
+                {
+                    return ServiceResponse<string>.CreateFailure("Category does not exist.");
+                }
+
                 // สร้าง Product ID ใหม่
                 string productId = await GetNextId($"product-sequence-{branchId}"); // ลำดับเฉพาะต่อ Branch
 
@@ -122,6 +132,41 @@ namespace backend.Services.ProductService
             }
         }
 
+        // public async Task<ServiceResponse<List<Products>>> GetProductsByCategory(string branchId, string categoryId)
+        // {
+        //     try
+        //     {
+        //         CollectionReference products = _firestoreDb
+        //             .Collection("branches")
+        //             .Document(branchId)
+        //             .Collection("products");
+
+        //         // ตรวจสอบว่า categoryId มีอยู่หรือไม่
+        //         var categoryDoc = _firestoreDb
+        //             .Collection("branches")
+        //             .Document(branchId)
+        //             .Collection("categories")
+        //             .Document(categoryId);
+                
+        //         var categorySnapshot = await categoryDoc.GetSnapshotAsync();
+        //         if (!categorySnapshot.Exists)
+        //         {
+        //             return ServiceResponse<List<Products>>.CreateFailure("Category not found.");
+        //         }
+
+        //         // ใช้ Where เพื่อกรองผลิตภัณฑ์ตาม categoryId
+        //         var query = products.Where("categoryId", "==", categoryId); // ใช้ 2 อาร์กิวเมนต์
+        //         QuerySnapshot querySnapshot = await query.GetSnapshotAsync();
+
+        //         List<Products> productsList = querySnapshot.Documents.Select(doc => doc.ConvertTo<Products>()).ToList();
+        //         return ServiceResponse<List<Products>>.CreateSuccess(productsList, "Products fetched successfully!");
+        //     }
+        //     catch (Exception ex)
+        //     {
+        //         return ServiceResponse<List<Products>>.CreateFailure($"Failed to fetch products: {ex.Message}");
+        //     }
+        // }
+
         public async Task<ServiceResponse<string>> UpdateProduct(string branchId, string productId, Products updatedProduct)
         {
             try
@@ -132,13 +177,15 @@ namespace backend.Services.ProductService
                     .Collection("products")
                     .Document(productId);
 
-                await productDoc.UpdateAsync(new Dictionary<string, object>
+                var productUpdate = new Dictionary<string, object>
                 {
                     { "productName", updatedProduct.productName },
                     { "description", updatedProduct.description },
                     { "price", updatedProduct.price },
-                    { "stock", updatedProduct.stock }
-                });
+                    { "stock", updatedProduct.stock } // สามารถใช้ "∞" หรือค่าที่ต้องการ
+                };
+
+                await productDoc.SetAsync(productUpdate, SetOptions.MergeAll); // ใช้ Merge เพื่ออัปเดตข้อมูลที่มีอยู่
 
                 return ServiceResponse<string>.CreateSuccess(productId, "Product updated successfully!");
             }

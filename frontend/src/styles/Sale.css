@@ -50,7 +50,7 @@
     grid-column: 2 / 3;
     padding: 20px;
     background-color: #f9f9f9;
-    overflow-y: auto; /* Scrolling ให้เนื้อหาไหลเมื่อยาวเกิน */
+    overflow-y: auto;
 }
 
 .search-container {
@@ -126,4 +126,25 @@
 .item-card p {
     font-size: 14px;
     font-weight: bold;
+}
+
+.icon {
+    background-color: transparent; /* Ensures buttons have no background */
+    border: none; /* Remove any button borders */
+    color: inherit; /* Color inherits from parent */
+    cursor: pointer; /* Change cursor to pointer */
+}
+
+.icon-button {
+    background-color: transparent; /* Ensure buttons have no background */
+    border: none; /* Remove button border */
+    padding: 0; /* Remove padding to avoid any unwanted space around icons */
+}
+
+.icon-red {
+    color: red;
+}
+
+.icon-blue{
+    color: #5995fd;
 }

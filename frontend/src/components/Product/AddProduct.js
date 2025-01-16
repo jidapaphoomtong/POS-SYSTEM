@@ -5,11 +5,17 @@ import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 
 const AddProduct = () => {
+    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+
+    // ปรับให้สอดคล้องกับ Products class ใน Backend
     const [formData, setFormData] = useState({
         productName: "",
-        productCode: "",
+        ImgUrl: "", // เป็นตัวแปรใหม่สำหรับ URL ของภาพ
+        description: "",
         price: "",
-        quantity: "",
+        stock: "", // มีการเก็บข้อมูลจำนวนแยก
+        categoryId: "", // เพิ่มประเภทสินค้าถ้าจำเป็น
+        branchId: branchId // เพิ่ม branchId 
     });
     
     const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +29,7 @@ const AddProduct = () => {
         e.preventDefault();
 
         // Validation
-        if (!formData.productName || !formData.productCode || !formData.price || !formData.quantity) {
+        if (!formData.productName || !formData.ImgUrl || !formData.price || !formData.stock) {
             alert("Please fill out all fields!");
             return;
         }
@@ -37,6 +43,7 @@ const AddProduct = () => {
                 return;
             }
         
+            // ส่งข้อมูลไปยัง API
             const response = await axios.post(`/api/Product/add-product/${branchId}`, formData, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
@@ -48,7 +55,7 @@ const AddProduct = () => {
         
             if (response.status === 200) {
                 alert("Product added successfully!");
-                navigate("/ProductList");
+                navigate(`/ProductList?branch=${branchId}`);
             } else {
                 alert(`Request failed with status: ${response.status}`);
             }
@@ -78,14 +85,21 @@ const AddProduct = () => {
                 />
                 <input
                     type="text"
-                    name="productCode"
-                    placeholder="Product Code"
-                    value={formData.productCode}
+                    name="ImgUrl"
+                    placeholder="Image URL"
+                    value={formData.ImgUrl}
                     onChange={handleChange}
                     required
                 />
                 <input
-                    type="number"
+                    type="text"
+                    name="description"
+                    placeholder="Description"
+                    value={formData.description}
+                    onChange={handleChange}
+                />
+                <input
+                    type="text"
                     name="price"
                     placeholder="Price"
                     value={formData.price}
@@ -93,15 +107,22 @@ const AddProduct = () => {
                     required
                 />
                 <input
-                    type="number"
-                    name="quantity"
-                    placeholder="Quantity"
-                    value={formData.quantity}
+                    type="text"
+                    name="stock"
+                    placeholder="Stock"
+                    value={formData.stock}
                     onChange={handleChange}
                     required
                 />
+                <input
+                    type="text"
+                    name="categoryId"
+                    placeholder="Category ID" // เพิ่มตัวเลือกสำหรับ category ID
+                    value={formData.categoryId}
+                    onChange={handleChange}
+                />
                 <div className="form-buttons">
-                    <button type="button" onClick={() => navigate('/ProductList')} disabled={isLoading}>
+                    <button type="button" onClick={() => navigate(`/ProductList?branch=${branchId}`)} disabled={isLoading}>
                         Cancel
                     </button>
                     <button type="submit" disabled={isLoading}>

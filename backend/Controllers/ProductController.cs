@@ -65,6 +65,18 @@ namespace backend.Controllers
             return NotFound(result.Message);
         }
 
+        // [CustomAuthorizeRole("Admin, Manager, Employee")]
+        // [HttpGet("products/{branchId}/{categoryId}")]
+        // public async Task<IActionResult> GetProductsByCategory(string branchId, string categoryId)
+        // {
+        //     var response = await _productService.GetProductsByCategory(branchId, categoryId);
+        //     if (response.Success)
+        //     {
+        //         return Ok(response);
+        //     }
+        //     return BadRequest(response);
+        // }
+
         [CustomAuthorizeRole("Admin, Manager")]
         [HttpPut("branches/{branchId}/products/{productId}")]
         public async Task<IActionResult> UpdateProduct(string branchId, string productId, [FromBody] Products updatedProduct)

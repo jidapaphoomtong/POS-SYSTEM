@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import "../../styles/product.css";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
 
 const EditProduct = () => {
     const navigate = useNavigate();
@@ -12,9 +11,11 @@ const EditProduct = () => {
 
     const [formData, setFormData] = useState({
         productName: "",
-        productCode: "",
+        ImgUrl: "", // ถูกตั้งค่าให้สามารถอัปเดต URL ของภาพได้
+        description: "",
         price: "",
-        quantity: "",
+        stock: "",
+        categoryId: ""
     });
     const [isLoading, setIsLoading] = useState(false);
 
@@ -22,7 +23,7 @@ const EditProduct = () => {
     useEffect(() => {
         if (!productId) {
             alert("Product ID is missing.");
-            navigate("/ProductList");
+            navigate(`/ProductList?branch=${branchId}`);
             return;
         }
 
@@ -31,7 +32,7 @@ const EditProduct = () => {
         const fetchProduct = async () => {
             try {
                 setIsLoading(true);
-                const response = await axios.get(`/api/Product/${branchId}/products/${productId}`, {
+                const response = await axios.get(`/api/Product/branches/${branchId}/products/${productId}`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -40,15 +41,18 @@ const EditProduct = () => {
                 });
 
                 if (response.data.success) {
+                    // กำหนดค่า formData ตามข้อมูลที่ได้จาก API
                     setFormData({
                         productName: response.data.data.productName,
-                        productCode: response.data.data.productCode,
+                        ImgUrl: response.data.data.ImgUrl,
+                        description: response.data.data.description,
                         price: response.data.data.price,
-                        quantity: response.data.data.quantity,
+                        stock: response.data.data.stock,
+                        categoryId: response.data.data.categoryId,
                     });
                 } else {
                     alert(response.data.message || "Failed to fetch product details.");
-                    navigate("/ProductList");
+                    navigate(`/ProductList?branch=${branchId}`);
                 }
             } catch (error) {
                 console.error("Failed to fetch product details:", error);
@@ -60,7 +64,7 @@ const EditProduct = () => {
         };
 
         fetchProduct();
-    }, [productId, navigate]);
+    }, [productId, branchId, navigate]);
 
     // ฟังก์ชันจัดการการเปลี่ยนค่าช่อง Input
     const handleChange = (e) => {
@@ -70,7 +74,7 @@ const EditProduct = () => {
     // ฟังก์ชันจัดการการบันทึกข้อมูล
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.productName || !formData.productCode || !formData.price || !formData.quantity) {
+        if (!formData.productName || !formData.ImgUrl || !formData.price || !formData.stock) {
             alert("Please fill out all fields!");
             return;
         }
@@ -86,7 +90,9 @@ const EditProduct = () => {
                 withCredentials: true,
             });
 
-            alert("Product updated successfully!");
+            if (response.data.message) {
+                alert(response.data.message); 
+            }
             navigate("/ProductList"); // นำทางกลับไปที่ Product List
         } catch (error) {
             console.error("Failed to update product:", error);
@@ -109,12 +115,20 @@ const EditProduct = () => {
                         placeholder="Product Name"
                         value={formData.productName}
                         onChange={handleChange}
+                        required
                     />
                     <input
                         type="text"
-                        name="productCode"
-                        placeholder="Product Code"
-                        value={formData.productCode}
+                        name="ImgUrl"
+                        placeholder="Image URL"
+                        value={formData.ImgUrl}
+                        onChange={handleChange}
+                        required
+                    />
+                    <textarea
+                        name="description"
+                        placeholder="Description"
+                        value={formData.description}
                         onChange={handleChange}
                     />
                     <input
@@ -123,16 +137,25 @@ const EditProduct = () => {
                         placeholder="Price"
                         value={formData.price}
                         onChange={handleChange}
+                        required
                     />
                     <input
                         type="number"
-                        name="quantity"
-                        placeholder="Quantity"
-                        value={formData.quantity}
+                        name="stock"
+                        placeholder="Stock"
+                        value={formData.stock}
+                        onChange={handleChange}
+                        required
+                    />
+                    <input
+                        type="text"
+                        name="categoryId"
+                        placeholder="Category ID"
+                        value={formData.categoryId}
                         onChange={handleChange}
                     />
                     <div className="form-buttons">
-                        <button type="button" onClick={() => navigate('/ProductList')} disabled={isLoading}>
+                        <button type="button" onClick={() => navigate(`/ProductList?branch=${branchId}`)} disabled={isLoading}>
                             Cancel
                         </button>
                         <button type="submit" disabled={isLoading}>
