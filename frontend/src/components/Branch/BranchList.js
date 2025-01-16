@@ -6,6 +6,8 @@ import ConfirmationModal from "./ConfirmationModal";
 import { useNavigate } from "react-router-dom";
 import "../../styles/branch.css";
 import Cookies from "js-cookie";
+import { FaEdit } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa6";
 
 const BranchList = () => {
     const [branches, setBranches] = useState([]); 
@@ -137,21 +139,21 @@ const BranchList = () => {
                                 <td>{id}</td>
                                 <td>{name}</td>
                                 <td>{location}</td>
-                                <td className="action-buttons">
+                                <td>
                                     <button
-                                        className="edit-button"
+                                        className="icon-button"
                                         onClick={() => {
                                             // setEditBranch({ id, name, location });
                                             navigate(`/edit-branch/${id}`);
                                         }}
                                     >
-                                        ✏️
+                                        <FaEdit className=" icon icon-blue" />
                                     </button>
                                     <button
-                                        className="delete-button"
+                                        className="icon icon-button"
                                         onClick={() => handleOpenDeleteModal(id)}
                                     >
-                                        🗑️
+                                        <FaTrash className="icon-red" />
                                     </button>
                                 </td>
                             </tr>

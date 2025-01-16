@@ -55,7 +55,7 @@ const EditEmployee = () => {
                 }
             } catch (error) {
                 alert("Failed to fetch employee details.");
-                console.error('Error fetching employee details:', error);
+                // console.error('Error fetching employee details:', error);
                 navigate(`/EmployeeList?branch=${branchId}`);
             } finally {
                 setIsLoading(false);

@@ -94,12 +94,12 @@ namespace backend.Services.EmployeeService
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(branchId) || employee == null || 
-                    string.IsNullOrWhiteSpace(employee.email) || 
-                    string.IsNullOrWhiteSpace(employee.passwordHash))
-                {
-                    throw new ArgumentException("BranchId, Employee object, email, and password cannot be null or empty.");
-                }
+                // if (string.IsNullOrWhiteSpace(branchId) || employee == null || 
+                //     string.IsNullOrWhiteSpace(employee.email) || 
+                //     string.IsNullOrWhiteSpace(employee.passwordHash))
+                // {
+                //     throw new ArgumentException("BranchId, Employee object, email, and password cannot be null or empty.");
+                // }
 
                 DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
                 DocumentSnapshot branchSnapshot = await branchDoc.GetSnapshotAsync();

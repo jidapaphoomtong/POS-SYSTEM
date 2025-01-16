@@ -31,20 +31,24 @@ namespace backend.Controllers
         {
             try
             {
-                // ตรวจสอบสิทธิ์ของผู้ใช้
-                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
-                if (string.IsNullOrEmpty(userRole) || userRole != "Admin")
-                {
-                    return Forbid("You do not have permission to add employees.");
-                }
+                // // ตรวจสอบสิทธิ์ของผู้ใช้
+                // var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                // if (string.IsNullOrEmpty(userRole) || userRole != "Admin")
+                // {
+                //     return Forbid("You do not have permission to add employees.");
+                // }
 
-                // ตรวจสอบข้อมูลที่จำเป็น
-                if (string.IsNullOrWhiteSpace(branchId) || employee == null || 
-                    string.IsNullOrWhiteSpace(employee.email) || 
-                    string.IsNullOrWhiteSpace(employee.passwordHash))
-                {
-                    return BadRequest("BranchId, email, and password cannot be null or empty.");
-                }
+                // // ตรวจสอบข้อมูลที่จำเป็น
+                // if (string.IsNullOrWhiteSpace(branchId) || employee == null || 
+                //     string.IsNullOrWhiteSpace(employee.email) || 
+                //     string.IsNullOrWhiteSpace(employee.passwordHash))
+                // {
+                //     return BadRequest("BranchId, email, and password cannot be null or empty.");
+                // }
+
+                // ดึงข้อมูล User จาก Claims
+                var userRole = User.FindFirst(ClaimTypes.Role)?.Value;
+                var userName = User.FindFirst(ClaimTypes.Name)?.Value;
 
                 // เรียกใช้งาน Service Layer เพื่อเพิ่มพนักงาน
                 var response = await _employeeService.AddEmployee(branchId, employee);

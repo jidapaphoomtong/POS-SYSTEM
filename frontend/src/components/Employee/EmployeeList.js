@@ -7,6 +7,8 @@ import "../../styles/employee.css";
 import Cookies from "js-cookie";
 import Navbar from "../bar/Navbar";
 import Sidebar from "../bar/Sidebar";
+import { FaEdit } from "react-icons/fa";
+import { FaTrash } from "react-icons/fa6";
 
 const EmployeeList = () => {
     const [employees, setEmployees] = useState([]);
@@ -19,8 +21,13 @@ const EmployeeList = () => {
     useEffect(() => {
         const fetchEmployees = async () => {
             const token = Cookies.get("authToken");
+            if (!token) {
+                alert("Your session has expired. Please login again.");
+                navigate("/");
+                return;
+            }
+            
             const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
-
             if (!branchId) {
                 alert("Branch ID is missing!");
                 return;
@@ -49,8 +56,12 @@ const EmployeeList = () => {
                     alert(response.data.message);
                 }
             } catch (error) {
-                console.error("Failed to fetch employees:", error);
-                alert("Failed to fetch employees!");
+                if (error.response?.status === 401) {
+                    alert("Unauthorized. Please login.");
+                    navigate("/");
+                } else {
+                    alert("Failed to fetch employees!");
+                }
             } finally {
                 setIsLoading(false);
             }
@@ -111,19 +122,16 @@ const EmployeeList = () => {
             <div className="content">
                 <Sidebar />
                 <div className="main-content">
-                    <div className="header-section">
-                        <div className="header-title">
-                            <h2>STAFF ({employees.length})</h2>
-                            <button
-                                className="add-button"
-                                onClick={() => navigate(`/add-employee?branch=${branchId}`)}
-                                disabled={isLoading}
-                                style={{ marginLeft: 'auto' }}
-                            >
-                                Add Staff
-                            </button>
-                        </div>
-                    </div>
+                <div className="header">
+                <h2>STAFF ({employees.length})</h2>
+                <button
+                    className="add-button"
+                    onClick={() => navigate(`/add-employee/${branchId}`)}
+                    disabled={isLoading}
+                >
+                    Add Staff
+                </button>
+            </div>
 
                     {isLoading ? (
                         <p>Loading employees...</p>
@@ -136,33 +144,36 @@ const EmployeeList = () => {
                                     <th>First Name</th>
                                     <th>Last Name</th>
                                     <th>Email</th>
-                                    <th>Role</th>
+                                    <th>Position</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {employees.map(({ id, firstName, lastName, email, roles }) => (
                                     <tr key={id}>
+                                        {/* <td>
+                                            <a href={`/branch/${id}`} className="detail-link">Detail</a>
+                                        </td> */}
                                         <td>{id}</td>
                                         <td>{firstName}</td>
                                         <td>{lastName}</td>
                                         <td>{email}</td>
                                         <td>{roles.map(role => role.Name).join(', ')}</td>
-                                        <td className="action-buttons">
+                                        <td>
                                             <button
-                                                className="edit-button"
+                                            className="icon-button"
                                                 onClick={() => {
                                                     // ส่งไปที่หน้า EditEmployee พร้อมกับ employeeId และ branchId
                                                     navigate(`/edit-employee/${id}?branch=${branchId}`);
                                                 }}
                                             >
-                                                ✏️
+                                                <FaEdit className="icon icon-blue" />
                                             </button>
                                             <button
-                                                className="delete-button"
+                                            className="icon-button"
                                                 onClick={() => handleOpenDeleteModal(id)}
                                             >
-                                                🗑️
+                                                <FaTrash className="icon icon-red" />
                                             </button>
                                         </td>
                                     </tr>
