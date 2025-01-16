@@ -44,13 +44,12 @@ namespace backend.Services.ProductService
             }
         }
 
-        public async Task<ServiceResponse<string>> AddProduct(string branchId, Products product)
+        public async Task<ServiceResponse<string>> AddProduct(string branchId, string categoryId, Products product)
         {
             try
             {
-                // ตรวจสอบว่า categoryId มีอยู่
                 var categoryDoc = _firestoreDb.Collection("branches").Document(branchId)
-                                .Collection("categories").Document(product.categoryId);
+                                .Collection("categories").Document(categoryId);
                 var snapshot = await categoryDoc.GetSnapshotAsync();
                 
                 if (!snapshot.Exists)
@@ -58,21 +57,12 @@ namespace backend.Services.ProductService
                     return ServiceResponse<string>.CreateFailure("Category does not exist.");
                 }
 
-                // สร้าง Product ID ใหม่
-                string productId = await GetNextId($"product-sequence-{branchId}"); // ลำดับเฉพาะต่อ Branch
+                string productId = await GetNextId($"product-sequence-{branchId}");
 
-                // อ้างถึง Document ID
-                DocumentReference productDoc = _firestoreDb.Collection("branches")
-                    .Document(branchId)
-                    .Collection("products")
-                    .Document(productId);
-
-                // เพิ่ม Product ID เข้าไปใน Object ก่อนบันทึก
+                DocumentReference productDoc = categoryDoc.Collection("products").Document(productId);
                 product.Id = productId;
 
-                // บันทึก Product ลงใน Firestore
                 await productDoc.SetAsync(product);
-
                 return ServiceResponse<string>.CreateSuccess(productId, "Product added successfully!");
             }
             catch (Exception ex)
@@ -81,13 +71,36 @@ namespace backend.Services.ProductService
             }
         }
 
-        public async Task<ServiceResponse<List<object>>> GetProducts(string branchId)
+        public async Task<ServiceResponse<List<Products>>> GetProductsByCategory(string branchId, string categoryId)
         {
             try
             {
                 CollectionReference products = _firestoreDb
                     .Collection("branches")
                     .Document(branchId)
+                    .Collection("categories")
+                    .Document(categoryId)
+                    .Collection("products");
+
+                QuerySnapshot querySnapshot = await products.GetSnapshotAsync();
+                List<Products> productsList = querySnapshot.Documents.Select(doc => doc.ConvertTo<Products>()).ToList();
+                return ServiceResponse<List<Products>>.CreateSuccess(productsList, "Products fetched successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<List<Products>>.CreateFailure($"Failed to fetch products: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<List<object>>> GetProducts(string branchId, string categoryId)
+        {
+            try
+            {
+                CollectionReference products = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("categories")
+                    .Document(categoryId)
                     .Collection("products");
 
                 QuerySnapshot snapshot = await products.GetSnapshotAsync();
@@ -106,13 +119,15 @@ namespace backend.Services.ProductService
             }
         }
 
-        public async Task<ServiceResponse<Products>> GetProductById(string branchId, string productId)
+        public async Task<ServiceResponse<Products>> GetProductById(string branchId, string categoryId, string productId)
         {
             try
             {
                 DocumentReference productDoc = _firestoreDb
                     .Collection("branches")
                     .Document(branchId)
+                    .Collection("categories")
+                    .Document(categoryId)
                     .Collection("products")
                     .Document(productId);
 
@@ -132,48 +147,15 @@ namespace backend.Services.ProductService
             }
         }
 
-        // public async Task<ServiceResponse<List<Products>>> GetProductsByCategory(string branchId, string categoryId)
-        // {
-        //     try
-        //     {
-        //         CollectionReference products = _firestoreDb
-        //             .Collection("branches")
-        //             .Document(branchId)
-        //             .Collection("products");
-
-        //         // ตรวจสอบว่า categoryId มีอยู่หรือไม่
-        //         var categoryDoc = _firestoreDb
-        //             .Collection("branches")
-        //             .Document(branchId)
-        //             .Collection("categories")
-        //             .Document(categoryId);
-                
-        //         var categorySnapshot = await categoryDoc.GetSnapshotAsync();
-        //         if (!categorySnapshot.Exists)
-        //         {
-        //             return ServiceResponse<List<Products>>.CreateFailure("Category not found.");
-        //         }
-
-        //         // ใช้ Where เพื่อกรองผลิตภัณฑ์ตาม categoryId
-        //         var query = products.Where("categoryId", "==", categoryId); // ใช้ 2 อาร์กิวเมนต์
-        //         QuerySnapshot querySnapshot = await query.GetSnapshotAsync();
-
-        //         List<Products> productsList = querySnapshot.Documents.Select(doc => doc.ConvertTo<Products>()).ToList();
-        //         return ServiceResponse<List<Products>>.CreateSuccess(productsList, "Products fetched successfully!");
-        //     }
-        //     catch (Exception ex)
-        //     {
-        //         return ServiceResponse<List<Products>>.CreateFailure($"Failed to fetch products: {ex.Message}");
-        //     }
-        // }
-
-        public async Task<ServiceResponse<string>> UpdateProduct(string branchId, string productId, Products updatedProduct)
+        public async Task<ServiceResponse<string>> UpdateProduct(string branchId, string categoryId, string productId, Products updatedProduct)
         {
             try
             {
                 DocumentReference productDoc = _firestoreDb
                     .Collection("branches")
                     .Document(branchId)
+                    .Collection("categories")
+                    .Document(categoryId)
                     .Collection("products")
                     .Document(productId);
 
@@ -182,11 +164,10 @@ namespace backend.Services.ProductService
                     { "productName", updatedProduct.productName },
                     { "description", updatedProduct.description },
                     { "price", updatedProduct.price },
-                    { "stock", updatedProduct.stock } // สามารถใช้ "∞" หรือค่าที่ต้องการ
+                    { "stock", updatedProduct.stock }
                 };
 
-                await productDoc.SetAsync(productUpdate, SetOptions.MergeAll); // ใช้ Merge เพื่ออัปเดตข้อมูลที่มีอยู่
-
+                await productDoc.SetAsync(productUpdate, SetOptions.MergeAll);
                 return ServiceResponse<string>.CreateSuccess(productId, "Product updated successfully!");
             }
             catch (Exception ex)
@@ -195,50 +176,19 @@ namespace backend.Services.ProductService
             }
         }
 
-        public async Task<ServiceResponse<string>> SellProduct(string branchId, string productId, int quantity)
+        public async Task<ServiceResponse<string>> DeleteProduct(string branchId, string categoryId, string productId)
         {
             try
             {
                 DocumentReference productDoc = _firestoreDb
                     .Collection("branches")
                     .Document(branchId)
-                    .Collection("products")
-                    .Document(productId);
-
-                var snapshot = await productDoc.GetSnapshotAsync();
-                var currentStock = snapshot.GetValue<int>("stock");
-
-                if (currentStock < quantity)
-                {
-                    return ServiceResponse<string>.CreateFailure("Not enough stock available.");
-                }
-
-                // ลดจำนวน Stock
-                await productDoc.UpdateAsync(new Dictionary<string, object>
-                {
-                    { "stock", currentStock - quantity }
-                });
-
-                return ServiceResponse<string>.CreateSuccess(productId, "Product sold and stock updated successfully!");
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse<string>.CreateFailure($"Failed to sell product: {ex.Message}");
-            }
-        }
-
-        public async Task<ServiceResponse<string>> DeleteProduct(string branchId, string productId)
-        {
-            try
-            {
-                DocumentReference productDoc = _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId)
+                    .Collection("categories")
+                    .Document(categoryId)
                     .Collection("products")
                     .Document(productId);
 
                 await productDoc.DeleteAsync();
-
                 return ServiceResponse<string>.CreateSuccess(productId, "Product deleted successfully!");
             }
             catch (Exception ex)
@@ -247,68 +197,42 @@ namespace backend.Services.ProductService
             }
         }
 
-        public async Task<ServiceResponse<string>> AddStock(string branchId, string productId, int quantity)
+        public async Task<ServiceResponse<string>> DeleteAllProducts(string branchId, string categoryId)
         {
             try
             {
-                DocumentReference productDoc = _firestoreDb
+                var productsCollection = _firestoreDb
                     .Collection("branches")
                     .Document(branchId)
-                    .Collection("products")
-                    .Document(productId);
+                    .Collection("categories")
+                    .Document(categoryId)
+                    .Collection("products");
 
-                var snapshot = await productDoc.GetSnapshotAsync();
-                if (!snapshot.Exists)
-                {
-                    return ServiceResponse<string>.CreateFailure("Product not found.");
-                }
+                var snapshots = await productsCollection.GetSnapshotAsync();
+                var deleteTasks = snapshots.Documents.Select(doc => doc.Reference.DeleteAsync());
 
-                var currentStock = snapshot.GetValue<int>("stock");
-                await productDoc.UpdateAsync(new Dictionary<string, object>
-                {
-                    { "stock", currentStock + quantity }
-                });
+                await Task.WhenAll(deleteTasks); // ลบผลิตภัณฑ์ทั้งหมดในหมวดหมู่นั้น
 
-                return ServiceResponse<string>.CreateSuccess(productId, "Stock added successfully!");
+                return ServiceResponse<string>.CreateSuccess(null, "All products deleted successfully!");
             }
             catch (Exception ex)
             {
-                return ServiceResponse<string>.CreateFailure($"Failed to add stock: {ex.Message}");
+                return ServiceResponse<string>.CreateFailure($"Failed to delete all products: {ex.Message}");
             }
         }
 
-        public async Task<ServiceResponse<string>> ReduceStock(string branchId, string productId, int quantity)
+        public async Task<ServiceResponse<string>> ResetproductId(string branchId)
         {
             try
             {
-                DocumentReference productDoc = _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId)
-                    .Collection("products")
-                    .Document(productId);
+                var sequenceDoc = _firestoreDb.Collection("config").Document($"product-sequence-{branchId}");
+                await sequenceDoc.SetAsync(new { counter = 1 }); // รีเซ็ตค่าเป็น 1
 
-                var snapshot = await productDoc.GetSnapshotAsync();
-                if (!snapshot.Exists)
-                {
-                    return ServiceResponse<string>.CreateFailure("Product not found.");
-                }
-
-                var currentStock = snapshot.GetValue<int>("stock");
-                if (currentStock < quantity)
-                {
-                    return ServiceResponse<string>.CreateFailure("Not enough stock available.");
-                }
-
-                await productDoc.UpdateAsync(new Dictionary<string, object>
-                {
-                    { "stock", currentStock - quantity }
-                });
-
-                return ServiceResponse<string>.CreateSuccess(productId, "Stock reduced successfully!");
+                return ServiceResponse<string>.CreateSuccess("Branch ID sequence reset successfully!", "Reset done");
             }
             catch (Exception ex)
             {
-                return ServiceResponse<string>.CreateFailure($"Failed to reduce stock: {ex.Message}");
+                return ServiceResponse<string>.CreateFailure($"Failed to reset branch ID sequence: {ex.Message}");
             }
         }
     }

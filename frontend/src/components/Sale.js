@@ -15,8 +15,8 @@ export default function Sale() {
     const [selectedItems, setSelectedItems] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
     const [loading, setLoading] = useState(false);
-    const [showOrderSummary, setShowOrderSummary] = useState(false);  
-    const [filterItems, setFilterItems] = useState([]); // Updated for filtered items
+    const [showOrderSummary, setShowOrderSummary] = useState(false);
+    const [filterItems, setFilterItems] = useState([]);
     const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -67,6 +67,7 @@ export default function Sale() {
                     },
                     withCredentials: true,  
                 });
+                console.log(categoryResponse.data); // เพิ่มบรรทัดนี้เพื่อตรวจสอบข้อมูล
                 
                 if (categoryResponse.data.success) {
                     setCategories([{ Id: "all", Name: "All" }, ...categoryResponse.data.data]); // Include "All" category
@@ -85,47 +86,43 @@ export default function Sale() {
     const handleCategorySelect = (categoryId) => {
         setSelectedCategory(categoryId);
         if (categoryId === "all") {
-            setFilterItems(items); // Show all products
+            setFilterItems(items); // Show all items
         } else {
             const filtered = items.filter(item => item.categoryId === categoryId);
-            setFilterItems(filtered); // Show filtered products
+            setFilterItems(filtered); // Show filtered items
         }
     };
 
     const handleSelectItem = (item) => {
-        setSelectedItems((prevItems) => {
-            const newItems = { ...prevItems };
-            if (newItems[item.Id]) {
-                newItems[item.Id].quantity += 1;
-            } else {
-                newItems[item.Id] = { ...item, quantity: 1 };
+        setSelectedItems((prevItems) => ({
+            ...prevItems,
+            [item.Id]: {
+                ...item,
+                quantity: (prevItems[item.Id] ? prevItems[item.Id].quantity : 0) + 1,
             }
-            return newItems;
-        });
+        }));
         
         setShowOrderSummary(true);
     };
 
     const handleIncreaseQuantity = (itemId) => {
-        setSelectedItems((prevItems) => {
-            const newItems = { ...prevItems };
-            if (newItems[itemId]) {
-                newItems[itemId].quantity += 1;
+        setSelectedItems((prevItems) => ({
+            ...prevItems,
+            [itemId]: {
+                ...prevItems[itemId],
+                quantity: prevItems[itemId].quantity + 1,
             }
-            return newItems;
-        });
+        }));
     };
 
     const handleDecreaseQuantity = (itemId) => {
         setSelectedItems((prevItems) => {
             const newItems = { ...prevItems };
-            if (newItems[itemId]) {
-                if (newItems[itemId].quantity > 1) {
-                    newItems[itemId].quantity -= 1;
-                } else {
-                    delete newItems[itemId];
-                    setShowOrderSummary(false);
-                }
+            if (newItems[itemId].quantity > 1) {
+                newItems[itemId].quantity -= 1;
+            } else {
+                delete newItems[itemId];
+                setShowOrderSummary(false);
             }
             return newItems;
         });
@@ -189,6 +186,7 @@ export default function Sale() {
                             </button>
                         ))}
                     </div>
+
                     <div className="main-content-order">
                         <div className="items-grid">
                             {filterItems.filter(item => 
