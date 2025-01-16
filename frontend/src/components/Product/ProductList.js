@@ -14,7 +14,10 @@ const ProductList = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [deleteProductId, setDeleteProductId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    
+    // ดึง branchId และ categoryId
     const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+    const categoryId = new URLSearchParams(window.location.search).get("category") || Cookies.get("categoryId");
 
     const getProductStatus = (stock) => {
         if (stock === "∞") {
@@ -40,7 +43,7 @@ const ProductList = () => {
 
             try {
                 setIsLoading(true);
-                const response = await axios.get(`/api/Product/branches/${branchId}/products`, {
+                const response = await axios.get(`/api/Product/branches/${branchId}/categories/${categoryId}/products`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -71,7 +74,7 @@ const ProductList = () => {
         };
 
         fetchProducts();
-    }, [navigate, branchId]);
+    }, [navigate, branchId, categoryId]);
 
     const handleOpenDeleteModal = (id) => {
         setDeleteProductId(id);
@@ -92,7 +95,7 @@ const ProductList = () => {
         }
 
         try {
-            const response = await axios.delete(`/api/Product/branches/${branchId}/products/${deleteProductId}`, {
+            const response = await axios.delete(`/api/Product/branches/${branchId}/categories/${categoryId}/products/${deleteProductId}`, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
@@ -120,10 +123,10 @@ const ProductList = () => {
                 <Sidebar />
                 <div className="main-content">
                     <div className="header">
-                        <h1>Product Management ({products.length})</h1>
+                        <h2>Product Management ({products.length})</h2>
                         <button
                             className="add-button"
-                            onClick={() => navigate(`/add-product/${branchId}`)}
+                            onClick={() => navigate(`/add-product/${branchId}/${categoryId}`)}
                             disabled={isLoading}
                         >
                             Add Product
@@ -147,7 +150,7 @@ const ProductList = () => {
                             </thead>
                             <tbody>
                                 {products.map(({ id, ImgUrl, productName, price, stock }) => {
-                                    const status = getProductStatus(stock); // Get product status
+                                    const status = getProductStatus(stock);
                                     return (
                                         <tr key={id}>
                                             <td>{id}</td>
@@ -155,9 +158,9 @@ const ProductList = () => {
                                             <td>{productName}</td>
                                             <td>{price}</td>
                                             <td>{stock}</td>
-                                            <td style={{ color: status.color }}>{status.icon} {status.text}</td> {/* Display status */}
+                                            <td style={{ color: status.color }}>{status.icon} {status.text}</td>
                                             <td>
-                                                <button className="icon-button" onClick={() => navigate(`/edit-product/${id}?branch=${branchId}`)}>
+                                                <button className="icon-button" onClick={() => navigate(`/edit-product/${id}/?branch=${branchId}&category=${categoryId}`)}>
                                                     <FaEdit className="icon icon-blue" />
                                                 </button>
                                                 <button className="icon-button" onClick={() => handleOpenDeleteModal(id)}>

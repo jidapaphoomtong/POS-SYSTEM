@@ -1,0 +1,447 @@
+{
+  "success": true,
+  "message": "Products fetched successfully!",
+  "data": [
+    {
+      "id": "001",
+      "data": {
+        "Id": "001",
+        "ImgUrl": "https://assets.tops.co.th/COKE-Coke500ml-8851959141014-1?$JPEG$",
+        "productName": "โค้กขวดเล็ก",
+        "description": "ขนาด 500ML",
+        "stock": 60,
+        "price": 19,
+        "categoryId": "001",
+        "branchId": "001"
+      }
+    },
+    {
+      "id": "002",
+      "data": {
+        "Id": "002",
+        "ImgUrl": "https://s.alicdn.com/@sc04/kf/Ab8e5405eeed34b15a7d960eafb1d3567r.jpg_300x300.jpg",
+        "productName": "เป๊ปซี่ขวดเล็ก",
+        "description": "ขนาด 500ML",
+        "stock": 60,
+        "price": 18,
+        "categoryId": "001",
+        "branchId": "001"
+      }
+    },
+    {
+      "id": "003",
+      "data": {
+        "Id": "003",
+        "ImgUrl": "https://sentosakhonkaen.com/wp-content/uploads/2021/07/S_0032_8851959142011.jpg",
+        "productName": "โค้กขวดใหญ่",
+        "description": "ขนาด 1.25L",
+        "stock": 60,
+        "price": 32,
+        "categoryId": "001",
+        "branchId": "001"
+      }
+    },
+    {
+      "id": "004",
+      "data": {
+        "Id": "004",
+        "ImgUrl": "https://m.media-amazon.com/images/I/51voi+EmcPL.jpg",
+        "productName": "เป๊ปซี่ขวดใหญ่",
+        "description": "ขนาด 1.25L",
+        "stock": 60,
+        "price": 32,
+        "categoryId": "001",
+        "branchId": "001"
+      }
+    },
+    {
+      "id": "005",
+      "data": {
+        "Id": "005",
+        "ImgUrl": "https://st.bigc-cs.com/cdn-cgi/image/format=webp,quality=90/public/media/catalog/product/61/88/8851952350161/8851952350161_1-20241017083600-.jpg",
+        "productName": "คริสตัลขวดเล็ก",
+        "description": "ขนาด 600ML",
+        "stock": 60,
+        "price": 7,
+        "categoryId": "001",
+        "branchId": "001"
+      }
+    },
+    {
+      "id": "006",
+      "data": {
+        "Id": "006",
+        "ImgUrl": "https://st.bigc-cs.com/cdn-cgi/image/format=webp,quality=90/public/media/catalog/product/30/88/8851952350130/8851952350130_2-20230621134313-.jpg",
+        "productName": "คริสตัลขวดใหญ่",
+        "description": "ขนาด 1000L",
+        "stock": 60,
+        "price": 14,
+        "categoryId": "001",
+        "branchId": "001"
+      }
+    }
+  ]
+}
+
+-----------------------------------------------------------------------------
+{
+  "success": true,
+  "message": "Products fetched successfully!",
+  "data": [
+    {
+      "id": "001",
+      "data": {
+        "Id": "001",
+        "ImgUrl": "https://officework.co.th/upload/product/0201-0340-01.JPG",
+        "productName": "ปากกาลูกลื่น สีน้ำเงิน",
+        "description": "Faber-Castell RX5 (0.5 มม.)",
+        "stock": 100,
+        "price": 25,
+        "categoryId": "001",
+        "branchId": "002"
+      }
+    },
+    {
+      "id": "002",
+      "data": {
+        "Id": "002",
+        "ImgUrl": "https://www.officepal.co.th/uploads/images/240322154413TDB3.jpg",
+        "productName": "ปากกาลูกลื่น สีแดง",
+        "description": "Faber-Castell RX5 (0.5 มม.)",
+        "stock": 100,
+        "price": 25,
+        "categoryId": "001",
+        "branchId": "002"
+      }
+    },
+    {
+      "id": "003",
+      "data": {
+        "Id": "003",
+        "ImgUrl": "https://www.dohome.co.th/media/catalog/product/cache/e446f15aaa8dc66b80b7a0df334f7c5a/1/0/10385102_ea_1200_2.jpg",
+        "productName": "ปากกาลูกลื่น สีน้ำเงิน",
+        "description": "ขนาด 0.38 มม.",
+        "stock": 100,
+        "price": 20,
+        "categoryId": "001",
+        "branchId": "002"
+      }
+    },
+    {
+      "id": "004",
+      "data": {
+        "Id": "004",
+        "ImgUrl": "https://www.dohome.co.th/media/catalog/product/cache/e446f15aaa8dc66b80b7a0df334f7c5a/1/0/10358455_ea_p2.jpg",
+        "productName": "ปากกาลูกลื่น สีน้ำเงิน",
+        "description": "ABPW3042 ขนาด 0.7มม.",
+        "stock": 100,
+        "price": 20,
+        "categoryId": "001",
+        "branchId": "002"
+      }
+    },
+    {
+      "id": "005",
+      "data": {
+        "Id": "005",
+        "ImgUrl": "https://excelchoice.net/Media/Thumbs/0005/0005400--995-05-.png",
+        "productName": "ปากกาตราช้าง สีแดง",
+        "description": "ขนาด 0.5มม.",
+        "stock": 100,
+        "price": 20,
+        "categoryId": "001",
+        "branchId": "002"
+      }
+    }
+  ]
+}
+-------------------------------------------------------------------------------
+{
+  "success": true,
+  "message": "Products fetched successfully!",
+  "data": [
+    {
+      "id": "001",
+      "data": {
+        "Id": "001",
+        "ImgUrl": "https://www.1376delivery.com/productimages/720_%20(L).jpg",
+        "productName": "ปีกไก่ทอด",
+        "description": "ชุดละ 3 ชิ้น",
+        "stock": 100,
+        "price": 45,
+        "categoryId": "001",
+        "branchId": "003"
+      }
+    },
+    {
+      "id": "002",
+      "data": {
+        "Id": "002",
+        "ImgUrl": "https://i.ytimg.com/vi/U5VBIJA0pNE/maxresdefault.jpg",
+        "productName": "สะโพกไก่ทอด",
+        "description": "ไก่ชิ้นใหญ่",
+        "stock": 100,
+        "price": 60,
+        "categoryId": "001",
+        "branchId": "003"
+      }
+    },
+    {
+      "id": "003",
+      "data": {
+        "Id": "003",
+        "ImgUrl": "https://img.wongnai.com/p/1920x0/2019/12/23/ff2c9968860d4aa7b726597dd07ff375.jpg",
+        "productName": "น่องไก่ทอด",
+        "description": "ไก่ชิ้นใหญ่",
+        "stock": 100,
+        "price": 45,
+        "categoryId": "001",
+        "branchId": "003"
+      }
+    },
+    {
+      "id": "004",
+      "data": {
+        "Id": "004",
+        "ImgUrl": "https://png.pngtree.com/png-clipart/20240525/original/pngtree-close-up-fried-chicken-drumsticks-png-image_15168472.png",
+        "productName": "ปีกบนไก่ทอด",
+        "description": "ชุดละ 3 ชิ้น",
+        "stock": 100,
+        "price": 45,
+        "categoryId": "001",
+        "branchId": "003"
+      }
+    },
+    {
+      "id": "005",
+      "data": {
+        "Id": "005",
+        "ImgUrl": "https://reds4families.com/wp-content/uploads/2023/02/cooking-method-1.jpg",
+        "productName": "หนังไก่ทอด",
+        "description": "ถุงละ 500 กรัม",
+        "stock": 100,
+        "price": 30,
+        "categoryId": "001",
+        "branchId": "003"
+      }
+    }
+  ]
+}
+
+------------------------------------------------------------------------------------------
+{
+  "success": true,
+  "message": "Products fetched successfully!",
+  "data": [
+    {
+      "id": "001",
+      "data": {
+        "Id": "001",
+        "ImgUrl": "https://df.lnwfile.com/_/df/_raw/z5/7x/8x.jpg",
+        "productName": "เสื้อยืดคอกลม สีดำ",
+        "description": "",
+        "stock": 50,
+        "price": 120,
+        "categoryId": "001",
+        "branchId": "004"
+      }
+    },
+    {
+      "id": "002",
+      "data": {
+        "Id": "002",
+        "ImgUrl": "https://inwfile.com/s-cx/hkklsw.jpg",
+        "productName": "เสื้อยืดคอกลม สีขาว",
+        "description": "",
+        "stock": 50,
+        "price": 120,
+        "categoryId": "001",
+        "branchId": "004"
+      }
+    },
+    {
+      "id": "003",
+      "data": {
+        "Id": "003",
+        "ImgUrl": "https://d29c1z66frfv6c.cloudfront.net/pub/media/catalog/product/zoom/d0a4f75c8060357decf49d0770a1a998b131ad50_xxl-1.jpg",
+        "productName": "เสื้อยืดคอวี สีกรม",
+        "description": "",
+        "stock": 50,
+        "price": 120,
+        "categoryId": "002",
+        "branchId": "004"
+      }
+    },
+    {
+      "id": "004",
+      "data": {
+        "Id": "004",
+        "ImgUrl": "https://assets.central.co.th//adobe/dynamicmedia/deliver/dm-aid--2524ccb4-c1e4-4875-8691-a01b5cbd1237/carson-v-neckt-shirtstvc12021-cds27463598-1.jpg?preferwebp=true&quality=85&width=550",
+        "productName": "เสื้อยืดคอวี สีดำ",
+        "description": "",
+        "stock": 50,
+        "price": 120,
+        "categoryId": "002",
+        "branchId": "004"
+      }
+    },
+    {
+      "id": "005",
+      "data": {
+        "Id": "005",
+        "ImgUrl": "https://d29c1z66frfv6c.cloudfront.net/pub/media/catalog/product/zoom/7be552f228a6d541b41cf5edac9e7700406f3266_xxl-1.jpg",
+        "productName": "เสื้อยืดคอวี สีขาว",
+        "description": "",
+        "stock": 50,
+        "price": 120,
+        "categoryId": "002",
+        "branchId": "004"
+      }
+    }
+  ]
+}
+-----------------------------------------------------------------------------------------------
+{
+  "success": true,
+  "message": "Products fetched successfully!",
+  "data": [
+    {
+      "id": "001",
+      "data": {
+        "Id": "001",
+        "ImgUrl": "https://backoffice.itoolmart.com/assets/images/uploads/product/md/md_product_1637902506.jpg",
+        "productName": "ค้อนหงอน",
+        "description": "",
+        "stock": 50,
+        "price": 200,
+        "categoryId": "001",
+        "branchId": "005"
+      }
+    },
+    {
+      "id": "002",
+      "data": {
+        "Id": "002",
+        "ImgUrl": "https://ktw.co.th/medias/sys_master/SAP-L01/SAP-L01/hc4/h68/9929429942302/-INGCO-I121-HS68PH2125-1.jpg",
+        "productName": "ไขควงปากแฉก",
+        "description": "",
+        "stock": 50,
+        "price": 110,
+        "categoryId": "001",
+        "branchId": "005"
+      }
+    },
+    {
+      "id": "003",
+      "data": {
+        "Id": "003",
+        "ImgUrl": "https://ktw.co.th/medias/sys_master/SAP-L01/SAP-L01/h23/hab/9692971335710/-STANLEY-S351-60826.jpg",
+        "productName": "ไขควงปากแบน",
+        "description": "",
+        "stock": 50,
+        "price": 110,
+        "categoryId": "001",
+        "branchId": "005"
+      }
+    },
+    {
+      "id": "004",
+      "data": {
+        "Id": "004",
+        "ImgUrl": "https://inwfile.com/s-do/6voojt.jpg",
+        "productName": "ตลับเมตร",
+        "description": "",
+        "stock": 50,
+        "price": 224,
+        "categoryId": "001",
+        "branchId": "005"
+      }
+    },
+    {
+      "id": "005",
+      "data": {
+        "Id": "005",
+        "ImgUrl": "string",
+        "productName": "ประแจเลื่อน",
+        "description": "",
+        "stock": 50,
+        "price": 218,
+        "categoryId": "001",
+        "branchId": "005"
+      }
+    }
+  ]
+}
+
+---------------------------------------------------------------------------------------------
+{
+  "success": true,
+  "message": "Products fetched successfully!",
+  "data": [
+    {
+      "id": "001",
+      "data": {
+        "Id": "001",
+        "ImgUrl": "https://www.gourmetandcuisine.com/Images/editor_upload/_editor20210816031222_original.jpg",
+        "productName": "Baguette",
+        "description": "",
+        "stock": 100,
+        "price": 149,
+        "categoryId": "001",
+        "branchId": "006"
+      }
+    },
+    {
+      "id": "002",
+      "data": {
+        "Id": "002",
+        "ImgUrl": "https://iel.co.th/wp-content/uploads/2024/03/%E0%B8%A0%E0%B8%B2%E0%B8%9E%E0%B8%9B%E0%B8%A3%E0%B8%B0%E0%B8%81%E0%B8%AD%E0%B8%9A-Blog-%E0%B9%80%E0%B8%94%E0%B8%B7%E0%B8%AD%E0%B8%99%E0%B8%A1%E0%B8%B5%E0%B8%99%E0%B8%B2%E0%B8%84%E0%B8%A1-3_0.jpg",
+        "productName": "ครัวซองต์",
+        "description": "",
+        "stock": 100,
+        "price": 79,
+        "categoryId": "001",
+        "branchId": "006"
+      }
+    },
+    {
+      "id": "003",
+      "data": {
+        "Id": "003",
+        "ImgUrl": "https://s.isanook.com/ca/0/ud/284/1423115/02.jpg?ip/resize/w728/q80/jpg",
+        "productName": "ทิมเบอร์ริงเคลือบช็อกโกแลต",
+        "description": "",
+        "stock": 100,
+        "price": 89,
+        "categoryId": "001",
+        "branchId": "006"
+      }
+    },
+    {
+      "id": "004",
+      "data": {
+        "Id": "004",
+        "ImgUrl": "https://panwebers.com/wp-content/uploads/2024/01/Bagels-dulces-y-afrutados.jpg",
+        "productName": "Strawberry Mascarpone Bagels",
+        "description": "",
+        "stock": 100,
+        "price": 189,
+        "categoryId": "001",
+        "branchId": "006"
+      }
+    },
+    {
+      "id": "005",
+      "data": {
+        "Id": "005",
+        "ImgUrl": "https://images.food52.com/AznwC5gtaNNBAeGgHZWslDdOags=/1200x1200/9274545a-73a4-4818-b313-489ed8e42f99--Sweet-Bread-edit-674x800.jpg",
+        "productName": "Caribbean Sweet Bread",
+        "description": "",
+        "stock": 100,
+        "price": 289,
+        "categoryId": "001",
+        "branchId": "006"
+      }
+    }
+  ]
+}
