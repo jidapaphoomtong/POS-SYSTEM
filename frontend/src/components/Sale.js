@@ -154,7 +154,7 @@ export default function Sale() {
             alert("Please select at least one item before placing an order.");
             return;
         }
-        navigate('/order', { state: { selectedItems } });
+        // navigate('/order', { state: { selectedItems } });
     };
 
     return (
