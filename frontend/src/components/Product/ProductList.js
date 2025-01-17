@@ -20,9 +20,11 @@ const ProductList = () => {
     const categoryId = new URLSearchParams(window.location.search).get("category") || Cookies.get("categoryId");
 
     const getProductStatus = (stock) => {
-        if (stock === "∞") {
-            return { text: "Ready to sell", color: "green", icon: "✅" };
-        }
+        const UNLIMITED_STOCK = Number.MAX_SAFE_INTEGER; // ใช้ค่านี้เป็นตัวแทนสำหรับ stock ที่ไม่มีวันหมด
+
+    if (stock === UNLIMITED_STOCK) {
+        return { text: "Ready to sell", color: "green", icon: "✅" };
+    }
         if (stock <= 0) {
             return { text: "Out of stock", color: "red", icon: "❌" };
         }
@@ -43,7 +45,7 @@ const ProductList = () => {
 
             try {
                 setIsLoading(true);
-                const response = await axios.get(`/api/Product/branches/${branchId}/categories/${categoryId}/products`, {
+                const response = await axios.get(`/api/Product/branches/${branchId}/products`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -95,7 +97,7 @@ const ProductList = () => {
         }
 
         try {
-            const response = await axios.delete(`/api/Product/branches/${branchId}/categories/${categoryId}/products/${deleteProductId}`, {
+            const response = await axios.delete(`/api/Product/branches/${branchId}/products/${deleteProductId}`, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
@@ -126,7 +128,7 @@ const ProductList = () => {
                         <h2>Product Management ({products.length})</h2>
                         <button
                             className="add-button"
-                            onClick={() => navigate(`/add-product/${branchId}/${categoryId}`)}
+                            onClick={() => navigate(`/add-product/${branchId}`)}
                             disabled={isLoading}
                         >
                             Add Product
@@ -160,12 +162,14 @@ const ProductList = () => {
                                             <td>{stock}</td>
                                             <td style={{ color: status.color }}>{status.icon} {status.text}</td>
                                             <td>
-                                                <button className="icon-button" onClick={() => navigate(`/edit-product/${id}/?branch=${branchId}&category=${categoryId}`)}>
-                                                    <FaEdit className="icon icon-blue" />
-                                                </button>
-                                                <button className="icon-button" onClick={() => handleOpenDeleteModal(id)}>
-                                                    <FaTrash className="icon icon-red" />
-                                                </button>
+                                                <div className="row-product">
+                                                    <button className="icon-button" onClick={() => navigate(`/edit-product/${id}?branch=${branchId}`)}>
+                                                        <FaEdit className="icon icon-blue" />
+                                                    </button>
+                                                    <button className="icon-button" onClick={() => handleOpenDeleteModal(id)}>
+                                                        <FaTrash className="icon icon-red" />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     );

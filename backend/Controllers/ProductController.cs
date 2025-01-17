@@ -26,14 +26,15 @@ namespace backend.Controllers
         }
 
         [CustomAuthorizeRole("Admin, Manager")]
-        [HttpPost("add-product/{branchId}/{categoryId}")]
-        public async Task<IActionResult> AddProduct(string branchId, string categoryId, [FromBody] Products product)
+        [HttpPost("add-product/{branchId}")]
+        public async Task<IActionResult> AddProduct(string branchId, [FromBody] Products product)
         {
-            var response = await _productService.AddProduct(branchId, categoryId, product);
+            var response = await _productService.AddProduct(branchId, product);
             if (response.Success) return Ok(response);
             return BadRequest(response);
         }
 
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
         [HttpGet("products/{branchId}/{categoryId}")]
         public async Task<IActionResult> GetProductsByCategory(string branchId, string categoryId)
         {
@@ -45,44 +46,49 @@ namespace backend.Controllers
             return BadRequest(response);
         }
 
-        [HttpGet("branches/{branchId}/categories/{categoryId}/products")]
-        public async Task<IActionResult> GetProducts(string branchId, string categoryId)
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
+        [HttpGet("branches/{branchId}/products")]
+        public async Task<IActionResult> GetProducts(string branchId)
         {
-            var result = await _productService.GetProducts(branchId, categoryId);
+            var result = await _productService.GetProducts(branchId);
             return result.Success ? Ok(result) : BadRequest(result);
         }
 
-        [HttpGet("branches/{branchId}/categories/{categoryId}/products/{productId}")]
-        public async Task<IActionResult> GetProductById(string branchId, string categoryId, string productId)
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
+        [HttpGet("branches/{branchId}/products/{productId}")]
+        public async Task<IActionResult> GetProductById(string branchId,  string productId)
         {
-            var result = await _productService.GetProductById(branchId, categoryId, productId);
+            var result = await _productService.GetProductById(branchId, productId);
             return result.Success ? Ok(result.Data) : NotFound(result.Message);
         }
 
-        [HttpPut("branches/{branchId}/categories/{categoryId}/products/{productId}")]
-        public async Task<IActionResult> UpdateProduct(string branchId, string categoryId, string productId, [FromBody] Products updatedProduct)
+        [CustomAuthorizeRole("Admin, Manager")]
+        [HttpPut("branches/{branchId}/products/{productId}")]
+        public async Task<IActionResult> UpdateProduct(string branchId, string productId, [FromBody] Products updatedProduct)
         {
-            var response = await _productService.UpdateProduct(branchId, categoryId, productId, updatedProduct);
+            var response = await _productService.UpdateProduct(branchId, productId, updatedProduct);
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
-        [HttpDelete("branches/{branchId}/categories/{categoryId}/products/{productId}")]
-        public async Task<IActionResult> DeleteProduct(string branchId, string categoryId, string productId)
+        [CustomAuthorizeRole("Admin, Manager")]
+        [HttpDelete("branches/{branchId}/products/{productId}")]
+        public async Task<IActionResult> DeleteProduct(string branchId, string productId)
         {
-            var response = await _productService.DeleteProduct(branchId, categoryId, productId);
+            var response = await _productService.DeleteProduct(branchId, productId);
             return response.Success ? Ok(response) : BadRequest(response);
         }
-
-        [HttpDelete("{branchId}/categories/{categoryId}/products")]
-        public async Task<IActionResult> DeleteAllProducts(string branchId, string categoryId)
+        
+        [CustomAuthorizeRole("Admin, Manager")]
+        [HttpDelete("{branchId}/products")]
+        public async Task<IActionResult> DeleteAllProducts(string branchId)
         {
-            var response = await _productService.DeleteAllProducts(branchId, categoryId);
+            var response = await _productService.DeleteAllProducts(branchId);
             if (response.Success) return Ok(response);
             return BadRequest(response);
         }
 
-        // Reset product ID sequence for a specific branch
         [CustomAuthorizeRole("Admin, Manager")]
+        // Reset product ID sequence for a specific branch
         [HttpPost("branches/{branchId}/reset-product-id")]
         public async Task<IActionResult> ResetProductId(string branchId)
         {
