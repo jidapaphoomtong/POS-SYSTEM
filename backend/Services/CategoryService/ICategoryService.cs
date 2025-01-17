@@ -13,5 +13,7 @@ namespace backend.Services.CategoryService
         Task<ServiceResponse<Category>> GetCategoryById(string branchId, string categoryId);
         Task<ServiceResponse<string>> UpdateCategory(string branchId, Category category);
         Task<ServiceResponse<string>> DeleteCategory(string branchId, string categoryId);
+        Task<ServiceResponse<string>> DeleteAllCategories(string branchId);
+        Task<ServiceResponse<string>> ResetCategoryId(string branchId);
     }
 }

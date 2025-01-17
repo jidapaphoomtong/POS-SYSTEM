@@ -148,3 +148,9 @@
 .icon-blue{
     color: #5995fd;
 }
+
+.row {
+    display: flex;
+    justify-content: space-between; /* ทำให้มีช่องว่างระหว่างข้อความและปุ่ม */
+    align-items: center; /* เพื่อให้แน่ใจว่าองค์ประกอบอยู่กลางในแนวตั้ง */
+}

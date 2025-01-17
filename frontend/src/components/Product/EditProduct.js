@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 
 const EditProduct = () => {
     const navigate = useNavigate();
-    const { productId } = useParams(); // ดึง Product ID จาก URL
+    const { productId  } = useParams(); // ดึง Product ID จาก URL
     const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
 
     const [formData, setFormData] = useState({
@@ -40,15 +40,17 @@ const EditProduct = () => {
                     withCredentials: true,
                 });
 
-                if (response.data.success) {
+                // console.log(response)
+
+                if (response.status === 200 && response.data) {
                     // กำหนดค่า formData ตามข้อมูลที่ได้จาก API
                     setFormData({
-                        productName: response.data.data.productName,
-                        ImgUrl: response.data.data.ImgUrl,
-                        description: response.data.data.description,
-                        price: response.data.data.price,
-                        stock: response.data.data.stock,
-                        categoryId: response.data.data.categoryId,
+                        productName: response.data.productName,
+                        ImgUrl: response.data.imgUrl,
+                        description: response.data.description,
+                        price: response.data.price,
+                        stock: response.data.stock,
+                        categoryId: response.data.categoryId,
                     });
                 } else {
                     alert(response.data.message || "Failed to fetch product details.");
@@ -57,7 +59,7 @@ const EditProduct = () => {
             } catch (error) {
                 console.error("Failed to fetch product details:", error);
                 alert(error.response ? error.response.data.message : "Failed to load product details.");
-                navigate("/ProductList");
+                navigate(`/ProductList?branch=${branchId}`);
             } finally {
                 setIsLoading(false);
             }
@@ -93,7 +95,7 @@ const EditProduct = () => {
             if (response.data.message) {
                 alert(response.data.message); 
             }
-            navigate("/ProductList"); // นำทางกลับไปที่ Product List
+            navigate(`/ProductList?branch=${branchId}`); // นำทางกลับไปที่ Product List
         } catch (error) {
             console.error("Failed to update product:", error);
             alert(error.response ? error.response.data.message : "Failed to update product.");
@@ -125,14 +127,15 @@ const EditProduct = () => {
                         onChange={handleChange}
                         required
                     />
-                    <textarea
+                    <input
+                        type="text"
                         name="description"
                         placeholder="Description"
                         value={formData.description}
                         onChange={handleChange}
                     />
                     <input
-                        type="number"
+                        type="text"
                         name="price"
                         placeholder="Price"
                         value={formData.price}
@@ -140,7 +143,7 @@ const EditProduct = () => {
                         required
                     />
                     <input
-                        type="number"
+                        type="text"
                         name="stock"
                         placeholder="Stock"
                         value={formData.stock}

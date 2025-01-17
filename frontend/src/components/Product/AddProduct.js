@@ -2,10 +2,11 @@ import React, { useState } from "react";
 import axios from "axios";
 import "../../styles/product.css";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 
 const AddProduct = () => {
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const token = Cookies.get("authToken");
+    const { branchId } = useParams();
 
     // ปรับให้สอดคล้องกับ Products class ใน Backend
     const [formData, setFormData] = useState({
@@ -37,7 +38,6 @@ const AddProduct = () => {
         setIsLoading(true);
 
         try {
-            const token = Cookies.get("authToken");
             if (!token) {
                 alert("No token found. Please log in again.");
                 return;
@@ -52,6 +52,8 @@ const AddProduct = () => {
                 },
                 withCredentials: true,
             });
+
+            // console.log(response);
         
             if (response.status === 200) {
                 alert("Product added successfully!");
@@ -60,7 +62,7 @@ const AddProduct = () => {
                 alert(`Request failed with status: ${response.status}`);
             }
         } catch (error) {
-            console.error("Error adding product:", error);
+            // console.error("Error adding product:", error);
             if (error.response) {
                 alert(error.response.data?.Message || "Failed to add product.");
             } else {

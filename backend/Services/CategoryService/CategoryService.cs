@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 using Google.Cloud.Firestore;
+using Newtonsoft.Json;
 
 namespace backend.Services.CategoryService
 {
@@ -44,6 +45,11 @@ namespace backend.Services.CategoryService
 
         public async Task<ServiceResponse<string>> AddCategory(string branchId, Category category)
         {
+            if (string.IsNullOrWhiteSpace(branchId) || category == null)
+            {
+                return ServiceResponse<string>.CreateFailure("branchId or category wrong!");
+            }
+
             try
             {
                 string categoryId = await GetNextId($"category-sequence-{branchId}"); // ลำดับเฉพาะต่อ Branch
@@ -52,7 +58,7 @@ namespace backend.Services.CategoryService
                     .Collection("branches")
                     .Document(branchId)
                     .Collection("categories")
-                    .Document();
+                    .Document(categoryId);
 
                 category.Id = categoryId;
                 await categoryDoc.SetAsync(category);
@@ -66,6 +72,11 @@ namespace backend.Services.CategoryService
 
         public async Task<ServiceResponse<List<Category>>> GetAllCategories(string branchId)
         {
+            if (string.IsNullOrWhiteSpace(branchId))
+            {
+                return ServiceResponse<List<Category>>.CreateFailure("branchId NOT NULL");
+            }
+
             try
             {
                 var categories = new List<Category>();
@@ -78,6 +89,7 @@ namespace backend.Services.CategoryService
                 foreach (var categoryDoc in snapshot.Documents)
                 {
                     var category = categoryDoc.ConvertTo<Category>();
+                    // Console.WriteLine(JsonConvert.SerializeObject(category));
                     categories.Add(category);
                 }
 
@@ -91,25 +103,43 @@ namespace backend.Services.CategoryService
 
         public async Task<ServiceResponse<Category>> GetCategoryById(string branchId, string categoryId)
         {
+            // ตรวจสอบว่า branchId และ categoryId ไม่เป็น null หรือว่าง
+            if (string.IsNullOrWhiteSpace(branchId))
+            {
+                throw new ArgumentException("Branch ID cannot be null or empty.", nameof(branchId));
+            }
+            if (string.IsNullOrWhiteSpace(categoryId))
+            {
+                throw new ArgumentException("Category ID cannot be null or empty.", nameof(categoryId));
+            }
+
             try
             {
-                var categoryDoc = await _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId)
-                    .Collection("categories")
-                    .Document(categoryId)
-                    .GetSnapshotAsync();
+                // สร้าง DocumentReference สำหรับ branch และ category
+                var branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                var categoryDoc = branchDoc.Collection("categories").Document(categoryId);
 
-                if (!categoryDoc.Exists)
+                // ดึงเอกสารหมวดหมู่จาก Firestore
+                DocumentSnapshot snapshot = await categoryDoc.GetSnapshotAsync();
+
+                // ตรวจสอบว่าเอกสารหมวดหมู่มีอยู่
+                if (!snapshot.Exists)
                 {
+                    Console.WriteLine($"Category with ID {categoryId} not found in branch {branchId}.");
                     return ServiceResponse<Category>.CreateFailure("Category not found.");
                 }
 
-                var category = categoryDoc.ConvertTo<Category>();
+                // แปลงเอกสารเป็น Category
+                var category = snapshot.ConvertTo<Category>();
+                Console.WriteLine("Category Data: " + JsonConvert.SerializeObject(category));
+
+                // ส่งกลับข้อมูลหมวดหมู่ที่ถูกต้อง
                 return ServiceResponse<Category>.CreateSuccess(category, "Category fetched successfully!");
             }
             catch (Exception ex)
             {
+                // จัดการข้อผิดพลาดและส่งข้อความที่เหมาะสม
+                Console.WriteLine($"Error fetching category: {ex}");
                 return ServiceResponse<Category>.CreateFailure($"Failed to fetch category: {ex.Message}");
             }
         }
@@ -149,6 +179,52 @@ namespace backend.Services.CategoryService
             catch (Exception ex)
             {
                 return ServiceResponse<string>.CreateFailure($"Failed to delete category: {ex.Message}");
+            }
+        }
+        public async Task<ServiceResponse<string>> DeleteAllCategories(string branchId)
+        {
+            if (string.IsNullOrWhiteSpace(branchId))
+            {
+                return ServiceResponse<string>.CreateFailure("branchId NOT NULL");
+            }
+
+            try
+            {
+                var categoriesCollection = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("categories");
+
+                var snapshots = await categoriesCollection.GetSnapshotAsync();
+                var deleteTasks = snapshots.Documents.Select(doc => doc.Reference.DeleteAsync());
+
+                await Task.WhenAll(deleteTasks);
+                return ServiceResponse<string>.CreateSuccess(null, "All category deleted successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Failed to delete category: {ex.Message}");
+            }
+        }
+
+        // ฟังก์ชันรีเซ็ต ID หมวดหมู่
+        public async Task<ServiceResponse<string>> ResetCategoryId(string branchId)
+        {
+            if (string.IsNullOrWhiteSpace(branchId))
+            {
+                return ServiceResponse<string>.CreateFailure("branchId NOT NULL");
+            }
+
+            try
+            {
+                var sequenceDoc = _firestoreDb.Collection("config").Document($"category-sequence-{branchId}");
+                await sequenceDoc.SetAsync(new { counter = 1 }); // รีเซ็ตค่าเป็น 1
+
+                return ServiceResponse<string>.CreateSuccess("Category ID reset already!", "Reset done");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<string>.CreateFailure($"Can not reset category id : {ex.Message}");
             }
         }
     }

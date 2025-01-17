@@ -27,11 +27,11 @@ export default function Sale() {
             
             if (!branchId) {
                 alert("Branch ID is missing!");
-                return;
+                return; // ถ้าไม่มี Branch ID จะแสดงข้อความเตือนและหยุดการทำงาน
             }
-
-            setLoading(true); 
-
+    
+            setLoading(true); // ตั้งค่าสถานะ loading เริ่มต้น
+    
             try {
                 // Fetch Products
                 const productResponse = await axios.get(`/api/Product/branches/${branchId}/products`, {
@@ -41,7 +41,7 @@ export default function Sale() {
                     },
                     withCredentials: true,
                 });
-
+    
                 if (productResponse.data.success) {
                     const products = productResponse.data.data.map(item => ({
                         Id: item.data.Id,
@@ -53,43 +53,44 @@ export default function Sale() {
                         categoryId: item.data.categoryId,
                         branchId: item.data.branchId,
                     }));
-                    setItems(products);
-                    setFilterItems(products); // Initialize filtered items
+                    setItems(products); // ตั้งค่าข้อมูลสินค้าทั้งหมด
+                    setFilterItems(products); // ตั้งค่าเริ่มต้นให้แสดงสินค้าทั้งหมด
                 } else {
-                    alert(productResponse.data.message);
+                    alert(productResponse.data.message); // แสดงข้อความเมื่อไม่สามารถนำเข้าข้อมูลได้
                 }
-
+    
                 // Fetch Categories
-                const categoryResponse = await axios.get(`/api/Category/branches/${branchId}/getCategory`, {
+                const categoryResponse = await axios.get(`/api/Category/branches/${branchId}/getCategories`, {
                     headers: { 
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}` 
                     },
                     withCredentials: true,  
                 });
-                console.log(categoryResponse.data); // เพิ่มบรรทัดนี้เพื่อตรวจสอบข้อมูล
                 
                 if (categoryResponse.data.success) {
-                    setCategories([{ Id: "all", Name: "All" }, ...categoryResponse.data.data]); // Include "All" category
+                    // รวมหมวดหมู่ "All" เข้าไปในรายการหมวดหมู่
+                    setCategories(categoryResponse.data.data);
                 }
+                
             } catch (error) {
-                console.error("Failed to fetch data:", error);
-                alert("Failed to fetch data!");
+                console.error("Failed to fetch data:", error); // แสดงข้อผิดพลาดใน Console
+                alert("Failed to fetch data!"); // แสดงข้อความเตือนเมื่อมีข้อผิดพลาดเกิดขึ้น
             } finally {
-                setLoading(false);
+                setLoading(false); // สถานะ loading จะถูกปิดเมื่อเสร็จสิ้น
             }
         };
-
+    
         fetchData();
     }, [navigate]);
 
     const handleCategorySelect = (categoryId) => {
-        setSelectedCategory(categoryId);
+        setSelectedCategory(categoryId); // ตั้งค่า selectedCategory ตามที่ได้รับ
         if (categoryId === "all") {
-            setFilterItems(items); // Show all items
+            setFilterItems(items); // ถ้าเลือก "All" ให้แสดงสินค้าทั้งหมด
         } else {
-            const filtered = items.filter(item => item.categoryId === categoryId);
-            setFilterItems(filtered); // Show filtered items
+            const filtered = items.filter(item => item.categoryId === categoryId); // กรองเฉพาะสินค้าที่มี categoryId ตรง
+            setFilterItems(filtered); // แสดงสินค้าที่กรองแล้ว
         }
     };
 
@@ -122,7 +123,6 @@ export default function Sale() {
                 newItems[itemId].quantity -= 1;
             } else {
                 delete newItems[itemId];
-                setShowOrderSummary(false);
             }
             return newItems;
         });
@@ -176,13 +176,19 @@ export default function Sale() {
                     </div>
 
                     <div className="categories">
+                    <button 
+                        className="category-btn"
+                        onClick={() => handleCategorySelect("all")} // เรียกใช้ฟังก์ชันเมื่อคลิก
+                    >
+                        All
+                    </button>
                         {categories.map((category) => (
                             <button 
-                                key={category.Id} 
+                                key={category.id}
                                 className="category-btn"
-                                onClick={() => handleCategorySelect(category.Id)}
+                                onClick={() => handleCategorySelect(category.id)}
                             >
-                                {category.Name}
+                                {category.name}
                             </button>
                         ))}
                     </div>
@@ -205,17 +211,21 @@ export default function Sale() {
                                 <h2>ORDER SUMMARY</h2>
                                 {Object.values(selectedItems).map(item => (
                                     <div key={item.Id} className="order-item">
-                                        <p>{item.productName} : {item.price} บาท</p>
-                                        <button className="icon-button" onClick={() => handleDecreaseQuantity(item.Id)}>
-                                            <AiFillMinusCircle className="icon icon-blue" />
-                                        </button>
-                                        <p> x {item.quantity}</p>
-                                        <button className="icon-button" onClick={() => handleIncreaseQuantity(item.Id)}>
-                                            <FcPlus className="icon" />
-                                        </button>
-                                        <button className="icon-button" onClick={() => handleRemoveItem(item.Id)}>
-                                            <FaTrash className="icon icon-red" />
-                                        </button>
+                                        <div className="row">
+                                            <p>{item.productName} : {item.price} บาท</p>
+                                            <button className="icon-button" onClick={() => handleRemoveItem(item.Id)}>
+                                                    <FaTrash className="icon icon-red" />
+                                            </button>
+                                        </div>
+                                        <div className="row">
+                                            <button className="icon-button" onClick={() => handleDecreaseQuantity(item.Id)}>
+                                                <AiFillMinusCircle className="icon icon-blue" />
+                                            </button>
+                                            <p> x {item.quantity}</p>
+                                            <button className="icon-button" onClick={() => handleIncreaseQuantity(item.Id)}>
+                                                <FcPlus className="icon" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                                 <p>Total: {calculateTotal()} บาท</p>

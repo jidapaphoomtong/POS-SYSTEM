@@ -6,6 +6,54 @@
     overflow: hidden;
 }
 
+.add-product-container, .edit-product-container {
+    max-width: 600px; /* Width แนะนำ */
+    margin: auto; /* จัดกลางในแนวนอน */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex; /* ใช้ flexbox */
+    flex-direction: column; /* เรียงตามคอลัมน์ */
+    align-items: center; /* จัดกลางในแนวตั้ง */
+    justify-content: center; /* จัดกลางในแนวตั้ง */
+    min-height: 80vh; /* เพิ่มความสูงขั้นต่ำ */
+}
+
+.edit-product-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+}
+
+.edit-product-form input {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+textarea[type="text"]{
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 4rem;
+    border: 2px solid lightblue;
+    border-radius: 10px;
+    box-sizing: border-box; /* ทำให้ padding ไม่กระทบกับขนาด */
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 1rem;
+    border: 2px solid lightblue;
+    border-radius: 10px;
+    box-sizing: border-box; /* ทำให้ padding ไม่กระทบกับขนาด */
+}
 .content {
     display: grid;
     grid-template-columns: 80px auto; /* Sidebar 80px, Main content takes the remaining space */
@@ -78,4 +126,10 @@
 
 .icon-blue {
     color: rgb(0, 102, 255);
+}
+
+.row-product {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* เพื่อให้แน่ใจว่าองค์ประกอบอยู่กลางในแนวตั้ง */
 }
