@@ -28,7 +28,7 @@ const ProductList = () => {
         if (stock <= 0) {
             return { text: "Out of stock", color: "red", icon: "❌" };
         }
-        if (stock < 25) {
+        if (stock < 50) {
             return { text: "Low stock", color: "orange", icon: "⚠️" };
         }
         return { text: "Ready to sell", color: "green", icon: "✅" };

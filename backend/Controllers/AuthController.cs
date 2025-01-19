@@ -117,6 +117,7 @@ namespace backend.Controllers
             var userSnapshot = await _authService.GetUserByEmail(userLogin.Email);
             string role;
             string branchId = userLogin.branchId;
+            string firstName;
 
             if (userSnapshot != null)
             {
@@ -127,6 +128,8 @@ namespace backend.Controllers
                 {
                     return Unauthorized(new { Success = false, Message = "Invalid credentials." });
                 }
+
+                firstName = user.ContainsKey("firstName") ? user["firstName"].ToString() : string.Empty;
 
                 role = user.ContainsKey("roles") && user["roles"] is IList<object> roles && roles.Count > 0
                     ? (roles.First() as Dictionary<string, object>)?["Name"]?.ToString() ?? RoleName.Employee
@@ -156,6 +159,8 @@ namespace backend.Controllers
 
                 var employee = employeeResponse.Data;
 
+                firstName = employee.firstName ?? string.Empty;
+
                 // ตรวจสอบรหัสผ่าน
                 if (!_employeeService.VerifyPassword(userLogin.Password, employee.passwordHash, employee.salt))
                 {
@@ -179,6 +184,8 @@ namespace backend.Controllers
             {
                 claims.Add(new Claim("branchId", branchId));
             }
+
+            claims.Add(new Claim("firstName", firstName));
 
             // Generate Token
             var accessToken = _tokenService.GenerateAccessToken(claims);

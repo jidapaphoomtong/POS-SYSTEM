@@ -58,7 +58,7 @@ const Sidebar = () => {
     };
 
     const handleDepartment = () => {
-        navigate(`/BranchList?branch=${branchId}`);
+        navigate(`/select-branch`);
     };
 
     return (
@@ -73,7 +73,7 @@ const Sidebar = () => {
                 ) : null}
 
                 {/* Staff Menu Item */}
-                {userRole === "Admin" ? (
+                {userRole === "Admin" || userRole === "Manager"  ? (
                     <div className="sidebar-item">
                         <FaUsers onClick={handleStaff} className="sidebar-icon" />
                         <span>Staff</span>
