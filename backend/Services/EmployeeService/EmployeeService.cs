@@ -370,5 +370,38 @@ namespace backend.Services.EmployeeService
                 return ServiceResponse<string>.CreateFailure($"Failed to reset branch ID sequence: {ex.Message}");
             }
         }
+
+        public async Task<ServiceResponse<List<Employee>>> GetEmployeeByFirstName(string branchId, string firstName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(branchId))
+                {
+                    throw new ArgumentException("Branch ID cannot be null or empty.", nameof(branchId));
+                }
+                
+                if (string.IsNullOrWhiteSpace(firstName))
+                {
+                    throw new ArgumentException("First name cannot be null or empty.", nameof(firstName));
+                }
+
+                var employeesQuery = _firestoreDb.Collection("branches").Document(branchId).Collection("employees")
+                    .WhereEqualTo("firstName", firstName);
+
+                var snapshot = await employeesQuery.GetSnapshotAsync();
+                var employees = snapshot.Documents.Select(doc => doc.ConvertTo<Employee>()).ToList();
+
+                if (employees.Count > 0)
+                {
+                    return ServiceResponse<List<Employee>>.CreateSuccess(employees, "Employees retrieved successfully!");
+                }
+
+                return ServiceResponse<List<Employee>>.CreateFailure("No employee found with this first name.");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<List<Employee>>.CreateFailure($"Failed to fetch employee: {ex.Message}");
+            }
+        }
     }
 }

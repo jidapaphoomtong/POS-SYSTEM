@@ -21,5 +21,6 @@ namespace backend.Services.EmployeeService
         Task<ServiceResponse<string>> DeleteEmployee(string branchId, string employeeId);
         Task<ServiceResponse<string>> DeleteAllEmployees(string branchId);
         Task<ServiceResponse<string>> ResetEmployeeId(string branchId);
+        Task<ServiceResponse<List<Employee>>> GetEmployeeByFirstName(string branchId, string firstName);
     }
 }

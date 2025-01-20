@@ -124,7 +124,7 @@ namespace backend.Controllers
             return NotFound(response.Message); // ส่งคืนข้อความถ้าไม่พบพนักงาน
         }
 
-        [HttpGet("getEmployeeById")]
+        [HttpGet("branches/{branchId}/employees/{employeeId}")]
         public async Task<IActionResult> GetEmployeeById(string branchId, string employeeId)
         {
             var result = await _employeeService.GetEmployeeById(branchId, employeeId);
@@ -224,6 +224,15 @@ namespace backend.Controllers
             }
 
             return BadRequest(new { Success = false, Message = response.Message });
+        }
+
+        [CustomAuthorizeRole("Admin, Manager")]
+        [HttpGet("get-employee-by-firstname")]
+        public async Task<IActionResult> GetEmployeeByFirstName(string branchId, string firstName)
+        {
+            var response = await _employeeService.GetEmployeeByFirstName(branchId, firstName);
+            if (response.Success) return Ok(response.Data);
+            return BadRequest(response);
         }
     }
 }
