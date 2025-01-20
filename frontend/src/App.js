@@ -13,7 +13,6 @@ import EmployeeList from './components/Employee/EmployeeList';
 import ProductList from './components/Product/ProductList';
 import EditEmployee from './components/Employee/EditEmployee';
 import AddEmployee from './components/Employee/AddEmployee';
-import Order from './components/Order';
 import AddProduct from './components/Product/AddProduct';
 import EditProduct from './components/Product/EditProduct'
 
@@ -35,7 +34,6 @@ function App() {
         <Route path='/ProductList' element={<ProductList />}/>
         <Route path="/edit-product/:productId" element={<EditProduct/>} />
         <Route path="/add-product/:branchId" element={<AddProduct />} />
-        <Route path="/order" element={<Order/>}/>
       </Routes>
       <ToastContainer />
     </Router>

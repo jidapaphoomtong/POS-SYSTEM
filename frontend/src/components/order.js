@@ -1,9 +1,12 @@
 // import React, { useState } from 'react';
-// import '../styles/order.css';
+// import { useLocation } from 'react-router-dom';
+// import '../styles/Order.css';
 
-// const Order = ({ selectedItems, total, onPlaceOrder }) => {
+// const Order = () => {
 //     const [showModal, setShowModal] = useState(false);
 //     const [paymentType, setPaymentType] = useState(null);
+//     const location = useLocation();
+//     const { selectedItems, total } = location.state; // ดึงข้อมูลที่ส่งมาจาก Sale
 
 //     const handlePaymentTypeSelect = (type) => {
 //         setPaymentType(type);

@@ -154,3 +154,65 @@
     justify-content: space-between; /* ทำให้มีช่องว่างระหว่างข้อความและปุ่ม */
     align-items: center; /* เพื่อให้แน่ใจว่าองค์ประกอบอยู่กลางในแนวตั้ง */
 }
+
+.payment-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 400px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.number-pad {
+    display: flex;
+    justify-content: space-between;
+    margin: 10px 0;
+}
+
+.number-pad button {
+    flex: 1;
+    margin: 5px;
+    padding: 10px;
+    background-color: #00771a;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.payment-button{
+    flex: 1;
+    margin: 5px;
+    padding: 10px;
+    background-color: #497edc;
+    color: white;
+    border: none;
+    border-radius: 5px;
+}
+
+.cancel-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+
+.payment-item {
+    margin-bottom: 10px;
+}

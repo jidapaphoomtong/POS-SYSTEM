@@ -8,6 +8,7 @@ import Cookies from 'js-cookie';
 import { FcPlus } from "react-icons/fc";
 import { AiFillMinusCircle } from "react-icons/ai";
 import { FaTrash } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
 
 export default function Sale() {
     const [categories, setCategories] = useState([]);
@@ -19,6 +20,9 @@ export default function Sale() {
     const [filterItems, setFilterItems] = useState([]);
     const navigate = useNavigate();
     const [selectedCategory, setSelectedCategory] = useState("all");
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [paidAmount, setPaidAmount] = useState(0); // จำนวนที่จ่าย
+    const [change, setChange] = useState(0); // เงินทอน
 
     useEffect(() => {
         const fetchData = async () => {
@@ -154,8 +158,96 @@ export default function Sale() {
             alert("Please select at least one item before placing an order.");
             return;
         }
-        navigate('/order', { state: { selectedItems } });
+        // ส่ง selectedItems ไปยังหน้า Order ด้วย navigate
+        navigate({ state: { selectedItems, total: calculateTotal() } }); // เพิ่ม total
     };
+
+    const handleOpenPaymentModal = () => {
+        setShowPaymentModal(true);
+    };
+
+    const handleClosePaymentModal = () => {
+        setShowPaymentModal(false);
+    };
+
+    const handlePayment = (type) => {
+        // Implement payment logic here
+        alert(`Pay Success ${type}`);
+
+        // Generate receipt
+        generateReceipt();
+
+        handleClosePaymentModal(); // ปิด modal หลังจากชำระเงินสำเร็จ
+    };
+
+    const handleAmountChange = (amount) => {
+        setPaidAmount(prev => prev + amount);
+        setChange(paidAmount + amount - calculateTotal());
+    };
+
+    const generateReceipt = async () => {
+        const token = Cookies.get("authToken");
+        // console.log(token)
+        let firstName = "";
+            
+        if (token) {
+            try {
+                const decodedToken = jwtDecode(token);
+                const firstNameFromToken = decodedToken["firstName"] || 'No role found';
+                firstName = firstNameFromToken; // Adjust according to your JWT structure
+                console.log(firstName);
+        
+            }catch (error) {
+                console.error("Invalid token:", error);
+                alert("Have Something wrong")
+            }
+        }
+
+        const receipt = {
+            items: Object.values(selectedItems),
+            total: calculateTotal(),
+            paidAmount: paidAmount,
+            change: change,
+            date: new Date().toLocaleString(),
+            seller: firstName,
+        };
+
+        // try {
+        //     const response = await axios.post('http://your-api-url/api/purchases', receipt, {
+        //         headers: {
+        //             Authorization: `Bearer ${token}`, // ส่ง token ไปด้วย
+        //         },
+        //     });
+        //     alert(response.data.Message); // แสดงข้อความการบันทึก
+        // } catch (error) {
+        //     console.error("Error during purchase:", error);
+        // }
+        
+        // console.log("ใบเสร็จ:", receipt);
+
+        // Call print function
+        printReceipt(receipt);
+    };
+
+    const printReceipt = (receipt) => {
+    const receiptWindow = window.open('', '', 'width=600,height=400');
+    receiptWindow.document.write('<pre>');
+    receiptWindow.document.write(`วันที่: ${receipt.date}\n`);
+    receiptWindow.document.write('รายการสินค้า:\n');
+    receipt.items.forEach(item => {
+        receiptWindow.document.write(`${item.productName} : ฿${item.price} x ${item.quantity}\n`);
+    });
+    receiptWindow.document.write('-------------------------\n');
+    receiptWindow.document.write(`ยอดรวม: ฿${receipt.total}\n`);
+    receiptWindow.document.write(`จำนวนเงินที่จ่าย: ฿${receipt.paidAmount}\n`);
+    receiptWindow.document.write(`เงินทอน: ฿${receipt.change}\n`);
+    receiptWindow.document.write(`ผู้ขาย: ${receipt.seller}\n`)
+    receiptWindow.document.write('</pre>');
+    receiptWindow.document.close();
+    receiptWindow.focus();
+    receiptWindow.print();
+    receiptWindow.close();
+};
 
     return (
         <div className="sale-page">
@@ -205,7 +297,7 @@ export default function Sale() {
                                 </div>
                             ))}
                         </div>
-
+                        {/* ส่วนของรายการสินค้าที่เลือก */}
                         {showOrderSummary && ( 
                             <div className="order-summary">
                                 <h2>ORDER SUMMARY</h2>
@@ -214,7 +306,7 @@ export default function Sale() {
                                         <div className="row">
                                             <p>{item.productName} : {item.price} บาท</p>
                                             <button className="icon-button" onClick={() => handleRemoveItem(item.Id)}>
-                                                    <FaTrash className="icon icon-red" />
+                                                <FaTrash className="icon icon-red" />
                                             </button>
                                         </div>
                                         <div className="row">
@@ -229,7 +321,43 @@ export default function Sale() {
                                     </div>
                                 ))}
                                 <p>Total: {calculateTotal()} บาท</p>
-                                <button onClick={handlePlaceOrder}>Place Order</button>
+                                <button onClick={handleOpenPaymentModal}>ชำระเงิน</button>
+                            </div>
+                        )}
+
+                        {/* Modal สำหรับการชำระเงิน */}
+                        {showPaymentModal && (
+                            <div className="payment-modal">
+                                <div className="modal-content">
+                                    <h3>ตรวจสอบการสั่งซื้อ</h3>
+                                    {Object.values(selectedItems).map(item => (
+                                        <div key={item.Id} className="payment-item">
+                                            <p>{item.productName} : ฿{item.price} x {item.quantity}</p>
+                                        </div>
+                                    ))}
+                                    <hr />
+                                    <p>ยอดรวม: ฿{calculateTotal()}</p>
+                                    
+                                    <p>เงินที่จ่าย: ฿{paidAmount}</p>
+                                    <p>เงินทอน: ฿{change >= 0 ? change : 0}</p>
+
+                                    {/* ปุ่มสำหรับเพิ่มจำนวนเงิน */}
+                                    <div className="number-pad">
+                                        {[1000, 500, 100, 50, 20, 10].map((amount) => (
+                                            <button key={amount} onClick={() => handleAmountChange(amount)}>
+                                                ฿{amount}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    {/* ตัวเลือกการชำระเงิน */}
+                                    <div className="payment-methods">
+                                        <button className="payment-button" onClick={() => handlePayment('cash')}>เงินสด</button>
+                                        <button className="payment-button" onClick={() => handlePayment('mobile')}>Mobile Banking</button>
+                                    </div>
+
+                                    <button className="cancel-button" onClick={handleClosePaymentModal}>ยกเลิก</button>
+                                </div>
                             </div>
                         )}
                     </div>

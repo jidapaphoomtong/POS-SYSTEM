@@ -23,7 +23,7 @@ const Navbar = () => {
                 const decodedToken = jwtDecode(token);
                 const firstNameFromToken = decodedToken["firstName"] || 'No role found';
                 firstName = firstNameFromToken; // Adjust according to your JWT structure
-                console.log(firstName);
+                // console.log(firstName);
 
             } catch (error) {
                 console.error("Invalid token:", error);
