@@ -79,28 +79,48 @@
     color: #2a83cf; /* สีฟ้าไอคอนเมนู */
   }
 
-  /* Add this to your existing CSS file */
-
+/* Dropdown */
 .dropdown {
-  position: absolute;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  border-radius: 5px;
-  margin-top: 10px; /* Space below the menu icon */
-  z-index: 1;
+    position: absolute;
+    right: 10px; /* ขยับออกจากฝั่งขวา 10px */
+    left: auto; /* ยกเลิกการตั้งค่า left หากมี */
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Increased shadow depth */
+    border-radius: 5px;
+    margin-top: 8px; /* Reduced space below the menu icon */
+    z-index: 1000; /* Higher z-index to ensure visibility over other elements */
+    width: 200px; /* Set a fixed width for better alignment */
+    overflow: hidden; /* Prevent overflow from long text */
+    animation: fadeIn 0.2s; /* Add a simple fade-in effect */
 }
 
+/* Dropdown List Style */
 .dropdown ul {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
 }
 
+/* Dropdown List Item Style */
 .dropdown li {
-  padding: 10px 20px;
-  cursor: pointer;
+    padding: 10px 15px; /* Slightly adjusted padding for better spacing */
+    cursor: pointer;
+    transition: background-color 0.2s; /* Smooth hover transition */
+    color: #333; /* Changed text color for better visibility */
 }
 
 .dropdown li:hover {
-  background-color: #f0f0f0; /* Hover effect */
+    background-color: #e0f7fa; /* Light blue hover effect */
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px); /* Slight upward movement for effect */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }

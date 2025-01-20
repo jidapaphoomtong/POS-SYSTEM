@@ -1,19 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 using backend.Services.PurchaseService;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    // [DisableCors]
-    [LogAction]
     public class PurchaseController : Controller
     {
         private readonly IPurchaseService _purchaseService;
@@ -29,6 +22,24 @@ namespace backend.Controllers
         {
             var response = await _purchaseService.AddPurchase(branchId, purchase);
             if (response.Success) return Ok(response);
+            return BadRequest(response);
+        }
+
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
+        [HttpGet("all-purchases/{branchId}")]
+        public async Task<IActionResult> GetAllPurchases(string branchId)
+        {
+            var response = await _purchaseService.GetAllPurchases(branchId);
+            if (response.Success) return Ok(response.Data);
+            return BadRequest(response);
+        }
+
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
+        [HttpGet("monthly-sales/{branchId}/{year}/{month}")]
+        public async Task<IActionResult> GetMonthlySales(string branchId, int year, int month)
+        {
+            var response = await _purchaseService.GetMonthlySales(branchId, year, month);
+            if (response.Success) return Ok(response.Data);
             return BadRequest(response);
         }
     }

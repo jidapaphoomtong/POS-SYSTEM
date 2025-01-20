@@ -1,8 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
+using Google.Cloud.Firestore;
 
 namespace backend.Services.PurchaseService
 {
@@ -29,10 +28,10 @@ namespace backend.Services.PurchaseService
                     counter = currentCounter;
                 }
 
-                // Increment ลำดับ
+                // Increment the sequence
                 await sequenceDoc.SetAsync(new { counter = counter + 1 });
 
-                // คืนค่า ID ในรูปแบบ "001", "002", "003"
+                // Return ID formatted
                 return counter.ToString("D3");
             }
             catch (Exception ex)
@@ -45,22 +44,60 @@ namespace backend.Services.PurchaseService
         {
             try
             {
-                // สร้าง purchase ID ใหม่
-                string purchaseId = await GetNextId($"purchase-sequence-{branchId}"); // ลำดับเฉพาะต่อ Branch
+                string purchaseId = await GetNextId($"purchase-sequence-{branchId}");
+                purchase.Id = purchaseId;
 
                 var purchaseDoc = _firestoreDb.Collection("branches")
                     .Document(branchId)
                     .Collection("purchases")
                     .Document(purchaseId);
 
-                purchase.Id = purchaseId;
                 await purchaseDoc.SetAsync(purchase);
-
                 return ServiceResponse<string>.CreateSuccess(purchaseId, "Purchase Data added successfully!");
             }
             catch (Exception ex)
             {
                 return ServiceResponse<string>.CreateFailure($"Failed to add purchase data: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<IEnumerable<Purchase>>> GetAllPurchases(string branchId)
+        {
+            try
+            {
+                var purchasesQuery = _firestoreDb.Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases");
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(purchases, "Purchases retrieved successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch purchases: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<IEnumerable<Purchase>>> GetMonthlySales(string branchId, int year, int month)
+        {
+            try
+            {
+                var purchasesQuery = _firestoreDb.Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases")
+                    .WhereGreaterThan("Date", new DateTime(year, month, 1))
+                    .WhereLessThan("Date", new DateTime(year, month + 1, 1));
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var monthlySales = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(monthlySales, "Monthly sales retrieved successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch monthly sales: {ex.Message}");
             }
         }
     }
