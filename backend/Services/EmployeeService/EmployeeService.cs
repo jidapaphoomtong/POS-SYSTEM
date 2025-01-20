@@ -375,17 +375,9 @@ namespace backend.Services.EmployeeService
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(branchId))
-                {
-                    throw new ArgumentException("Branch ID cannot be null or empty.", nameof(branchId));
-                }
-                
-                if (string.IsNullOrWhiteSpace(firstName))
-                {
-                    throw new ArgumentException("First name cannot be null or empty.", nameof(firstName));
-                }
-
-                var employeesQuery = _firestoreDb.Collection("branches").Document(branchId).Collection("employees")
+                var employeesQuery = _firestoreDb.Collection("branches")
+                    .Document(branchId)
+                    .Collection("employees")
                     .WhereEqualTo("firstName", firstName);
 
                 var snapshot = await employeesQuery.GetSnapshotAsync();

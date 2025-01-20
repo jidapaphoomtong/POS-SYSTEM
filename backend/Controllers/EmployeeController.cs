@@ -230,8 +230,26 @@ namespace backend.Controllers
         [HttpGet("get-employee-by-firstname")]
         public async Task<IActionResult> GetEmployeeByFirstName(string branchId, string firstName)
         {
+            if (string.IsNullOrWhiteSpace(branchId))
+            {
+                return BadRequest("Branch ID cannot be null or empty.");
+            }
+
+            if (string.IsNullOrWhiteSpace(firstName))
+            {
+                return BadRequest("First name cannot be null or empty.");
+            }
+
             var response = await _employeeService.GetEmployeeByFirstName(branchId, firstName);
-            if (response.Success) return Ok(response.Data);
+            if (response.Success) 
+            {
+                if (response.Data == null || response.Data.Count == 0)
+                {
+                    return NotFound("No employee found with this first name.");
+                }
+                return Ok(response.Data);
+            }
+
             return BadRequest(response);
         }
     }

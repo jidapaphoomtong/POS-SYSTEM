@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 using Google.Cloud.Firestore;
@@ -21,17 +22,11 @@ namespace backend.Services.PurchaseService
                 var sequenceDoc = _firestoreDb.Collection("config").Document(sequenceName);
                 var snapshot = await sequenceDoc.GetSnapshotAsync();
 
-                int counter = 1;
+                int counter = snapshot.Exists && snapshot.TryGetValue("counter", out int currentCounter)
+                    ? currentCounter + 1
+                    : 1;
 
-                if (snapshot.Exists && snapshot.TryGetValue<int>("counter", out var currentCounter))
-                {
-                    counter = currentCounter;
-                }
-
-                // Increment the sequence
-                await sequenceDoc.SetAsync(new { counter = counter + 1 });
-
-                // Return ID formatted
+                await sequenceDoc.SetAsync(new { counter });
                 return counter.ToString("D3");
             }
             catch (Exception ex)
@@ -46,6 +41,11 @@ namespace backend.Services.PurchaseService
             {
                 string purchaseId = await GetNextId($"purchase-sequence-{branchId}");
                 purchase.Id = purchaseId;
+
+                if (purchase == null)
+                {
+                    return ServiceResponse<string>.CreateFailure("Purchase data is null.");
+                }
 
                 var purchaseDoc = _firestoreDb.Collection("branches")
                     .Document(branchId)
@@ -99,6 +99,42 @@ namespace backend.Services.PurchaseService
             {
                 return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch monthly sales: {ex.Message}");
             }
+        }
+        
+        public async Task<ServiceResponse<bool>> DeleteAllPurchases(string branchId)
+        {
+            try
+            {
+                var purchasesQuery = _firestoreDb.Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases");
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                if (snapshot.Documents.Count == 0)
+                {
+                    return ServiceResponse<bool>.CreateFailure("No purchases to delete.");
+                }
+
+                foreach (var doc in snapshot.Documents)
+                {
+                    await doc.Reference.DeleteAsync();
+                }
+
+                // รีเซต purchaseId
+                await ResetPurchaseId(branchId);
+
+                return ServiceResponse<bool>.CreateSuccess(true, "All purchases deleted successfully!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<bool>.CreateFailure($"Failed to delete purchases: {ex.Message}");
+            }
+        }
+
+        private async Task ResetPurchaseId(string branchId)
+        {
+            var sequenceDoc = _firestoreDb.Collection("config").Document($"purchase-sequence-{branchId}");
+            await sequenceDoc.SetAsync(new { counter = 0 });
         }
     }
 }

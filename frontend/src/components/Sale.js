@@ -252,71 +252,65 @@ export default function Sale() {
         receiptWindow.close();
     };
 
-    const getEmployeeIdFromFirstName = async (firstName) => {
-        const token = Cookies.get("authToken");
-    
-        if (token) {
-            const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
-    
-            try {
-                const response = await axios.get(`/api/Employee/get-employee-by-firstname?branchId=${branchId}&firstName=${firstName}`, {
-                    headers: { 
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}` 
-                    },
-                    withCredentials: true,
-                });
-    
-                if (response.data && response.data.length > 0) {
-                    return response.data[0].id; // สมมุติว่า API ส่งคืน array ของพนักงาน
-                }
-            } catch (error) {
-                console.error("Error fetching employee by first name:", error);
-                return null;
-            }
-        }
-        return null;
-    };
-    
     const saveOrder = async () => {
         const token = Cookies.get("authToken");
         const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
         
-        if(!branchId) {
+        // เช็คว่า branchId มีค่าหรือไม่
+        if (!branchId) {
             alert("Branch ID is missing!");
             return;
         }
+    
+        // ตรวจสอบการ Decode Token
+        let firstName = "";
+        if (token) {
+            try {
+                const decodedToken = jwtDecode(token);
+                const firstNameFromToken = decodedToken["firstName"] || 'No role found';
+                firstName = firstNameFromToken; // Adjust according to your JWT structure
+                // console.log(firstName);
 
-        const decodedToken = jwtDecode(token);
-        const firstName = decodedToken.firstName; // ดึง firstName ออกมา
-        // console.log(firstName)
-    
-        const employeeId = await getEmployeeIdFromFirstName(firstName); // เรียกใช้ฟังก์ชันเพื่อดึง employeeId
-    
+            } catch (error) {
+                console.error("Invalid token:", error);
+                alert("Have Something wrong")
+            }
+        }
+        
+        // สร้าง Purchase Object
         const purchase = {
             products: Object.values(selectedItems).map(item => ({
-                Id: item.Id,
+                id: item.Id, // แก้ไขชื่อให้ตรงตามที่ backend คาดหวัง
                 stock: item.quantity,
             })),
-            total: calculateTotal(),
+            total: calculateTotal(), // คำนวณให้ถูกต้อง
             paidAmount: paidAmount,
             change: change,
-            date: new Date().toLocaleString(),
-            sellerId: employeeId, // ใช้ employeeId แทน seller
+            date: new Date().toISOString(), // เปลี่ยนให้เป็น ISO string
+            seller: firstName, // ตั้งค่า seller เป็น firstName
         };
     
+        // Debugging: แสดง Purchase Object ใน Console
+        console.log("Purchase Object:", JSON.stringify(purchase, null, 2));
+    
         try {
-            const response = await axios.post(`/api/purchase/all-purchases/${branchId}`, purchase, {
+            const response = await axios.post(`/api/Purchase/add-purchase/${branchId}`, purchase, {
                 headers: { 
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}` 
                 },
                 withCredentials: true,
             });
-            alert(response.data.message);
+    
+            // ตรวจสอบการตอบกลับจาก API
+            if (response.data && response.data.message) {
+                alert(response.data.message);
+            } else {
+                alert("Purchase saved but no message received.");
+            }
         } catch (error) {
             console.error("Error during purchase:", error);
-            alert("Failed to save the purchase.");
+            alert("Failed to save the purchase: " + error.message); // แสดงข้อความผิดพลาดที่ชัดเจน
         }
     };
 
