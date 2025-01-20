@@ -39,6 +39,29 @@ function App() {
         <Route path="/add-product/:branchId" element={<AddProduct />} />
         <Route path="/product/:productId" element={<ProductDetail />} />
       </Routes>
+      
+      {/* <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/select-branch" element={<SelectBranch />} />
+
+        <Route path="/sale/:branchId" element={<Sale />} />
+
+        <Route path="/BranchList" element={<BranchList />} />
+        <Route path="/:branchId/BranchList/edit-branch" element={<EditBranch />} />
+        <Route path="/:branchId/BranchList/add-branch" element={<AddBranch />} />
+        <Route path="/:branchId/BranchList/branch" element={<BranchDetail />} />
+
+        <Route path="/:branchId/EmployeeList" element={<EmployeeList />} />
+        <Route path="/:branchId/EmployeeList/edit-employee/:employeeId" element={<EditEmployee />} />
+        <Route path="/:branchId/EmployeeList/add-employee" element={<AddEmployee />} />
+        <Route path="/:branchId/EmployeeList/employee/:employeeId" element={<EmployeeDetail />} />
+
+        <Route path="/:branchId/ProductList" element={<ProductList />} />
+        <Route path="/:branchId/ProductList/edit-product/:productId" element={<EditProduct />} />
+        <Route path="/:branchId/ProductList/add-product" element={<AddProduct />} />
+        <Route path="/:branchId/ProductList/product/:productId" element={<ProductDetail />} />
+      </Routes> */}
       <ToastContainer />
     </Router>
   );

@@ -19,6 +19,7 @@ using Microsoft.OpenApi.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Google.Cloud.Firestore;
+using backend.Services.PurchaseService;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -90,6 +91,7 @@ builder.Services.AddScoped<IBranchService, BranchService>();
 builder.Services.AddScoped<IEmployeeService, EmployeeService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<IPurchaseService, PurchaseService>();
 // builder.Services.AddScoped<IAdminService, AdminService>();
 // builder.Services.AddScoped<backend.Filters.CheckHeaderAttribute>();
 
