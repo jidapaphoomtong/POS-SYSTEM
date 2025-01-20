@@ -7,6 +7,7 @@ import ConfirmationModal from "./ConfirmationModal";
 import Navbar from "../bar/Navbar";
 import Sidebar from "../bar/Sidebar";
 import { FaEdit, FaTrash } from "react-icons/fa";
+import { jwtDecode } from "jwt-decode";
 
 const ProductList = () => {
     const [products, setProducts] = useState([]);
@@ -14,6 +15,7 @@ const ProductList = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [deleteProductId, setDeleteProductId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [userRole, setUserRole] = useState(""); // state สำหรับบทบาทผู้ใช้
     
     // ดึง branchId และ categoryId
     const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
@@ -118,6 +120,24 @@ const ProductList = () => {
         }
     };
 
+    useEffect(() => {
+        const fetchUserRole = async () => {
+            const token = Cookies.get("authToken");
+            if (token) {
+                // สมมุติว่าเราใส่ข้อมูล role ใน token หรือ API อื่น
+                const decodedToken = jwtDecode(token); // ใช้ jwt-decode หรือวิธีการที่จะเข้าถึงข้อมูลนี้
+                const roleFromToken = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'No role found';
+                setUserRole(roleFromToken);
+            }
+            console.log(setUserRole);
+        };
+
+        fetchUserRole();
+    }, []);
+
+    // ฟังก์ชันที่ใช้ในการตรวจสอบบทบาท
+    const canEditOrDelete = userRole !== "employee";
+
     return (
         <div className="product-container">
             <Navbar />
@@ -126,13 +146,15 @@ const ProductList = () => {
                 <div className="main-content">
                     <div className="header">
                         <h2>Product Management ({products.length})</h2>
-                        <button
-                            className="add-button"
-                            onClick={() => navigate(`/add-product/${branchId}`)}
-                            disabled={isLoading}
-                        >
-                            Add Product
-                        </button>
+                        {canEditOrDelete && (
+                            <button
+                                className="add-button"
+                                onClick={() => navigate(`/add-product/${branchId}`)}
+                                disabled={isLoading}
+                            >
+                                Add Product
+                            </button>
+                        )}
                     </div>
 
                     {isLoading ? (
@@ -147,7 +169,7 @@ const ProductList = () => {
                                     <th>Price</th>
                                     <th>Stock</th>
                                     <th>Status</th>
-                                    <th>Actions</th>
+                                    {canEditOrDelete && <th>Actions</th>}
                                 </tr>
                             </thead>
                             <tbody>
@@ -155,22 +177,26 @@ const ProductList = () => {
                                     const status = getProductStatus(stock);
                                     return (
                                         <tr key={id}>
-                                            <td>{id}</td>
+                                            <td>
+                                                <a href={`/product/${id}?branch=${branchId}`} className="detail-link">{id}</a>
+                                            </td>
                                             <td><img src={ImgUrl} alt={productName} style={{ width: "50px", height: "50px" }} /></td>
                                             <td>{productName}</td>
                                             <td>{price}</td>
                                             <td>{stock}</td>
                                             <td style={{ color: status.color }}>{status.icon} {status.text}</td>
-                                            <td>
-                                                <div className="row-product">
-                                                    <button className="icon-button" onClick={() => navigate(`/edit-product/${id}?branch=${branchId}`)}>
-                                                        <FaEdit className="icon icon-blue" />
-                                                    </button>
-                                                    <button className="icon-button" onClick={() => handleOpenDeleteModal(id)}>
-                                                        <FaTrash className="icon icon-red" />
-                                                    </button>
-                                                </div>
-                                            </td>
+                                            {canEditOrDelete && (  
+                                                <td>
+                                                    <div className="row-product">
+                                                        <button className="icon-button" onClick={() => navigate(`/edit-product/${id}?branch=${branchId}`)}>
+                                                            <FaEdit className="icon icon-blue" />
+                                                        </button>
+                                                        <button className="icon-button" onClick={() => handleOpenDeleteModal(id)}>
+                                                            <FaTrash className="icon icon-red" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            )}
                                         </tr>
                                     );
                                 })}

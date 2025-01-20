@@ -41,7 +41,7 @@ const EditEmployee = () => {
                     withCredentials: true,
                 });
         
-                console.log(response); // เพิ่มบรรทัดนี้เพื่อตรวจสอบข้อมูล
+                // console.log(response); // เพิ่มบรรทัดนี้เพื่อตรวจสอบข้อมูล
         
                 // ตรวจสอบว่า response.data มีข้อมูลตามที่เราต้องการหรือไม่
                 if (response.status === 200 && response.data) {

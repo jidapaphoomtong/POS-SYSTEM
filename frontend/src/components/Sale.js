@@ -23,6 +23,7 @@ export default function Sale() {
     const [showPaymentModal, setShowPaymentModal] = useState(false);
     const [paidAmount, setPaidAmount] = useState(0); // จำนวนที่จ่าย
     const [change, setChange] = useState(0); // เงินทอน
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         const fetchData = async () => {
@@ -168,14 +169,29 @@ export default function Sale() {
 
     const handleClosePaymentModal = () => {
         setShowPaymentModal(false);
+
+         // รีเซ็ตทั้งหมด
+        setPaidAmount(0); // จำนวนที่จ่าย
+        setChange(0); // เงินทอน
     };
 
-    const handlePayment = (type) => {
-        // Implement payment logic here
-        alert(`Pay Success ${type}`);
+    const handlePayment = async (type) => {
+        const total = calculateTotal();
+    
+        // ตรวจสอบจำนวนที่จ่ายและเงินทอน
+        if (paidAmount < total) {
+            setErrorMessage("คิดเงินผิด! กรุณาจ่ายเงินให้ครบถ้วน.");
+            return; // ถ้าเงินไม่ครบไม่ให้ proceed
+        }
+
+        // Logic สำหรับการชำระเงินที่ถูกต้อง
+        alert(`ชำระเงินสำเร็จด้วย ${type}`);
 
         // Generate receipt
-        generateReceipt();
+        await generateReceipt();
+
+        // บันทึกคำสั่งซื้อ
+        await saveOrder(); // <-- เรียกใช้ฟังก์ชันสำหรับบันทึกคำสั่งซื้อ
 
         handleClosePaymentModal(); // ปิด modal หลังจากชำระเงินสำเร็จ
     };
@@ -195,7 +211,7 @@ export default function Sale() {
                 const decodedToken = jwtDecode(token);
                 const firstNameFromToken = decodedToken["firstName"] || 'No role found';
                 firstName = firstNameFromToken; // Adjust according to your JWT structure
-                console.log(firstName);
+                // console.log(firstName);
         
             }catch (error) {
                 console.error("Invalid token:", error);
@@ -212,42 +228,97 @@ export default function Sale() {
             seller: firstName,
         };
 
-        // try {
-        //     const response = await axios.post('http://your-api-url/api/purchases', receipt, {
-        //         headers: {
-        //             Authorization: `Bearer ${token}`, // ส่ง token ไปด้วย
-        //         },
-        //     });
-        //     alert(response.data.Message); // แสดงข้อความการบันทึก
-        // } catch (error) {
-        //     console.error("Error during purchase:", error);
-        // }
-        
-        // console.log("ใบเสร็จ:", receipt);
-
         // Call print function
         printReceipt(receipt);
     };
 
     const printReceipt = (receipt) => {
-    const receiptWindow = window.open('', '', 'width=600,height=400');
-    receiptWindow.document.write('<pre>');
-    receiptWindow.document.write(`วันที่: ${receipt.date}\n`);
-    receiptWindow.document.write('รายการสินค้า:\n');
-    receipt.items.forEach(item => {
-        receiptWindow.document.write(`${item.productName} : ฿${item.price} x ${item.quantity}\n`);
-    });
-    receiptWindow.document.write('-------------------------\n');
-    receiptWindow.document.write(`ยอดรวม: ฿${receipt.total}\n`);
-    receiptWindow.document.write(`จำนวนเงินที่จ่าย: ฿${receipt.paidAmount}\n`);
-    receiptWindow.document.write(`เงินทอน: ฿${receipt.change}\n`);
-    receiptWindow.document.write(`ผู้ขาย: ${receipt.seller}\n`)
-    receiptWindow.document.write('</pre>');
-    receiptWindow.document.close();
-    receiptWindow.focus();
-    receiptWindow.print();
-    receiptWindow.close();
-};
+        const receiptWindow = window.open('', '', 'width=600,height=400');
+        receiptWindow.document.write('<pre>');
+        receiptWindow.document.write(`วันที่: ${receipt.date}\n`);
+        receiptWindow.document.write('รายการสินค้า:\n');
+        receipt.items.forEach(item => {
+            receiptWindow.document.write(`${item.productName} : ฿${item.price} x ${item.quantity}\n`);
+        });
+        receiptWindow.document.write('-------------------------\n');
+        receiptWindow.document.write(`ยอดรวม: ฿${receipt.total}\n`);
+        receiptWindow.document.write(`จำนวนเงินที่จ่าย: ฿${receipt.paidAmount}\n`);
+        receiptWindow.document.write(`เงินทอน: ฿${receipt.change}\n`);
+        receiptWindow.document.write(`ผู้ขาย: ${receipt.seller}\n`)
+        receiptWindow.document.write('</pre>');
+        receiptWindow.document.close();
+        receiptWindow.focus();
+        receiptWindow.print();
+        receiptWindow.close();
+    };
+
+    const getEmployeeIdFromFirstName = async (firstName) => {
+        const token = Cookies.get("authToken");
+    
+        if (token) {
+            const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+    
+            try {
+                const response = await axios.get(`/api/Employee/get-employee-by-firstname?branchId=${branchId}&firstName=${firstName}`, {
+                    headers: { 
+                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                        Authorization: `Bearer ${token}` 
+                    },
+                    withCredentials: true,
+                });
+    
+                if (response.data && response.data.length > 0) {
+                    return response.data[0].id; // สมมุติว่า API ส่งคืน array ของพนักงาน
+                }
+            } catch (error) {
+                console.error("Error fetching employee by first name:", error);
+                return null;
+            }
+        }
+        return null;
+    };
+    
+    const saveOrder = async () => {
+        const token = Cookies.get("authToken");
+        const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+        
+        if(!branchId) {
+            alert("Branch ID is missing!");
+            return;
+        }
+
+        const decodedToken = jwtDecode(token);
+        const firstName = decodedToken.firstName; // ดึง firstName ออกมา
+        // console.log(firstName)
+    
+        const employeeId = await getEmployeeIdFromFirstName(firstName); // เรียกใช้ฟังก์ชันเพื่อดึง employeeId
+    
+        const purchase = {
+            products: Object.values(selectedItems).map(item => ({
+                Id: item.Id,
+                stock: item.quantity,
+            })),
+            total: calculateTotal(),
+            paidAmount: paidAmount,
+            change: change,
+            date: new Date().toLocaleString(),
+            sellerId: employeeId, // ใช้ employeeId แทน seller
+        };
+    
+        try {
+            const response = await axios.post(`/api/purchase/all-purchases/${branchId}`, purchase, {
+                headers: { 
+                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                    Authorization: `Bearer ${token}` 
+                },
+                withCredentials: true,
+            });
+            alert(response.data.message);
+        } catch (error) {
+            console.error("Error during purchase:", error);
+            alert("Failed to save the purchase.");
+        }
+    };
 
     return (
         <div className="sale-page">
@@ -340,6 +411,9 @@ export default function Sale() {
                                     
                                     <p>เงินที่จ่าย: ฿{paidAmount}</p>
                                     <p>เงินทอน: ฿{change >= 0 ? change : 0}</p>
+                                    
+                                    {/* แสดงข้อความผิดพลาดถ้ามี */}
+                                    {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
 
                                     {/* ปุ่มสำหรับเพิ่มจำนวนเงิน */}
                                     <div className="number-pad">

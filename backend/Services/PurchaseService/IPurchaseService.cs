@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 
@@ -10,5 +8,7 @@ namespace backend.Services.PurchaseService
     {
         Task<string> GetNextId(string sequenceName);
         Task<ServiceResponse<string>> AddPurchase(string branchId, Purchase purchase);
+        Task<ServiceResponse<IEnumerable<Purchase>>> GetAllPurchases(string branchId);
+        Task<ServiceResponse<IEnumerable<Purchase>>> GetMonthlySales(string branchId, int year, int month);
     }
 }

@@ -139,7 +139,6 @@ const EmployeeList = () => {
                         <table className="employee-table">
                             <thead>
                                 <tr>
-                                    {/* <th>Detail</th> */}
                                     <th>Employee ID</th>
                                     <th>First Name</th>
                                     <th>Last Name</th>
@@ -151,10 +150,9 @@ const EmployeeList = () => {
                             <tbody>
                                 {employees.map(({ id, firstName, lastName, email, roles }) => (
                                     <tr key={id}>
-                                        {/* <td>
-                                            <a href={`/branch/${id}`} className="detail-link">Detail</a>
-                                        </td> */}
-                                        <td>{id}</td>
+                                        <td>
+                                            <a href={`/employee/${id}?branch=${branchId}`} className="detail-link">{id}</a>
+                                        </td>
                                         <td>{firstName}</td>
                                         <td>{lastName}</td>
                                         <td>{email}</td>

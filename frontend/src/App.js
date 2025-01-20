@@ -15,6 +15,8 @@ import EditEmployee from './components/Employee/EditEmployee';
 import AddEmployee from './components/Employee/AddEmployee';
 import AddProduct from './components/Product/AddProduct';
 import EditProduct from './components/Product/EditProduct'
+import EmployeeDetail from './components/Employee/EmployeeDetail';
+import ProductDetail from './components/Product/ProductDetail';
 
 function App() {
   return (
@@ -31,9 +33,11 @@ function App() {
         <Route path='/EmployeeList' element={<EmployeeList />}/>
         <Route path="/edit-employee/:employeeId" element={<EditEmployee />} />
         <Route path="/add-employee/:branchId" element={<AddEmployee />} />
+        <Route path="/employee/:employeeId" element={<EmployeeDetail />} />
         <Route path='/ProductList' element={<ProductList />}/>
         <Route path="/edit-product/:productId" element={<EditProduct/>} />
         <Route path="/add-product/:branchId" element={<AddProduct />} />
+        <Route path="/product/:productId" element={<ProductDetail />} />
       </Routes>
       <ToastContainer />
     </Router>
