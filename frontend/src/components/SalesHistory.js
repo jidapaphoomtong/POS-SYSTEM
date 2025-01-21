@@ -142,7 +142,7 @@ const SalesHistory = () => {
                                     <th>Bill No.</th>
                                     <th>Date</th>
                                     <th>Total</th>
-                                    <th>Employee</th>
+                                    <th>Seller</th>
                                     <th>Payment Method</th>
                                     <th>Actions</th>
                                 </tr>
