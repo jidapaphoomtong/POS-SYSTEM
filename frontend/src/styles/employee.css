@@ -158,3 +158,9 @@ input[type="text"] {
 .icon-blue {
     color: rgb(0, 102, 255);
 }
+
+.row-emplyee {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* เพื่อให้แน่ใจว่าองค์ประกอบอยู่กลางในแนวตั้ง */
+}

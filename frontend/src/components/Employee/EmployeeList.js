@@ -2,13 +2,14 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import EditEmployee from "./EditEmployee";
 import ConfirmationModal from "./ConfirmationModal";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "../../styles/employee.css";
 import Cookies from "js-cookie";
 import Navbar from "../bar/Navbar";
 import Sidebar from "../bar/Sidebar";
 import { FaEdit } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa6";
+import { toast } from "react-toastify";
 
 const EmployeeList = () => {
     const [employees, setEmployees] = useState([]);
@@ -17,19 +18,21 @@ const EmployeeList = () => {
     const [editEmployee, setEditEmployee] = useState(null);
     const [deleteEmployeeId, setDeleteEmployeeId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const { branchId } = useParams();
+    // console.log(branchId);
 
     useEffect(() => {
         const fetchEmployees = async () => {
             const token = Cookies.get("authToken");
             if (!token) {
-                alert("Your session has expired. Please login again.");
+                toast.error("Your session has expired. Please login again.");
                 navigate("/");
                 return;
             }
             
-            const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+            // const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
             if (!branchId) {
-                alert("Branch ID is missing!");
+                toast.error("Branch ID is missing!");
                 return;
             }
 
@@ -53,14 +56,14 @@ const EmployeeList = () => {
                     }));
                     setEmployees(employeeData);
                 } else {
-                    alert(response.data.message);
+                    toast.error(response.data.message);
                 }
             } catch (error) {
                 if (error.response?.status === 401) {
-                    alert("Unauthorized. Please login.");
+                    toast.error("Unauthorized. Please login.");
                     navigate("/");
                 } else {
-                    alert("Failed to fetch employees!");
+                    toast.error("Failed to fetch employees!");
                 }
             } finally {
                 setIsLoading(false);
@@ -101,21 +104,18 @@ const EmployeeList = () => {
                 });
                 
                 if (response.status === 200) {
-                    alert("Employee deleted successfully!");
+                    toast.success("Employee deleted successfully!");
                     setEmployees((prevEmployees) => prevEmployees.filter((employee) => employee.id !== deleteEmployeeId));
                     handleCloseDeleteModal();
                 } else {
-                    alert("Failed to delete employee.");
+                    toast.error("Failed to delete employee.");
                 }
             } catch (error) {
                 console.error("Failed to delete employee:", error);
-                alert("Failed to delete employee: " + (error.response?.data?.message || "Unknown error"));
+                toast.error("Failed to delete employee: " + (error.response?.data?.message || "Unknown error"));
             }
         };
         
-        // Extract branchId for navigation
-        const branchId = new URLSearchParams(window.location.search).get("branch");
-
     return (
         <div className="employee-container">
             <Navbar />
@@ -126,7 +126,7 @@ const EmployeeList = () => {
                 <h2>STAFF ({employees.length})</h2>
                 <button
                     className="add-button"
-                    onClick={() => navigate(`/add-employee/${branchId}`)}
+                    onClick={() => navigate(`/${branchId}/add-employee`)}
                     disabled={isLoading}
                 >
                     Add Staff
@@ -151,28 +151,30 @@ const EmployeeList = () => {
                                 {employees.map(({ id, firstName, lastName, email, roles }) => (
                                     <tr key={id}>
                                         <td>
-                                            <a href={`/employee/${id}?branch=${branchId}`} className="detail-link">{id}</a>
+                                            <a href={`/${branchId}/employee/${id}`} style={{ textAlign: 'center' }} className="detail-link">{id}</a>
                                         </td>
                                         <td>{firstName}</td>
                                         <td>{lastName}</td>
                                         <td>{email}</td>
                                         <td>{roles.map(role => role.Name).join(', ')}</td>
                                         <td>
-                                            <button
-                                            className="icon-button"
-                                                onClick={() => {
-                                                    // ส่งไปที่หน้า EditEmployee พร้อมกับ employeeId และ branchId
-                                                    navigate(`/edit-employee/${id}?branch=${branchId}`);
-                                                }}
-                                            >
-                                                <FaEdit className="icon icon-blue" />
+                                            <div className="row-employee">
+                                                <button
+                                                className="icon-button"
+                                                    onClick={() => {
+                                                        // ส่งไปที่หน้า EditEmployee พร้อมกับ employeeId และ branchId
+                                                        navigate(`/${branchId}/edit-employee/${id}`);
+                                                    }}
+                                                >
+                                                    <FaEdit className="icon icon-blue" />
+                                                </button>
+                                                <button
+                                                className="icon-button"
+                                                    onClick={() => handleOpenDeleteModal(id)}
+                                                >
+                                                    <FaTrash className="icon-red" />
                                             </button>
-                                            <button
-                                            className="icon-button"
-                                                onClick={() => handleOpenDeleteModal(id)}
-                                            >
-                                                <FaTrash className="icon icon-red" />
-                                            </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

@@ -4,6 +4,7 @@ import axios from "axios";
 import "../styles/SelectBranch.css";
 import { FaTh, FaList } from "react-icons/fa";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 export default function SelectBranch() {
     const [branches, setBranches] = useState([]);
@@ -20,7 +21,7 @@ export default function SelectBranch() {
     useEffect(() => {
         const fetchBranches = async () => {
             const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
-            console.log("Login successful, JWT Token received:", token);
+            // console.log("Login successful, JWT Token received:", token);
             if(token){
                 try {
                     // console.log("Fetching branches...");
@@ -39,10 +40,10 @@ export default function SelectBranch() {
                 } catch (error) {
                     // console.error("Failed to fetch branches:", error);
                     if (error.response?.status === 401) {
-                        alert("Unauthorized. Please login.");
+                        toast.error("Unauthorized. Please login.");
                         navigate("/"); // Redirect ไปหน้า Login
                     } else if (error.response?.status === 403) {
-                        alert("Access Denied: You do not have the required permissions.");
+                        toast.error("Access Denied: You do not have the required permissions.");
                     }
                 }
             setIsLoading(false); // ปิดสถานะการโหลด
@@ -54,7 +55,7 @@ export default function SelectBranch() {
 
     const handleSelectBranch = (branchId) => {
         setSelectedBranch(branchId);
-        navigate(`/sale?branch=${branchId}`); // Redirect ไป Sale หน้าต่าง ๆ
+        navigate(`/${branchId}/sale`); // Redirect ไป Sale หน้าต่าง ๆ
     };
 
     return (

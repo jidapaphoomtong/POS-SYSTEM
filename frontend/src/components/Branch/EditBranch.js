@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const EditBranch = () => {
     const navigate = useNavigate();
@@ -20,7 +21,7 @@ const EditBranch = () => {
     // ฟังก์ชันโหลดรายละเอียดของ Branch
     useEffect(() => {
         if (!branchId) {
-            alert("Branch ID is missing.");
+            toast.error("Branch ID is missing.");
             navigate("/BranchList");
             return;
         }
@@ -45,12 +46,12 @@ const EditBranch = () => {
                         iconUrl: response.data.data.iconUrl,
                     });
                 } else {
-                    alert(response.data.message || "Failed to fetch branch details.");
+                    toast.error(response.data.message || "Failed to fetch branch details.");
                     navigate("/BranchList");
                 }
             } catch (error) {
                 console.error("Failed to fetch branch details:", error);
-                alert(error.response ? error.response.data.message : "Failed to load branch details.");
+                toast.error(error.response ? error.response.data.message : "Failed to load branch details.");
                 navigate("/BranchList");
             } finally {
                 setIsLoading(false);
@@ -88,11 +89,11 @@ const EditBranch = () => {
                 withCredentials: true,
             });
 
-            alert("Branch updated successfully!");
+            toast.success("Branch updated successfully!");
             navigate("/BranchList"); // นำทางกลับไปที่ Branch List
         } catch (error) {
             console.error("Failed to update branch:", error);
-            alert(error.response ? error.response.data.message : "Failed to update branch.");
+            toast.error(error.response ? error.response.data.message : "Failed to update branch.");
         } finally {
             setIsLoading(false);
         }

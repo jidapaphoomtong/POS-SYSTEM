@@ -45,6 +45,20 @@ namespace backend.Controllers
         }
 
         [CustomAuthorizeRole("Admin, Manager, Employee")]
+        [HttpGet("branches/{branchId}/purchases/{purchaseId}")]
+        public async Task<IActionResult> GetPurchaseById(string branchId, string purchaseId)
+        {
+            var response = await _purchaseService.GetPurchaseById(branchId, purchaseId);
+
+            if (response.Success)
+            {
+                return Ok(response.Data);
+            }
+
+            return NotFound(new { message = response.Message });
+        }
+
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
         [HttpGet("monthly-sales/{branchId}/{year}/{month}")]
         public async Task<IActionResult> GetMonthlySales(string branchId, int year, int month)
         {

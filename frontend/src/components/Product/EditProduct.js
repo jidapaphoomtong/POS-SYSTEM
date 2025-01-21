@@ -3,11 +3,12 @@ import "../../styles/product.css";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 const EditProduct = () => {
     const navigate = useNavigate();
-    const { productId  } = useParams(); // ดึง Product ID จาก URL
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const { productId, branchId  } = useParams(); // ดึง Product ID จาก URL
+    // const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
 
     const [formData, setFormData] = useState({
         productName: "",
@@ -22,8 +23,8 @@ const EditProduct = () => {
     // ฟังก์ชันโหลดรายละเอียดของ Product
     useEffect(() => {
         if (!productId) {
-            alert("Product ID is missing.");
-            navigate(`/ProductList?branch=${branchId}`);
+            toast.error("Product ID is missing.");
+            navigate(`/${branchId}/ProductList`);
             return;
         }
 
@@ -53,13 +54,13 @@ const EditProduct = () => {
                         categoryId: response.data.categoryId,
                     });
                 } else {
-                    alert(response.data.message || "Failed to fetch product details.");
-                    navigate(`/ProductList?branch=${branchId}`);
+                    toast.error(response.data.message || "Failed to fetch product details.");
+                    navigate(`/${branchId}/ProductList`);
                 }
             } catch (error) {
                 console.error("Failed to fetch product details:", error);
-                alert(error.response ? error.response.data.message : "Failed to load product details.");
-                navigate(`/ProductList?branch=${branchId}`);
+                toast.error(error.response ? error.response.data.message : "Failed to load product details.");
+                navigate(`/${branchId}/ProductList`);
             } finally {
                 setIsLoading(false);
             }
@@ -77,7 +78,7 @@ const EditProduct = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.productName || !formData.ImgUrl || !formData.price || !formData.stock) {
-            alert("Please fill out all fields!");
+            toast.error("Please fill out all fields!");
             return;
         }
 
@@ -93,12 +94,12 @@ const EditProduct = () => {
             });
 
             if (response.data.message) {
-                alert(response.data.message); 
+                toast.success(response.data.message); 
             }
-            navigate(`/ProductList?branch=${branchId}`); // นำทางกลับไปที่ Product List
+            navigate(`/${branchId}/ProductList`); // นำทางกลับไปที่ Product List
         } catch (error) {
             console.error("Failed to update product:", error);
-            alert(error.response ? error.response.data.message : "Failed to update product.");
+            toast.error(error.response ? error.response.data.message : "Failed to update product.");
         } finally {
             setIsLoading(false);
         }
@@ -158,7 +159,7 @@ const EditProduct = () => {
                         onChange={handleChange}
                     />
                     <div className="form-buttons">
-                        <button type="button" onClick={() => navigate(`/ProductList?branch=${branchId}`)} disabled={isLoading}>
+                        <button type="button" onClick={() => navigate(`/${branchId}/ProductList`)} disabled={isLoading}>
                             Cancel
                         </button>
                         <button type="submit" disabled={isLoading}>

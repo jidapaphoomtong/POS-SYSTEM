@@ -4,6 +4,7 @@ import { FaSearch, FaBell, FaUser, FaBars } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
 
 const Navbar = () => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -27,7 +28,7 @@ const Navbar = () => {
 
             } catch (error) {
                 console.error("Invalid token:", error);
-                alert("Have Something wrong")
+                toast.error("Have Something wrong");
             }
         }
     return (

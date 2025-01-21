@@ -153,20 +153,6 @@ builder.Services.AddAuthentication(options =>
         options.SlidingExpiration = true; // รีเฟรชอายุใช้งานของ Cookie หากใช้งานอยู่
         options.ExpireTimeSpan = TimeSpan.FromDays(3); // อายุ Cookie
 
-        // options.Events = new CookieAuthenticationEvents
-        // {
-        //     OnRedirectToAccessDenied = context =>
-        //     {
-        //         // กรณี Unauthorized ส่ง JSON 403 แทนการ Redirect
-        //         context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        //         context.Response.ContentType = "application/json";
-        //         return context.Response.WriteAsync(System.Text.Json.JsonSerializer.Serialize(new
-        //         {
-        //             Success = false,
-        //             Message = "You do not have permission to access this resource."
-        //         }));
-        //     }
-        // };
         options.Events = new CookieAuthenticationEvents
         {
             OnRedirectToLogin = context =>

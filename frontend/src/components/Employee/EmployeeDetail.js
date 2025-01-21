@@ -4,13 +4,15 @@ import Cookies from "js-cookie";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "../../styles/employee.css"; 
+import { toast } from "react-toastify";
 
 const EmployeeDetail = () => {
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
-    const { employeeId } = useParams(); // ดึง Employee ID และ Branch ID จาก URL
+    // const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const { employeeId, branchId } = useParams(); // ดึง Employee ID และ Branch ID จาก URL
     const [employee, setEmployee] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
+    // console.log(branchId);
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -32,7 +34,7 @@ const EmployeeDetail = () => {
                     withCredentials: true,
                 });
 
-                console.log(response)
+                // console.log(response)
 
                 if (response.status === 200 && response.data){
                     setFormData({
@@ -42,14 +44,14 @@ const EmployeeDetail = () => {
                         email: response.data.email,
                         roles: response.data.roles.map(role => role.name).join(', ')
                     });
-                    console.log('Roles:', response.data.roles); // ดูเนื้อหาที่ดึงมา
+                    // console.log('Roles:', response.data.roles); // ดูเนื้อหาที่ดึงมา
                 } else {
-                    alert(response.data.message || "Failed to fetch employee details.");
-                    navigate(`/EmployeeList?branch=${branchId}`);
+                    toast.error(response.data.message || "Failed to fetch employee details.");
+                    navigate(`/${branchId}/EmployeeList`);
                 }
             } catch (error) {
                 console.error("Failed to fetch employee details:", error);
-                alert(error.response ? error.response.data.message : "Failed to load employee details.");
+                toast.error(error.response ? error.response.data.message : "Failed to load employee details.");
             } finally {
                 setIsLoading(false);
             }
