@@ -51,7 +51,7 @@ const Login = () => {
                 const decodedToken = jwtDecode(token);
                 const emailFromToken = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || 'No email found';
                 const roleFromToken = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'No role found';
-                navigate(`/sale?branch=${branchId}`); 
+                navigate(`/${branchId}/sale`); 
 
             } else {
                 toast.error("Unknown role. Please contact support.");

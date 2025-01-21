@@ -15,6 +15,7 @@ export default function Sale() {
     const [items, setItems] = useState([]);
     const [selectedItems, setSelectedItems] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
+    const [paymentMethod, setPaymentMethod] = useState(); // ตัวแปรที่ใช้เก็บวิธีการชำระเงิน
     const [loading, setLoading] = useState(false);
     const [showOrderSummary, setShowOrderSummary] = useState(false);
     const [filterItems, setFilterItems] = useState([]);
@@ -184,14 +185,14 @@ export default function Sale() {
             return; // ถ้าเงินไม่ครบไม่ให้ proceed
         }
 
-        // Logic สำหรับการชำระเงินที่ถูกต้อง
+        setPaymentMethod(type); // บันทึกประเภทการชำระเงิน
         alert(`ชำระเงินสำเร็จด้วย ${type}`);
 
         // Generate receipt
-        await generateReceipt();
+        await generateReceipt(type);
 
         // บันทึกคำสั่งซื้อ
-        await saveOrder(); // <-- เรียกใช้ฟังก์ชันสำหรับบันทึกคำสั่งซื้อ
+        await saveOrder(type); // <-- เรียกใช้ฟังก์ชันสำหรับบันทึกคำสั่งซื้อ
 
         handleClosePaymentModal(); // ปิด modal หลังจากชำระเงินสำเร็จ
     };
@@ -201,7 +202,7 @@ export default function Sale() {
         setChange(paidAmount + amount - calculateTotal());
     };
 
-    const generateReceipt = async () => {
+    const generateReceipt = async (type) => {
         const token = Cookies.get("authToken");
         // console.log(token)
         let firstName = "";
@@ -226,6 +227,7 @@ export default function Sale() {
             change: change,
             date: new Date().toLocaleString(),
             seller: firstName,
+            paymentMethod: type, // เพิ่มประเภทการชำระเงินในใบเสร็จ
         };
 
         // Call print function
@@ -244,6 +246,7 @@ export default function Sale() {
         receiptWindow.document.write(`ยอดรวม: ฿${receipt.total}\n`);
         receiptWindow.document.write(`จำนวนเงินที่จ่าย: ฿${receipt.paidAmount}\n`);
         receiptWindow.document.write(`เงินทอน: ฿${receipt.change}\n`);
+        receiptWindow.document.write(`ประเภทการจ่ายเงิน: ${receipt.type}\n`)
         receiptWindow.document.write(`ผู้ขาย: ${receipt.seller}\n`)
         receiptWindow.document.write('</pre>');
         receiptWindow.document.close();
@@ -252,7 +255,7 @@ export default function Sale() {
         receiptWindow.close();
     };
 
-    const saveOrder = async () => {
+    const saveOrder = async (type) => {
         const token = Cookies.get("authToken");
     
         // เช็คว่า branchId มีค่าหรือไม่
@@ -288,6 +291,7 @@ export default function Sale() {
             change: change,
             date: new Date().toISOString(),
             seller: firstName,
+            paymentMethod: type,
         };
     
         // Debugging: แสดง Purchase Object ใน Console

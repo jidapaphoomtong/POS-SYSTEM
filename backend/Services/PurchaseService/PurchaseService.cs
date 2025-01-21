@@ -47,7 +47,8 @@ namespace backend.Services.PurchaseService
                     return ServiceResponse<string>.CreateFailure("Purchase data is null.");
                 }
 
-                var purchaseDoc = _firestoreDb.Collection("branches")
+                var purchaseDoc = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases")
                     .Document(purchaseId);
@@ -65,12 +66,18 @@ namespace backend.Services.PurchaseService
         {
             try
             {
-                var purchasesQuery = _firestoreDb.Collection("branches")
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases");
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                if (purchases.Count == 0)
+                {
+                    return ServiceResponse<IEnumerable<Purchase>>.CreateFailure("Don't have purchases in this branch.");
+                }
 
                 return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(purchases, "Purchases retrieved successfully!");
             }
@@ -84,7 +91,8 @@ namespace backend.Services.PurchaseService
         {
             try
             {
-                var purchasesQuery = _firestoreDb.Collection("branches")
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases")
                     .WhereGreaterThan("Date", new DateTime(year, month, 1))
@@ -105,7 +113,8 @@ namespace backend.Services.PurchaseService
         {
             try
             {
-                var purchasesQuery = _firestoreDb.Collection("branches")
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases");
 

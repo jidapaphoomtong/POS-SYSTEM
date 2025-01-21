@@ -28,6 +28,9 @@ namespace backend.Models
         public DateTime Date { get; set; }
 
         [FirestoreProperty]
-        public string Seller { get; set; } = string.Empty; // ฟิลด์ที่ใช้สำหรับชื่อคนขาย
+        public string Seller { get; set; } // ฟิลด์ที่ใช้สำหรับชื่อคนขาย
+        
+        [FirestoreProperty]
+        public string PaymentMethod { get; set; } = string.Empty; 
     }
 }
