@@ -70,6 +70,26 @@ namespace backend.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
+        // Update stock endpoint
+        [HttpPut("update-stock/{branchId}/{productId}")]
+        public async Task<ActionResult<ServiceResponse<string>>> UpdateStock(string branchId, string productId, [FromBody] Products product)
+        {
+            if (product == null || product.quantity <= 0)
+            {
+                return BadRequest("Invalid product data. Quantity must be greater than zero.");
+            }
+
+            // เรียกใช้ UpdateStock โดยส่งค่า product แทนค่า quantity
+            var response = await _productService.UpdateStock(branchId, productId, product);
+            if (!response.Success)
+            {
+                return BadRequest(response);
+            }
+
+            return Ok(response);
+        }
+
         [CustomAuthorizeRole("Admin, Manager")]
         [HttpDelete("branches/{branchId}/products/{productId}")]
         public async Task<IActionResult> DeleteProduct(string branchId, string productId)

@@ -254,8 +254,7 @@ export default function Sale() {
 
     const saveOrder = async () => {
         const token = Cookies.get("authToken");
-        // const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
-        
+    
         // เช็คว่า branchId มีค่าหรือไม่
         if (!branchId) {
             alert("Branch ID is missing!");
@@ -268,32 +267,27 @@ export default function Sale() {
             try {
                 const decodedToken = jwtDecode(token);
                 const firstNameFromToken = decodedToken["firstName"] || 'No role found';
-                firstName = firstNameFromToken; // Adjust according to your JWT structure
-                // console.log(firstName);
-
+                firstName = firstNameFromToken;
             } catch (error) {
                 console.error("Invalid token:", error);
-                alert("Have Something wrong")
+                alert("Have Something wrong");
             }
         }
-        
+    
         // สร้าง Purchase Object
         const purchase = {
             products: Object.values(selectedItems).map(item => ({
-                Id: item.Id,
-                ImgUrl: item.ImgUrl,
+                id: item.Id,
                 productName: item.productName,
-                description: item.description,
-                stock: item.stock,
                 price: item.price,
+                stock: item.quantity,
                 categoryId: item.categoryId,
-                branchId: item.branchId,
             })),
-            total: calculateTotal(), // คำนวณให้ถูกต้อง
+            total: calculateTotal(),
             paidAmount: paidAmount,
             change: change,
-            date: new Date().toISOString(), // เปลี่ยนให้เป็น ISO string
-            seller: firstName, // ตั้งค่า seller เป็น firstName
+            date: new Date().toISOString(),
+            seller: firstName,
         };
     
         // Debugging: แสดง Purchase Object ใน Console
@@ -303,21 +297,36 @@ export default function Sale() {
             const response = await axios.post(`/api/Purchase/add-purchase/${branchId}`, purchase, {
                 headers: { 
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}` ,
-                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}` 
                 },
                 withCredentials: true,
             });
-
+    
             if (response.status === 200) {
+                // อัปเดต stock สินค้า
+                for (const item of purchase.products) {
+                    // ดึง productId ของ item
+                    const productId = item.id; // ใช้ id จาก Purchase object
+    
+                    await axios.put(`/api/Product/update-stock/${branchId}/${productId}`, {
+                        quantity: item.stock // ปรับปรุงจำนวน stock ที่ใช้งาน
+                    }, {
+                        headers: { 
+                            "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                            Authorization: `Bearer ${token}` 
+                        },
+                        withCredentials: true,
+                    });
+                }
+    
                 alert("Purchases added successfully!");
             } else {
                 alert(`Request failed with status: ${response.status}`);
             }
-
+    
         } catch (error) {
             console.error("Error during purchase:", error);
-            alert("Failed to save the purchase: " + error.message); // แสดงข้อความผิดพลาดที่ชัดเจน
+            alert("Failed to save the purchase: " + error.message);
         }
     };
 
