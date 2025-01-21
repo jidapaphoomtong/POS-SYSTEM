@@ -115,9 +115,6 @@ const EmployeeList = () => {
             }
         };
         
-        // Extract branchId for navigation
-        // const branchId = new URLSearchParams(window.location.search).get("branch");
-
     return (
         <div className="employee-container">
             <Navbar />

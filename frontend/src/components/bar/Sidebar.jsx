@@ -55,7 +55,7 @@ const Sidebar = () => {
     };
 
     const handleHistory = () => {
-        navigate(`/`);
+        navigate(`/${branchId}/history`);
     };
 
     const handleDepartment = () => {

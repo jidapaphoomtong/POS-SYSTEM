@@ -17,6 +17,7 @@ import AddProduct from './components/Product/AddProduct';
 import EditProduct from './components/Product/EditProduct'
 import EmployeeDetail from './components/Employee/EmployeeDetail';
 import ProductDetail from './components/Product/ProductDetail';
+import SalesHistory from './components/SalesHistory';
 
 function App() {
   return (
@@ -59,6 +60,7 @@ function App() {
             <Route path="edit-product/:productId" element={<EditProduct />} />
             <Route path="add-product" element={<AddProduct />} />
             <Route path="product/:productId" element={<ProductDetail />} />
+            <Route path="history" element={<SalesHistory/>}/>
         </Route>
 
       </Routes>
