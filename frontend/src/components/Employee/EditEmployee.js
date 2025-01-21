@@ -6,8 +6,9 @@ import Cookies from "js-cookie";
 
 const EditEmployee = () => {
     const navigate = useNavigate();
-    const { employeeId } = useParams(); // ดึง Employee ID จาก URL
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const { employeeId, branchId } = useParams(); // ดึง Employee ID จาก URL
+    // const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+
     // ตรวจสอบการกำหนดค่าคงที่ใหม่
     const existingSalt = "";  // ต้องมีการกำหนดค่า
     const existingPasswordHash = ""; // ต้องมีการกำหนดค่า
@@ -24,7 +25,7 @@ const EditEmployee = () => {
     useEffect(() => {
         if (!employeeId || !branchId) {
             alert("Employee ID or Branch ID is missing.");
-            navigate(`/EmployeeList?branch=${branchId}`);
+            navigate(`/${branchId}/EmployeeList`);
             return;
         }
 
@@ -33,7 +34,7 @@ const EditEmployee = () => {
         const fetchEmployee = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`/api/Employee/getEmployeeById?branchId=${branchId}&employeeId=${employeeId}`, {
+                const response = await axios.get(`/api/Employee//branches/${branchId}/employees/${employeeId}`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -56,7 +57,7 @@ const EditEmployee = () => {
             } catch (error) {
                 alert("Failed to fetch employee details.");
                 // console.error('Error fetching employee details:', error);
-                navigate(`/EmployeeList?branch=${branchId}`);
+                navigate(`/${branchId}/EmployeeList`);
             } finally {
                 setIsLoading(false);
             }
@@ -107,7 +108,7 @@ const EditEmployee = () => {
     
             if (response.status === 200) {
                 alert("Employee updated successfully!");
-                navigate(`/EmployeeList?branch=${branchId}`);
+                navigate(`/${branchId}/EmployeeList`);
             }
         } catch (error) {
             alert("Failed to update employee.");
@@ -150,7 +151,7 @@ const EditEmployee = () => {
                     />
 
                     <div className="form-buttons">
-                        <button type="button" onClick={() => navigate(`/EmployeeList?branch=${branchId}`)} className="cancel-button">
+                        <button type="button" onClick={() => navigate(`/${branchId}/EmployeeList`)} className="cancel-button">
                             Cancel
                         </button>
                         <button type="submit" className="save-button">

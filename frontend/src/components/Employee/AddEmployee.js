@@ -66,7 +66,7 @@ const AddEmployee = () => {
     
             if (response.status === 200) {
                 alert("Employee added successfully!");
-                navigate(`/EmployeeList?branch=${branchId}`);
+                navigate(`/${branchId}/EmployeeList`);
             } else {
                 alert(`Request failed with status: ${response.status}`);
             }
@@ -122,7 +122,7 @@ const AddEmployee = () => {
                     required
                 />
                 <div className="form-buttons">
-                    <button type="button" onClick={() => navigate(`/EmployeeList?branch=${branchId}`)} className="cancel-button">
+                    <button type="button" onClick={() => navigate(`/${branchId}/EmployeeList`)} className="cancel-button">
                         Cancel
                     </button>
                     <button type="submit" disabled={isLoading}>

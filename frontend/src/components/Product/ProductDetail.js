@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/branch.css";
 
 const ProductDetail = () => {
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
-    const { productId } = useParams();
+    // const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const { productId, branchId } = useParams();
     const [product, setProduct] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();

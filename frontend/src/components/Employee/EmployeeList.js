@@ -2,7 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import EditEmployee from "./EditEmployee";
 import ConfirmationModal from "./ConfirmationModal";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "../../styles/employee.css";
 import Cookies from "js-cookie";
 import Navbar from "../bar/Navbar";
@@ -17,6 +17,8 @@ const EmployeeList = () => {
     const [editEmployee, setEditEmployee] = useState(null);
     const [deleteEmployeeId, setDeleteEmployeeId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const { branchId } = useParams();
+    // console.log(branchId);
 
     useEffect(() => {
         const fetchEmployees = async () => {
@@ -27,7 +29,7 @@ const EmployeeList = () => {
                 return;
             }
             
-            const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+            // const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
             if (!branchId) {
                 alert("Branch ID is missing!");
                 return;
@@ -114,7 +116,7 @@ const EmployeeList = () => {
         };
         
         // Extract branchId for navigation
-        const branchId = new URLSearchParams(window.location.search).get("branch");
+        // const branchId = new URLSearchParams(window.location.search).get("branch");
 
     return (
         <div className="employee-container">
@@ -126,7 +128,7 @@ const EmployeeList = () => {
                 <h2>STAFF ({employees.length})</h2>
                 <button
                     className="add-button"
-                    onClick={() => navigate(`/add-employee/${branchId}`)}
+                    onClick={() => navigate(`/${branchId}/add-employee`)}
                     disabled={isLoading}
                 >
                     Add Staff
@@ -151,7 +153,7 @@ const EmployeeList = () => {
                                 {employees.map(({ id, firstName, lastName, email, roles }) => (
                                     <tr key={id}>
                                         <td>
-                                            <a href={`/employee/${id}?branch=${branchId}`} className="detail-link">{id}</a>
+                                            <a href={`/${branchId}/employee/${id}`} className="detail-link">{id}</a>
                                         </td>
                                         <td>{firstName}</td>
                                         <td>{lastName}</td>
@@ -162,7 +164,7 @@ const EmployeeList = () => {
                                             className="icon-button"
                                                 onClick={() => {
                                                     // ส่งไปที่หน้า EditEmployee พร้อมกับ employeeId และ branchId
-                                                    navigate(`/edit-employee/${id}?branch=${branchId}`);
+                                                    navigate(`/${branchId}/edit-employee/${id}`);
                                                 }}
                                             >
                                                 <FaEdit className="icon icon-blue" />

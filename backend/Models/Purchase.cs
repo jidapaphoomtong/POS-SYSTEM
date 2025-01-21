@@ -10,7 +10,7 @@ namespace backend.Models
     public class Purchase
     {
         [FirestoreProperty]
-        public string Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         [FirestoreProperty]
         public IList<Products> Products { get; set; }
@@ -28,6 +28,6 @@ namespace backend.Models
         public DateTime Date { get; set; }
 
         [FirestoreProperty]
-        public string Seller { get; set; } // ฟิลด์ที่ใช้สำหรับชื่อคนขาย
+        public string Seller { get; set; } = string.Empty; // ฟิลด์ที่ใช้สำหรับชื่อคนขาย
     }
 }

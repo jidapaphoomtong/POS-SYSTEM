@@ -54,7 +54,7 @@ export default function SelectBranch() {
 
     const handleSelectBranch = (branchId) => {
         setSelectedBranch(branchId);
-        navigate(`/sale?branch=${branchId}`); // Redirect ไป Sale หน้าต่าง ๆ
+        navigate(`/${branchId}/sale`); // Redirect ไป Sale หน้าต่าง ๆ
     };
 
     return (

@@ -6,8 +6,8 @@ import Cookies from "js-cookie";
 
 const EditProduct = () => {
     const navigate = useNavigate();
-    const { productId  } = useParams(); // ดึง Product ID จาก URL
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const { productId, branchId  } = useParams(); // ดึง Product ID จาก URL
+    // const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
 
     const [formData, setFormData] = useState({
         productName: "",
@@ -23,7 +23,7 @@ const EditProduct = () => {
     useEffect(() => {
         if (!productId) {
             alert("Product ID is missing.");
-            navigate(`/ProductList?branch=${branchId}`);
+            navigate(`/${branchId}/ProductList`);
             return;
         }
 
@@ -54,12 +54,12 @@ const EditProduct = () => {
                     });
                 } else {
                     alert(response.data.message || "Failed to fetch product details.");
-                    navigate(`/ProductList?branch=${branchId}`);
+                    navigate(`/${branchId}/ProductList`);
                 }
             } catch (error) {
                 console.error("Failed to fetch product details:", error);
                 alert(error.response ? error.response.data.message : "Failed to load product details.");
-                navigate(`/ProductList?branch=${branchId}`);
+                navigate(`/${branchId}/ProductList`);
             } finally {
                 setIsLoading(false);
             }
@@ -95,7 +95,7 @@ const EditProduct = () => {
             if (response.data.message) {
                 alert(response.data.message); 
             }
-            navigate(`/ProductList?branch=${branchId}`); // นำทางกลับไปที่ Product List
+            navigate(`/${branchId}/ProductList`); // นำทางกลับไปที่ Product List
         } catch (error) {
             console.error("Failed to update product:", error);
             alert(error.response ? error.response.data.message : "Failed to update product.");
@@ -158,7 +158,7 @@ const EditProduct = () => {
                         onChange={handleChange}
                     />
                     <div className="form-buttons">
-                        <button type="button" onClick={() => navigate(`/ProductList?branch=${branchId}`)} disabled={isLoading}>
+                        <button type="button" onClick={() => navigate(`/${branchId}/ProductList`)} disabled={isLoading}>
                             Cancel
                         </button>
                         <button type="submit" disabled={isLoading}>

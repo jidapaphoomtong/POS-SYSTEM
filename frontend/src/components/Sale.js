@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from "../components/bar/Navbar";
 import SideBar from "../components/bar/Sidebar";
 import "../styles/Sale.css";
@@ -24,11 +24,11 @@ export default function Sale() {
     const [paidAmount, setPaidAmount] = useState(0); // จำนวนที่จ่าย
     const [change, setChange] = useState(0); // เงินทอน
     const [errorMessage, setErrorMessage] = useState("");
+    const { branchId } = useParams(); // สำหรับการดึงค่า branchId
 
     useEffect(() => {
         const fetchData = async () => {
             const token = Cookies.get("authToken");
-            const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
             
             if (!branchId) {
                 alert("Branch ID is missing!");
@@ -254,7 +254,7 @@ export default function Sale() {
 
     const saveOrder = async () => {
         const token = Cookies.get("authToken");
-        const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+        // const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
         
         // เช็คว่า branchId มีค่าหรือไม่
         if (!branchId) {
@@ -280,8 +280,14 @@ export default function Sale() {
         // สร้าง Purchase Object
         const purchase = {
             products: Object.values(selectedItems).map(item => ({
-                id: item.Id, // แก้ไขชื่อให้ตรงตามที่ backend คาดหวัง
-                stock: item.quantity,
+                Id: item.Id,
+                ImgUrl: item.ImgUrl,
+                productName: item.productName,
+                description: item.description,
+                stock: item.stock,
+                price: item.price,
+                categoryId: item.categoryId,
+                branchId: item.branchId,
             })),
             total: calculateTotal(), // คำนวณให้ถูกต้อง
             paidAmount: paidAmount,
@@ -297,17 +303,18 @@ export default function Sale() {
             const response = await axios.post(`/api/Purchase/add-purchase/${branchId}`, purchase, {
                 headers: { 
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}` 
+                    Authorization: `Bearer ${token}` ,
+                    "Content-Type": "application/json",
                 },
                 withCredentials: true,
             });
-    
-            // ตรวจสอบการตอบกลับจาก API
-            if (response.data && response.data.message) {
-                alert(response.data.message);
+
+            if (response.status === 200) {
+                alert("Purchases added successfully!");
             } else {
-                alert("Purchase saved but no message received.");
+                alert(`Request failed with status: ${response.status}`);
             }
+
         } catch (error) {
             console.error("Error during purchase:", error);
             alert("Failed to save the purchase: " + error.message); // แสดงข้อความผิดพลาดที่ชัดเจน

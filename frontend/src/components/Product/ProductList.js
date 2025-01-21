@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "../../styles/product.css";
 import Cookies from "js-cookie";
 import ConfirmationModal from "./ConfirmationModal";
@@ -16,9 +16,10 @@ const ProductList = () => {
     const [deleteProductId, setDeleteProductId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
     const [userRole, setUserRole] = useState(""); // state สำหรับบทบาทผู้ใช้
+    const { branchId } = useParams();
     
     // ดึง branchId และ categoryId
-    const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+    // const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
     const categoryId = new URLSearchParams(window.location.search).get("category") || Cookies.get("categoryId");
 
     const getProductStatus = (stock) => {
@@ -149,7 +150,7 @@ const ProductList = () => {
                         {canEditOrDelete && (
                             <button
                                 className="add-button"
-                                onClick={() => navigate(`/add-product/${branchId}`)}
+                                onClick={() => navigate(`/${branchId}/add-product`)}
                                 disabled={isLoading}
                             >
                                 Add Product
@@ -178,7 +179,7 @@ const ProductList = () => {
                                     return (
                                         <tr key={id}>
                                             <td>
-                                                <a href={`/product/${id}?branch=${branchId}`} className="detail-link">{id}</a>
+                                                <a href={`/${branchId}/product/${id}`} className="detail-link">{id}</a>
                                             </td>
                                             <td><img src={ImgUrl} alt={productName} style={{ width: "50px", height: "50px" }} /></td>
                                             <td>{productName}</td>
@@ -188,7 +189,7 @@ const ProductList = () => {
                                             {canEditOrDelete && (  
                                                 <td>
                                                     <div className="row-product">
-                                                        <button className="icon-button" onClick={() => navigate(`/edit-product/${id}?branch=${branchId}`)}>
+                                                        <button className="icon-button" onClick={() => navigate(`/${branchId}/edit-product/${id}`)}>
                                                             <FaEdit className="icon icon-blue" />
                                                         </button>
                                                         <button className="icon-button" onClick={() => handleOpenDeleteModal(id)}>

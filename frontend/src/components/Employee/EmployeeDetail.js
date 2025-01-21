@@ -6,11 +6,12 @@ import { useNavigate } from "react-router-dom";
 import "../../styles/employee.css"; 
 
 const EmployeeDetail = () => {
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
-    const { employeeId } = useParams(); // ดึง Employee ID และ Branch ID จาก URL
+    // const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const { employeeId, branchId } = useParams(); // ดึง Employee ID และ Branch ID จาก URL
     const [employee, setEmployee] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
+    // console.log(branchId);
 
     const [formData, setFormData] = useState({
         firstName: "",
@@ -45,7 +46,7 @@ const EmployeeDetail = () => {
                     console.log('Roles:', response.data.roles); // ดูเนื้อหาที่ดึงมา
                 } else {
                     alert(response.data.message || "Failed to fetch employee details.");
-                    navigate(`/EmployeeList?branch=${branchId}`);
+                    navigate(`/${branchId}/EmployeeList`);
                 }
             } catch (error) {
                 console.error("Failed to fetch employee details:", error);
