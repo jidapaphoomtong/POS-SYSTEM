@@ -26,6 +26,8 @@ namespace backend.Models
         public string categoryId { get; set; } = string.Empty;
         [FirestoreProperty]
         public string branchId { get; set; } = string.Empty; // เพิ่มฟิลด์สำหรับ branchId
+        [FirestoreProperty]
+        public int quantity { get; set; } // เพิ่มฟิลด์ quantity
     }
     public class ProductsResponse
     {

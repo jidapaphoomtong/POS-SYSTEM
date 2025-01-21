@@ -8,6 +8,7 @@ import "../../styles/branch.css";
 import Cookies from "js-cookie";
 import { FaEdit } from "react-icons/fa";
 import { FaTrash } from "react-icons/fa6";
+import { toast } from "react-toastify";
 
 const BranchList = () => {
     const [branches, setBranches] = useState([]); 
@@ -23,7 +24,7 @@ const BranchList = () => {
         const fetchBranches = async () => {
             const token = Cookies.get("authToken");
             if (!token) {
-                alert("Your session has expired. Please login again.");
+                toast.error("Your session has expired. Please login again.");
                 navigate("/");
                 return;
             }
@@ -42,10 +43,10 @@ const BranchList = () => {
             } catch (error) {
                 console.error("Failed to fetch branches:", error);
                 if (error.response?.status === 401) {
-                    alert("Unauthorized. Please login.");
+                    toast.error("Unauthorized. Please login.");
                     navigate("/");
                 } else {
-                    alert("Failed to fetch branches.");
+                    toast.error("Failed to fetch branches.");
                 }
             } finally {
                 setIsLoading(false);
@@ -92,15 +93,15 @@ const BranchList = () => {
             });
 
             if (response.status === 200) {
-                alert("Branch deleted successfully!");
+                toast.success("Branch deleted successfully!");
                 setBranches(branches.filter((branch) => branch.id !== deleteBranchId));
                 handleCloseDeleteModal();
             } else {
-                alert("Failed to delete branch.");
+                toast.error("Failed to delete branch.");
             }
         } catch (error) {
             console.error("Failed to delete branch:", error);
-            alert("Failed to delete branch: " + (error.response?.data?.message || "Unknown error"));
+            toast.error("Failed to delete branch: " + (error.response?.data?.message || "Unknown error"));
         }
     };
 
@@ -140,21 +141,21 @@ const BranchList = () => {
                                 <td>{name}</td>
                                 <td>{location}</td>
                                 <td>
-                                    <button
-                                        className="icon-button"
-                                        onClick={() => {
-                                            // setEditBranch({ id, name, location });
-                                            navigate(`/edit-branch/${id}`);
-                                        }}
-                                    >
-                                        <FaEdit className=" icon icon-blue" />
-                                    </button>
-                                    <button
-                                        className="icon icon-button"
-                                        onClick={() => handleOpenDeleteModal(id)}
-                                    >
-                                        <FaTrash className="icon-red" />
-                                    </button>
+                                        <button
+                                            className="icon-button"
+                                            onClick={() => {
+                                                // setEditBranch({ id, name, location });
+                                                navigate(`/edit-branch/${id}`);
+                                            }}
+                                        >
+                                            <FaEdit className=" icon icon-blue" />
+                                        </button>
+                                        <button
+                                            className="icon icon-button"
+                                            onClick={() => handleOpenDeleteModal(id)}
+                                        >
+                                            <FaTrash className="icon-red" />
+                                        </button>
                                 </td>
                             </tr>
                         ))}

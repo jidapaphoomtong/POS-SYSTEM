@@ -3,6 +3,7 @@ import axios from "axios";
 import "../../styles/product.css";
 import Cookies from "js-cookie";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AddProduct = () => {
     const token = Cookies.get("authToken");
@@ -31,7 +32,7 @@ const AddProduct = () => {
 
         // Validation
         if (!formData.productName || !formData.ImgUrl || !formData.price || !formData.stock) {
-            alert("Please fill out all fields!");
+            toast.error("Please fill out all fields!");
             return;
         }
 
@@ -39,7 +40,7 @@ const AddProduct = () => {
 
         try {
             if (!token) {
-                alert("No token found. Please log in again.");
+                toast.error("No token found. Please log in again.");
                 return;
             }
         
@@ -56,17 +57,17 @@ const AddProduct = () => {
             // console.log(response);
         
             if (response.status === 200) {
-                alert("Product added successfully!");
+                toast.success("Product added successfully!");
                 navigate(`/ProductList?branch=${branchId}`);
             } else {
-                alert(`Request failed with status: ${response.status}`);
+                toast.error(`Request failed with status: ${response.status}`);
             }
         } catch (error) {
             // console.error("Error adding product:", error);
             if (error.response) {
-                alert(error.response.data?.Message || "Failed to add product.");
+                toast.error(error.response.data?.Message || "Failed to add product.");
             } else {
-                alert("Error: " + error.message);
+                toast.error("Error: " + error.message);
             }
         } finally {
             setIsLoading(false);

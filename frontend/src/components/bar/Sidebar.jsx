@@ -2,12 +2,14 @@ import React from "react";
 import "../../styles/Sidebar.css";
 import { FaUsers, FaTh, FaBox, FaCalendarAlt, FaBuilding, FaSignOutAlt } from "react-icons/fa";
 import { AiFillProduct } from "react-icons/ai";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
 
 const Sidebar = () => {
     const navigate = useNavigate();
+    const { branchId } = useParams(); // สำหรับการดึงค่า branchId
     
     // Extract token and decode it to get user role
     const token = Cookies.get("authToken");
@@ -22,11 +24,11 @@ const Sidebar = () => {
             // console.log(userRole);
         } catch (error) {
             console.error("Invalid token:", error);
-            alert("Have Something wrong")
+            toast.error("Have Something wrong");
         }
     }
 
-    const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
+
     
     if (!branchId) {
         alert("Branch ID is missing!");
@@ -38,11 +40,11 @@ const Sidebar = () => {
     };
 
     const handleSale = () => {
-        navigate(`/sale?branch=${branchId}`);
+        navigate(`/${branchId}/sale`);
     };
 
     const handleStaff = () => {
-        navigate(`/EmployeeList?branch=${branchId}`);
+        navigate(`/${branchId}/EmployeeList`);
     };
 
     const handleDashboard = () => {
@@ -50,11 +52,11 @@ const Sidebar = () => {
     };
 
     const handleStock = () => {
-        navigate(`/ProductList?branch=${branchId}`);
+        navigate(`/${branchId}/ProductList`);
     };
 
     const handleHistory = () => {
-        navigate(`/`);
+        navigate(`/${branchId}/history`);
     };
 
     const handleDepartment = () => {

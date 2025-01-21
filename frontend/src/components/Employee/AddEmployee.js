@@ -3,6 +3,7 @@ import axios from "axios";
 import "../../styles/employee.css";
 import Cookies from "js-cookie";
 import { useParams, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AddEmployee = () => {
     const token = Cookies.get("authToken");
@@ -29,7 +30,7 @@ const AddEmployee = () => {
     
         // ตรวจสอบข้อมูลก่อนส่ง
         if (!formData.firstName || !formData.lastName || !formData.email || !formData.passwordHash) {
-            alert("Please fill out all fields!");
+            toast.error("Please fill out all fields!");
             return;
         }
     
@@ -38,17 +39,9 @@ const AddEmployee = () => {
     
         try {
             if (!token) {
-                alert("No token found. Please log in again.");
+                toast.error("No token found. Please log in again.");
                 return;
             }
-            
-            // // ถอดรหัส Token เพื่อตรวจสอบบทบาท
-            // const decodedToken = jwt_decode(token);
-            // const userRole = decodedToken.role; // ขึ้นอยู่กับโครงสร้างของ token ของคุณ
-            // if (userRole !== "Admin" && userRole !== "Manager") {
-            //     alert("You do not have permission to add employees.");
-            //     return;
-            // }
             
             // แก้ไข URL ให้ถูกต้อง
             const response = await axios.post(`/api/Employee/add-employee/${branchId}`, {
@@ -65,20 +58,20 @@ const AddEmployee = () => {
             });
     
             if (response.status === 200) {
-                alert("Employee added successfully!");
-                navigate(`/EmployeeList?branch=${branchId}`);
+                toast.success("Employee added successfully!");
+                navigate(`/${branchId}/EmployeeList`);
             } else {
-                alert(`Request failed with status: ${response.status}`);
+                toast.error(`Request failed with status: ${response.status}`);
             }
         } catch (error) {
             // console.error("Error adding employee:", error);
             if (error.response) {
                 // console.error("Response data:", error.response.data);
-                alert(error.response.data?.Message || "Failed to add employee.");
+                toast.error(error.response.data?.Message || "Failed to add employee.");
             } else if (error.request) {
-                alert("No response from server. Please try again later.");
+                toast.error("No response from server. Please try again later.");
             } else {
-                alert("Error: " + error.message);
+                toast.error("Error: " + error.message);
             }
         } finally {
             setIsLoading(false);
@@ -122,7 +115,7 @@ const AddEmployee = () => {
                     required
                 />
                 <div className="form-buttons">
-                    <button type="button" onClick={() => navigate(`/EmployeeList?branch=${branchId}`)} className="cancel-button">
+                    <button type="button" onClick={() => navigate(`/${branchId}/EmployeeList`)} className="cancel-button">
                         Cancel
                     </button>
                     <button type="submit" disabled={isLoading}>

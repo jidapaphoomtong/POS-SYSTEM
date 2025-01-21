@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using backend.Models;
 using Google.Cloud.Firestore;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Services.ProductService
 {
@@ -342,8 +343,11 @@ namespace backend.Services.ProductService
             }
         }
 
-        public async Task<ServiceResponse<string>> SellProduct(string branchId, string productId, int quantity)
+        public async Task<ServiceResponse<string>> UpdateStock(string branchId, string productId, Products product)
         {
+
+            int quantity = product.quantity; // เข้าถึง quantity จากโมเดลที่ส่งมา
+
             try
             {
                 DocumentReference productDoc = _firestoreDb
@@ -352,24 +356,29 @@ namespace backend.Services.ProductService
                     .Collection("products")
                     .Document(productId);
 
-                var snapshot = await productDoc.GetSnapshotAsync();
-                var currentStock = snapshot.GetValue<int>("stock");
-
-                if (currentStock < quantity)
+                // หาค่าสต็อกปัจจุบัน
+                var productSnap = await productDoc.GetSnapshotAsync();
+                if (!productSnap.Exists)
                 {
-                    return ServiceResponse<string>.CreateFailure("Not enough stock available.");
+                    return ServiceResponse<string>.CreateFailure("Product not found");
                 }
 
-                await productDoc.UpdateAsync(new Dictionary<string, object>
-                {
-                    { "stock", currentStock - quantity }
-                });
+                var existingStock = productSnap.GetValue<int>("stock");
+                var newStock = existingStock - quantity; // ลดสต็อกตามที่ได้รับมา
 
-                return ServiceResponse<string>.CreateSuccess(productId, "Product sold and stock updated successfully!");
+                // ตั้งค่าการอัปเดต
+                var productUpdate = new Dictionary<string, object>
+                {
+                    { "stock", newStock }
+                };
+
+                // อัปโหลดการอัปเดตลงไปใน Firestore
+                await productDoc.SetAsync(productUpdate, SetOptions.MergeAll);
+                return ServiceResponse<string>.CreateSuccess(productId, "Stock updated successfully!");
             }
             catch (Exception ex)
             {
-                return ServiceResponse<string>.CreateFailure($"Failed to sell product: {ex.Message}");
+                return ServiceResponse<string>.CreateFailure($"Failed to update stock: {ex.Message}");
             }
         }
 
@@ -389,71 +398,6 @@ namespace backend.Services.ProductService
             catch (Exception ex)
             {
                 return ServiceResponse<string>.CreateFailure($"Failed to delete product: {ex.Message}");
-            }
-        }
-
-        public async Task<ServiceResponse<string>> AddStock(string branchId, string productId, int quantity)
-        {
-            try
-            {
-                DocumentReference productDoc = _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId)
-                    .Collection("products")
-                    .Document(productId);
-
-                var snapshot = await productDoc.GetSnapshotAsync();
-                if (!snapshot.Exists)
-                {
-                    return ServiceResponse<string>.CreateFailure("Product not found.");
-                }
-
-                var currentStock = snapshot.GetValue<int>("stock");
-                await productDoc.UpdateAsync(new Dictionary<string, object>
-                {
-                    { "stock", currentStock + quantity }
-                });
-
-                return ServiceResponse<string>.CreateSuccess(productId, "Stock added successfully!");
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse<string>.CreateFailure($"Failed to add stock: {ex.Message}");
-            }
-        }
-
-        public async Task<ServiceResponse<string>> ReduceStock(string branchId, string productId, int quantity)
-        {
-            try
-            {
-                DocumentReference productDoc = _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId)
-                    .Collection("products")
-                    .Document(productId);
-
-                var snapshot = await productDoc.GetSnapshotAsync();
-                if (!snapshot.Exists)
-                {
-                    return ServiceResponse<string>.CreateFailure("Product not found.");
-                }
-
-                var currentStock = snapshot.GetValue<int>("stock");
-                if (currentStock < quantity)
-                {
-                    return ServiceResponse<string>.CreateFailure("Not enough stock available.");
-                }
-
-                await productDoc.UpdateAsync(new Dictionary<string, object>
-                {
-                    { "stock", currentStock - quantity }
-                });
-
-                return ServiceResponse<string>.CreateSuccess(productId, "Stock reduced successfully!");
-            }
-            catch (Exception ex)
-            {
-                return ServiceResponse<string>.CreateFailure($"Failed to reduce stock: {ex.Message}");
             }
         }
 

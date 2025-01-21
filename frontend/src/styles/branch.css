@@ -197,3 +197,9 @@ input[type="text"] {
 .form-buttons button:hover {
     opacity: 0.8; /* Add hover effect */
 }
+
+.row-branch {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* เพื่อให้แน่ใจว่าองค์ประกอบอยู่กลางในแนวตั้ง */
+}

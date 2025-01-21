@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import NavBar from "../components/bar/Navbar";
 import SideBar from "../components/bar/Sidebar";
 import "../styles/Sale.css";
@@ -9,12 +9,14 @@ import { FcPlus } from "react-icons/fc";
 import { AiFillMinusCircle } from "react-icons/ai";
 import { FaTrash } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
+import { toast } from "react-toastify";
 
 export default function Sale() {
     const [categories, setCategories] = useState([]);
     const [items, setItems] = useState([]);
     const [selectedItems, setSelectedItems] = useState({});
     const [searchTerm, setSearchTerm] = useState("");
+    const [paymentMethod, setPaymentMethod] = useState(); // ตัวแปรที่ใช้เก็บวิธีการชำระเงิน
     const [loading, setLoading] = useState(false);
     const [showOrderSummary, setShowOrderSummary] = useState(false);
     const [filterItems, setFilterItems] = useState([]);
@@ -24,14 +26,14 @@ export default function Sale() {
     const [paidAmount, setPaidAmount] = useState(0); // จำนวนที่จ่าย
     const [change, setChange] = useState(0); // เงินทอน
     const [errorMessage, setErrorMessage] = useState("");
+    const { branchId } = useParams(); // สำหรับการดึงค่า branchId
 
     useEffect(() => {
         const fetchData = async () => {
             const token = Cookies.get("authToken");
-            const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
             
             if (!branchId) {
-                alert("Branch ID is missing!");
+                toast.error("Branch ID is missing!");
                 return; // ถ้าไม่มี Branch ID จะแสดงข้อความเตือนและหยุดการทำงาน
             }
     
@@ -80,7 +82,7 @@ export default function Sale() {
                 
             } catch (error) {
                 console.error("Failed to fetch data:", error); // แสดงข้อผิดพลาดใน Console
-                alert("Failed to fetch data!"); // แสดงข้อความเตือนเมื่อมีข้อผิดพลาดเกิดขึ้น
+                toast.error("Failed to fetch data!"); // แสดงข้อความเตือนเมื่อมีข้อผิดพลาดเกิดขึ้น
             } finally {
                 setLoading(false); // สถานะ loading จะถูกปิดเมื่อเสร็จสิ้น
             }
@@ -156,7 +158,7 @@ export default function Sale() {
 
     const handlePlaceOrder = () => {
         if (Object.keys(selectedItems).length === 0) {
-            alert("Please select at least one item before placing an order.");
+            toast.error("Please select at least one item before placing an order.");
             return;
         }
         // ส่ง selectedItems ไปยังหน้า Order ด้วย navigate
@@ -184,14 +186,14 @@ export default function Sale() {
             return; // ถ้าเงินไม่ครบไม่ให้ proceed
         }
 
-        // Logic สำหรับการชำระเงินที่ถูกต้อง
-        alert(`ชำระเงินสำเร็จด้วย ${type}`);
+        setPaymentMethod(type); // บันทึกประเภทการชำระเงิน
+        toast.success(`ชำระเงินสำเร็จด้วย ${type}`);
 
         // Generate receipt
-        await generateReceipt();
+        await generateReceipt(type);
 
         // บันทึกคำสั่งซื้อ
-        await saveOrder(); // <-- เรียกใช้ฟังก์ชันสำหรับบันทึกคำสั่งซื้อ
+        await saveOrder(type); // <-- เรียกใช้ฟังก์ชันสำหรับบันทึกคำสั่งซื้อ
 
         handleClosePaymentModal(); // ปิด modal หลังจากชำระเงินสำเร็จ
     };
@@ -201,7 +203,7 @@ export default function Sale() {
         setChange(paidAmount + amount - calculateTotal());
     };
 
-    const generateReceipt = async () => {
+    const generateReceipt = async (type) => {
         const token = Cookies.get("authToken");
         // console.log(token)
         let firstName = "";
@@ -226,6 +228,7 @@ export default function Sale() {
             change: change,
             date: new Date().toLocaleString(),
             seller: firstName,
+            paymentMethod: type, // เพิ่มประเภทการชำระเงินในใบเสร็จ
         };
 
         // Call print function
@@ -234,31 +237,37 @@ export default function Sale() {
 
     const printReceipt = (receipt) => {
         const receiptWindow = window.open('', '', 'width=600,height=400');
-        receiptWindow.document.write('<pre>');
-        receiptWindow.document.write(`วันที่: ${receipt.date}\n`);
-        receiptWindow.document.write('รายการสินค้า:\n');
+        receiptWindow.document.write('<html><head><title>ใบเสร็จ</title></head><body>');
+        receiptWindow.document.write('<h2>ใบเสร็จ</h2>');
+        receiptWindow.document.write(`<p>วันที่: ${receipt.date}</p>`);
+        receiptWindow.document.write('<h3>รายการสินค้า:</h3>');
+        receiptWindow.document.write('<ul>');
+    
         receipt.items.forEach(item => {
-            receiptWindow.document.write(`${item.productName} : ฿${item.price} x ${item.quantity}\n`);
+            receiptWindow.document.write(`<li>${item.productName} : ฿${item.price} x ${item.quantity}</li>`);
         });
-        receiptWindow.document.write('-------------------------\n');
-        receiptWindow.document.write(`ยอดรวม: ฿${receipt.total}\n`);
-        receiptWindow.document.write(`จำนวนเงินที่จ่าย: ฿${receipt.paidAmount}\n`);
-        receiptWindow.document.write(`เงินทอน: ฿${receipt.change}\n`);
-        receiptWindow.document.write(`ผู้ขาย: ${receipt.seller}\n`)
-        receiptWindow.document.write('</pre>');
+        
+        receiptWindow.document.write('</ul>');
+        receiptWindow.document.write('-------------------------<br>');
+        receiptWindow.document.write(`<p><strong>ยอดรวม: ฿${receipt.total}</strong></p>`);
+        receiptWindow.document.write(`<p>จำนวนเงินที่จ่าย: ฿${receipt.paidAmount}</p>`);
+        receiptWindow.document.write(`<p>เงินทอน: ฿${receipt.change}</p>`);
+        receiptWindow.document.write(`<p>ประเภทการจ่ายเงิน: ${receipt.paymentMethod}</p>`); // แก้ไขจาก receipt.type เป็น receipt.paymentMethod
+        receiptWindow.document.write(`<p>ผู้ขาย: ${receipt.seller}</p>`);
+        receiptWindow.document.write('</body></html>');
+        
         receiptWindow.document.close();
         receiptWindow.focus();
         receiptWindow.print();
         receiptWindow.close();
     };
 
-    const saveOrder = async () => {
+    const saveOrder = async (type) => {
         const token = Cookies.get("authToken");
-        const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
-        
+    
         // เช็คว่า branchId มีค่าหรือไม่
         if (!branchId) {
-            alert("Branch ID is missing!");
+            toast.error("Branch ID is missing!");
             return;
         }
     
@@ -268,30 +277,32 @@ export default function Sale() {
             try {
                 const decodedToken = jwtDecode(token);
                 const firstNameFromToken = decodedToken["firstName"] || 'No role found';
-                firstName = firstNameFromToken; // Adjust according to your JWT structure
-                // console.log(firstName);
-
+                firstName = firstNameFromToken;
             } catch (error) {
                 console.error("Invalid token:", error);
-                alert("Have Something wrong")
+                toast.error("Have Something wrong");
             }
         }
-        
+    
         // สร้าง Purchase Object
         const purchase = {
             products: Object.values(selectedItems).map(item => ({
-                id: item.Id, // แก้ไขชื่อให้ตรงตามที่ backend คาดหวัง
+                id: item.Id,
+                productName: item.productName,
+                price: item.price,
                 stock: item.quantity,
+                categoryId: item.categoryId,
             })),
-            total: calculateTotal(), // คำนวณให้ถูกต้อง
+            total: calculateTotal(),
             paidAmount: paidAmount,
             change: change,
-            date: new Date().toISOString(), // เปลี่ยนให้เป็น ISO string
-            seller: firstName, // ตั้งค่า seller เป็น firstName
+            date: new Date().toISOString(),
+            seller: firstName,
+            paymentMethod: type,
         };
     
         // Debugging: แสดง Purchase Object ใน Console
-        console.log("Purchase Object:", JSON.stringify(purchase, null, 2));
+        // console.log("Purchase Object:", JSON.stringify(purchase, null, 2));
     
         try {
             const response = await axios.post(`/api/Purchase/add-purchase/${branchId}`, purchase, {
@@ -302,15 +313,31 @@ export default function Sale() {
                 withCredentials: true,
             });
     
-            // ตรวจสอบการตอบกลับจาก API
-            if (response.data && response.data.message) {
-                alert(response.data.message);
+            if (response.status === 200) {
+                // อัปเดต stock สินค้า
+                for (const item of purchase.products) {
+                    // ดึง productId ของ item
+                    const productId = item.id; // ใช้ id จาก Purchase object
+    
+                    await axios.put(`/api/Product/update-stock/${branchId}/${productId}`, {
+                        quantity: item.stock // ปรับปรุงจำนวน stock ที่ใช้งาน
+                    }, {
+                        headers: { 
+                            "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+                            Authorization: `Bearer ${token}` 
+                        },
+                        withCredentials: true,
+                    });
+                }
+    
+                toast.success("Purchases added successfully!");
             } else {
-                alert("Purchase saved but no message received.");
+                toast.error(`Request failed with status: ${response.status}`);
             }
+    
         } catch (error) {
             console.error("Error during purchase:", error);
-            alert("Failed to save the purchase: " + error.message); // แสดงข้อความผิดพลาดที่ชัดเจน
+            toast.error("Failed to save the purchase: " + error.message);
         }
     };
 

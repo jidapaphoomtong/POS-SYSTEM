@@ -3,11 +3,13 @@ import "../../styles/employee.css";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cookies from "js-cookie";
+import { toast } from "react-toastify";
 
 const EditEmployee = () => {
     const navigate = useNavigate();
-    const { employeeId } = useParams(); // ดึง Employee ID จาก URL
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const { employeeId, branchId } = useParams(); // ดึง Employee ID จาก URL
+    // const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+
     // ตรวจสอบการกำหนดค่าคงที่ใหม่
     const existingSalt = "";  // ต้องมีการกำหนดค่า
     const existingPasswordHash = ""; // ต้องมีการกำหนดค่า
@@ -23,8 +25,8 @@ const EditEmployee = () => {
 
     useEffect(() => {
         if (!employeeId || !branchId) {
-            alert("Employee ID or Branch ID is missing.");
-            navigate(`/EmployeeList?branch=${branchId}`);
+            toast.error("Employee ID or Branch ID is missing.");
+            navigate(`/${branchId}/EmployeeList`);
             return;
         }
 
@@ -33,7 +35,7 @@ const EditEmployee = () => {
         const fetchEmployee = async () => {
             setIsLoading(true);
             try {
-                const response = await axios.get(`/api/Employee/getEmployeeById?branchId=${branchId}&employeeId=${employeeId}`, {
+                const response = await axios.get(`/api/Employee//branches/${branchId}/employees/${employeeId}`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
@@ -54,9 +56,9 @@ const EditEmployee = () => {
                     setRoles(response.data.roles); // เก็บ roles ไว้
                 }
             } catch (error) {
-                alert("Failed to fetch employee details.");
+                toast.error("Failed to fetch employee details.");
                 // console.error('Error fetching employee details:', error);
-                navigate(`/EmployeeList?branch=${branchId}`);
+                navigate(`/${branchId}/EmployeeList`);
             } finally {
                 setIsLoading(false);
             }
@@ -74,7 +76,7 @@ const EditEmployee = () => {
     
         // ตรวจสอบให้แน่ใจว่าฟิลด์ที่สำคัญครบถ้วน
         if (!formData.firstName || !formData.lastName || !formData.email) {
-            alert("Please fill out all fields!");
+            toast.error("Please fill out all fields!");
             return;
         }
     
@@ -106,11 +108,11 @@ const EditEmployee = () => {
             });
     
             if (response.status === 200) {
-                alert("Employee updated successfully!");
-                navigate(`/EmployeeList?branch=${branchId}`);
+                toast.success("Employee updated successfully!");
+                navigate(`/${branchId}/EmployeeList`);
             }
         } catch (error) {
-            alert("Failed to update employee.");
+            toast.error("Failed to update employee.");
             console.error("Error updating employee:", error.response ? error.response.data : error.message);
         } finally {
             setIsLoading(false);
@@ -150,7 +152,7 @@ const EditEmployee = () => {
                     />
 
                     <div className="form-buttons">
-                        <button type="button" onClick={() => navigate(`/EmployeeList?branch=${branchId}`)} className="cancel-button">
+                        <button type="button" onClick={() => navigate(`/${branchId}/EmployeeList`)} className="cancel-button">
                             Cancel
                         </button>
                         <button type="submit" className="save-button">

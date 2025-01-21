@@ -4,6 +4,7 @@ import Cookies from "js-cookie";
 import { useParams } from "react-router-dom";
 import "../../styles/branch.css";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const BranchDetail = () => {
     const { branchId } = useParams(); // ดึง Branch ID จาก URL
@@ -28,11 +29,11 @@ const BranchDetail = () => {
                 if (response.data.success) {
                     setBranch(response.data.data);
                 } else {
-                    alert(response.data.message || "Failed to fetch branch details.");
+                    toast.error(response.data.message || "Failed to fetch branch details.");
                 }
             } catch (error) {
                 console.error("Failed to fetch branch details:", error);
-                alert(error.response ? error.response.data.message : "Failed to load branch details.");
+                toast.error(error.response ? error.response.data.message : "Failed to load branch details.");
             } finally {
                 setIsLoading(false);
             }

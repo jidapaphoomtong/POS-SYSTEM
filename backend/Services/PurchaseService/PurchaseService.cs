@@ -47,7 +47,8 @@ namespace backend.Services.PurchaseService
                     return ServiceResponse<string>.CreateFailure("Purchase data is null.");
                 }
 
-                var purchaseDoc = _firestoreDb.Collection("branches")
+                var purchaseDoc = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases")
                     .Document(purchaseId);
@@ -65,12 +66,18 @@ namespace backend.Services.PurchaseService
         {
             try
             {
-                var purchasesQuery = _firestoreDb.Collection("branches")
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases");
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                if (purchases.Count == 0)
+                {
+                    return ServiceResponse<IEnumerable<Purchase>>.CreateFailure("Don't have purchases in this branch.");
+                }
 
                 return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(purchases, "Purchases retrieved successfully!");
             }
@@ -80,11 +87,42 @@ namespace backend.Services.PurchaseService
             }
         }
 
+        public async Task<ServiceResponse<Purchase>> GetPurchaseById(string branchId, string purchaseId)
+        {
+            try
+            {
+                // เข้าถึงคำสั่งซื้อเฉพาะจาก Firestore
+                var purchaseDocRef = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases")
+                    .Document(purchaseId);
+
+                var snapshot = await purchaseDocRef.GetSnapshotAsync();
+
+                if (snapshot.Exists)
+                {
+                    // แปลงข้อมูลใน snapshot เป็น Purchase
+                    var purchase = snapshot.ConvertTo<Purchase>();
+                    return ServiceResponse<Purchase>.CreateSuccess(purchase, "Purchase retrieved successfully!");
+                }
+                else
+                {
+                    return ServiceResponse<Purchase>.CreateFailure("Purchase not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<Purchase>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
+            }
+        }
+
         public async Task<ServiceResponse<IEnumerable<Purchase>>> GetMonthlySales(string branchId, int year, int month)
         {
             try
             {
-                var purchasesQuery = _firestoreDb.Collection("branches")
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases")
                     .WhereGreaterThan("Date", new DateTime(year, month, 1))
@@ -105,7 +143,8 @@ namespace backend.Services.PurchaseService
         {
             try
             {
-                var purchasesQuery = _firestoreDb.Collection("branches")
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases");
 

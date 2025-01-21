@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Services.ProductService
 {
@@ -14,9 +15,8 @@ namespace backend.Services.ProductService
         Task<ServiceResponse<Products>> GetProductById(string branchId, string productId);
         Task<ServiceResponse<List<Products>>> GetProductsByCategory(string branchId, string categoryId);
         Task<ServiceResponse<string>> UpdateProduct(string branchId, string productId, Products updatedProduct);
+        Task<ServiceResponse<string>> UpdateStock(string branchId, string productId, Products product);
         Task<ServiceResponse<string>> DeleteProduct(string branchId, string productId);
-        Task<ServiceResponse<string>> AddStock(string branchId, string productId, int quantity);
-        Task<ServiceResponse<string>> ReduceStock(string branchId, string productId, int quantity);
         Task<ServiceResponse<string>> DeleteAllProducts(string branchId);
         Task<ServiceResponse<string>> ResetproductId(string branchId);
     }

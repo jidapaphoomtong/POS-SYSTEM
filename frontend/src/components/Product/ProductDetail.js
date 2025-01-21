@@ -4,10 +4,11 @@ import Cookies from "js-cookie";
 import { useParams } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import "../../styles/branch.css";
+import { toast } from "react-toastify";
 
 const ProductDetail = () => {
-    const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
-    const { productId } = useParams();
+    // const branchId = new URLSearchParams(window.location.search).get("branch"); // ดึง Branch ID จาก URL
+    const { productId, branchId } = useParams();
     const [product, setProduct] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const navigate = useNavigate();
@@ -43,11 +44,11 @@ const ProductDetail = () => {
                         stock: response.data.stock
                     });
                 } else {
-                    alert(response.data.message || "Failed to fetch product details.");
+                    toast.error(response.data.message || "Failed to fetch product details.");
                 }
             } catch (error) {
                 console.error("Failed to fetch product details:", error);
-                alert(error.response ? error.response.data.message : "Failed to load product details.");
+                toast.error(error.response ? error.response.data.message : "Failed to load product details.");
             } finally {
                 setIsLoading(false);
             }

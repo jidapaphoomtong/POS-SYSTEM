@@ -17,11 +17,13 @@ import AddProduct from './components/Product/AddProduct';
 import EditProduct from './components/Product/EditProduct'
 import EmployeeDetail from './components/Employee/EmployeeDetail';
 import ProductDetail from './components/Product/ProductDetail';
+import SalesHistory from './components/SalesHistory';
+import PurchaseDetail from './components/PurchaseDetail';
 
 function App() {
   return (
     <Router>
-      <Routes>
+      {/* <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/select-branch" element={<SelectBranch />} />
@@ -38,30 +40,32 @@ function App() {
         <Route path="/edit-product/:productId" element={<EditProduct/>} />
         <Route path="/add-product/:branchId" element={<AddProduct />} />
         <Route path="/product/:productId" element={<ProductDetail />} />
-      </Routes>
+      </Routes> */}
       
-      {/* <Routes>
+      <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/select-branch" element={<SelectBranch />} />
-
-        <Route path="/sale/:branchId" element={<Sale />} />
-
         <Route path="/BranchList" element={<BranchList />} />
-        <Route path="/:branchId/BranchList/edit-branch" element={<EditBranch />} />
-        <Route path="/:branchId/BranchList/add-branch" element={<AddBranch />} />
-        <Route path="/:branchId/BranchList/branch" element={<BranchDetail />} />
+        <Route path="/add-branch" element={<AddBranch />} />
+        <Route path="/edit-branch/:branchId" element={<EditBranch />} />
+        <Route path="/branch/:branchId" element={<BranchDetail />} />
+        
+        <Route path="/:branchId">
+            <Route path="sale" element={<Sale />} />
+            <Route path="EmployeeList" element={<EmployeeList />} />
+            <Route path="edit-employee/:employeeId" element={<EditEmployee />} />
+            <Route path="add-employee" element={<AddEmployee />} />
+            <Route path="employee/:employeeId" element={<EmployeeDetail />} />
+            <Route path="ProductList" element={<ProductList />} />
+            <Route path="edit-product/:productId" element={<EditProduct />} />
+            <Route path="add-product" element={<AddProduct />} />
+            <Route path="product/:productId" element={<ProductDetail />} />
+            <Route path="history" element={<SalesHistory/>}/>
+            <Route path="purchase/:purchaseId" element={<PurchaseDetail />} />
+        </Route>
 
-        <Route path="/:branchId/EmployeeList" element={<EmployeeList />} />
-        <Route path="/:branchId/EmployeeList/edit-employee/:employeeId" element={<EditEmployee />} />
-        <Route path="/:branchId/EmployeeList/add-employee" element={<AddEmployee />} />
-        <Route path="/:branchId/EmployeeList/employee/:employeeId" element={<EmployeeDetail />} />
-
-        <Route path="/:branchId/ProductList" element={<ProductList />} />
-        <Route path="/:branchId/ProductList/edit-product/:productId" element={<EditProduct />} />
-        <Route path="/:branchId/ProductList/add-product" element={<AddProduct />} />
-        <Route path="/:branchId/ProductList/product/:productId" element={<ProductDetail />} />
-      </Routes> */}
+      </Routes>
       <ToastContainer />
     </Router>
   );

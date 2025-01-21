@@ -3,6 +3,7 @@ import axios from "axios";
 import "../../styles/branch.css";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AddBranch = ({ onAddSuccess }) => {
     const [formData, setFormData] = useState({
@@ -23,7 +24,7 @@ const AddBranch = ({ onAddSuccess }) => {
 
         // Validation
         if (!formData.name || !formData.location) {
-            alert("Please fill out all fields!");
+            toast.error("Please fill out all fields!");
             return;
         }
 
@@ -32,7 +33,7 @@ const AddBranch = ({ onAddSuccess }) => {
         try {
             const token = Cookies.get("authToken");
             if (!token) {
-                alert("No token found. Please log in again.");
+                toast.error("No token found. Please log in again.");
                 return;
             }
         
@@ -49,13 +50,13 @@ const AddBranch = ({ onAddSuccess }) => {
             if (response.status === 200) {
                 // Check if response.data is defined
                 if (response.data) {
-                        alert("Branch added successfully!");
+                        toast.success("Branch added successfully!");
                         navigate("/BranchList");
                 } else {
-                    alert("Response data is empty.");
+                    toast.error("Response data is empty.");
                 }
             } else {
-                alert(`Request failed with status: ${response.status}`);
+                toast.error(`Request failed with status: ${response.status}`);
             }
         } catch (error) {
             console.error("Error adding branch:", error);
@@ -64,13 +65,13 @@ const AddBranch = ({ onAddSuccess }) => {
             if (error.response) {
                 // Server responded with a status other than 200 range
                 console.error("Response data:", error.response.data);
-                alert(error.response.data?.Message || "Failed to add branch.");
+                toast.error(error.response.data?.Message || "Failed to add branch.");
             } else if (error.request) {
                 // Request was made but no response was received
-                alert("No response from server. Please try again later.");
+                toast.error("No response from server. Please try again later.");
             } else {
                 // Something happened in setting up the request
-                alert("Error: " + error.message);
+                toast.error("Error: " + error.message);
             }
         } finally {
             setIsLoading(false);
