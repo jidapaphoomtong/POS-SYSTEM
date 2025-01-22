@@ -169,6 +169,20 @@ namespace backend.Controllers
         }
 
         [CustomAuthorizeRole("Admin, Manager")]
+        [HttpPut("branches/{branchId}/employees/{employeeId}/status")]
+        public async Task<IActionResult> UpdateStatus(string branchId, string employeeId, [FromBody] StatusRequest request)
+        {
+            var result = await _employeeService.UpdateEmployeeStatusAsync(branchId, employeeId, request.status);
+
+            if (!result)
+            {
+                return NotFound(new { message = "Employee not found." });
+            }
+
+            return Ok(new { message = "Employee status updated successfully." });
+        }
+
+        [CustomAuthorizeRole("Admin, Manager")]
         [HttpDelete("branches/{branchId}/employees/{employeeId}")]
         public async Task<IActionResult> DeleteEmployee(string branchId, string employeeId)
         {

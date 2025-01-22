@@ -17,6 +17,7 @@ namespace backend.Services.BranchService
         Task<ServiceResponse<List<BranchResponse>>> GetBranches();
         Task<ServiceResponse<BranchResponse>> GetBranchById(string branchId);
         Task<ServiceResponse<string>> UpdateBranch(string branchId, Branch branch);
+        Task<bool> UpdateBranchStatusAsync(string branchId, string status);
         Task<ServiceResponse<string>> DeleteBranch(string branchId);
     }
 }

@@ -194,6 +194,35 @@ namespace backend.Services.BranchService
             }
         }
 
+        public async Task<bool> UpdateBranchStatusAsync(string branchId, string status)
+    {
+        DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+
+        var branchSnapshot = await branchDoc.GetSnapshotAsync();
+
+        if (!branchSnapshot.Exists)
+        {
+            return false; // ไม่พบ branch
+        }
+
+        try
+        {
+            // สร้าง Dictionary สำหรับการอัปเดตสถานะ
+            var updates = new Dictionary<string, object>
+            {
+                { "status", status }
+            };
+
+            // อัปเดตสถานะ
+            await branchDoc.UpdateAsync(updates);
+            return true; // อัปเดตสำเร็จ
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating branch status: {ex.Message}");
+            return false; // การอัปเดตล้มเหลว
+        }
+    }
 
 //         public async Task<ServiceResponse<string>> DeleteAllBranches()
 //         {

@@ -9,9 +9,16 @@ const PurchaseDetail = () => {
     const { branchId, purchaseId } = useParams();
     const [purchase, setPurchase] = useState(null);
     const formatDate = (dateString) => {
-        const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+        const options = {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false, // ถ้าคุณต้องการเวลาในรูปแบบ 24 ชั่วโมง
+        };
         const date = new Date(dateString);
-        return date.toLocaleDateString('th-TH', options); // ปรับเป็น 'th-TH' เพื่อให้ได้รูปแบบ DD/MM/YYYY
+        return date.toLocaleString('th-TH', options); // ปรับเป็น 'th-TH' เพื่อให้ได้รูปแบบ DD/MM/YYYY HH:mm
     };
     
     useEffect(() => {

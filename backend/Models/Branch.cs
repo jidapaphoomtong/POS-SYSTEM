@@ -17,6 +17,8 @@ namespace backend.Models
         public string Location { get; set; } = string.Empty;
         [FirestoreProperty]
         public string IconUrl { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string status { get; set; } = string.Empty; // เพิ่ม property นี้
     }
 
     [FirestoreData]
@@ -30,7 +32,7 @@ namespace backend.Models
         public string Location { get; set; } = string.Empty;
         [FirestoreProperty]
         public string IconUrl { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string status { get; set; } = string.Empty; // เพิ่ม property นี้
     }
-
-    
 }

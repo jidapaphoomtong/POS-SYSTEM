@@ -25,11 +25,8 @@ const EditEmployee = () => {
 
     useEffect(() => {
         if (!employeeId || !branchId) {
-<<<<<<< HEAD
             toast.error("Employee ID or Branch ID is missing.");
-=======
-            alert("Employee ID or Branch ID is missing.");
->>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
+
             navigate(`/${branchId}/EmployeeList`);
             return;
         }
@@ -112,11 +109,8 @@ const EditEmployee = () => {
             });
     
             if (response.status === 200) {
-<<<<<<< HEAD
                 toast.success("Employee updated successfully!");
-=======
-                alert("Employee updated successfully!");
->>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
+
                 navigate(`/${branchId}/EmployeeList`);
             }
         } catch (error) {

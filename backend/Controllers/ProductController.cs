@@ -70,6 +70,22 @@ namespace backend.Controllers
             return response.Success ? Ok(response) : BadRequest(response);
         }
 
+        // Endpoint สำหรับอัปเดตสถานะของผลิตภัณฑ์
+        [CustomAuthorizeRole("Admin, Manager")]
+        [HttpPut("branches/{branchId}/products/{productId}/status")]
+        public async Task<IActionResult> UpdateStatus(string branchId, string productId, [FromBody] StatusRequest request)
+        {
+            // อัปเดตสถานะและเช็คว่าประสบความสำเร็จหรือไม่
+            var result = await _productService.UpdateProductStatusAsync(branchId, productId, request.status);
+            
+            if (!result)
+            {
+                return NotFound(new { message = "Product not found." }); // คืนค่าถ้าไม่พบผลิตภัณฑ์
+            }
+            
+            return Ok(new { message = "Product status updated successfully." }); //คืนค่าความสำเร็จ
+        }
+
         [CustomAuthorizeRole("Admin, Manager, Employee")]
         // Update stock endpoint
         [HttpPut("update-stock/{branchId}/{productId}")]

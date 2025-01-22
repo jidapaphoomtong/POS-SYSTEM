@@ -58,11 +58,8 @@ const AddEmployee = () => {
             });
     
             if (response.status === 200) {
-<<<<<<< HEAD
                 toast.success("Employee added successfully!");
-=======
-                alert("Employee added successfully!");
->>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
+
                 navigate(`/${branchId}/EmployeeList`);
             } else {
                 toast.error(`Request failed with status: ${response.status}`);

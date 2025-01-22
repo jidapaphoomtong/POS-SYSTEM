@@ -13,13 +13,13 @@ import { toast } from "react-toastify";
 const BranchList = () => {
     const [branches, setBranches] = useState([]); 
     // const [showAddForm, setShowAddForm] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 6; // จำนวนสินค้าที่จะแสดงต่อหน้า
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [editBranch, setEditBranch] = useState(null);
     const [deleteBranchId, setDeleteBranchId] = useState(null);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // จำนวนสินค้าที่จะแสดงต่อหน้า
 
     // Fetch Branch List
     useEffect(() => {
@@ -72,40 +72,40 @@ const BranchList = () => {
         // setEditBranch(null); // ปิดการแก้ไขเมื่ออัปเดตเสร็จ
     };
 
-    const handleOpenDeleteModal = (id) => {
-        setDeleteBranchId(id);
-        setIsConfirmModalOpen(true);
-    };
+    // const handleOpenDeleteModal = (id) => {
+    //     setDeleteBranchId(id);
+    //     setIsConfirmModalOpen(true);
+    // };
 
-    const handleCloseDeleteModal = () => {
-        setDeleteBranchId(null);
-        setIsConfirmModalOpen(false);
-    };
+    // const handleCloseDeleteModal = () => {
+    //     setDeleteBranchId(null);
+    //     setIsConfirmModalOpen(false);
+    // };
 
-    const handleConfirmDelete = async () => {
-        const token = Cookies.get("authToken");
+    // const handleConfirmDelete = async () => {
+    //     const token = Cookies.get("authToken");
 
-        try {
-            const response = await axios.delete(`/api/Branch/branches/${deleteBranchId}`, {
-                headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}`,
-                },
-                withCredentials: true,
-            });
+    //     try {
+    //         const response = await axios.delete(`/api/Branch/branches/${deleteBranchId}`, {
+    //             headers: {
+    //                 "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
+    //                 Authorization: `Bearer ${token}`,
+    //             },
+    //             withCredentials: true,
+    //         });
 
-            if (response.status === 200) {
-                toast.success("Branch deleted successfully!");
-                setBranches(branches.filter((branch) => branch.id !== deleteBranchId));
-                handleCloseDeleteModal();
-            } else {
-                toast.error("Failed to delete branch.");
-            }
-        } catch (error) {
-            console.error("Failed to delete branch:", error);
-            toast.error("Failed to delete branch: " + (error.response?.data?.message || "Unknown error"));
-        }
-    };
+    //         if (response.status === 200) {
+    //             toast.success("Branch deleted successfully!");
+    //             setBranches(branches.filter((branch) => branch.id !== deleteBranchId));
+    //             handleCloseDeleteModal();
+    //         } else {
+    //             toast.error("Failed to delete branch.");
+    //         }
+    //     } catch (error) {
+    //         console.error("Failed to delete branch:", error);
+    //         toast.error("Failed to delete branch: " + (error.response?.data?.message || "Unknown error"));
+    //     }
+    // };
 
     // ฟังก์ชันสำหรับการจัดการ pagination
     const handlePageChange = (pageNumber) => {
@@ -115,8 +115,7 @@ const BranchList = () => {
     // คำนวณสินค้าที่จะแสดง
     const indexOfLastBranch = currentPage * itemsPerPage;
     const indexOfFirstBranch = indexOfLastBranch - itemsPerPage;
-    const currentBranch = branches.slice(indexOfFirstBranch, indexOfLastBranch);
-
+    const currentBranches = branches.slice(indexOfFirstBranch, indexOfLastBranch);
     const totalPages = Math.ceil(branches.length / itemsPerPage);
 
     return (
@@ -164,12 +163,12 @@ const BranchList = () => {
                                         >
                                             <FaEdit className=" icon icon-blue" />
                                         </button>
-                                        <button
+                                        {/* <button
                                             className="icon icon-button"
                                             onClick={() => handleOpenDeleteModal(id)}
                                         >
                                             <FaTrash className="icon-red" />
-                                        </button>
+                                        </button> */}
                                 </td>
                             </tr>
                         ))}
@@ -196,14 +195,14 @@ const BranchList = () => {
                 Back
             </button>
 
-            {isConfirmModalOpen && (
+            {/* {isConfirmModalOpen && (
                 <ConfirmationModal
                     isOpen={isConfirmModalOpen}
                     onClose={handleCloseDeleteModal}
                     onConfirm={handleConfirmDelete}
                     message="Are you sure you want to delete this branch?"
                 />
-            )}
+            )} */}
 
             {editBranch && (
                 <EditBranch

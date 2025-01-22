@@ -14,39 +14,44 @@ export default function SelectBranch() {
     const [searchTerm, setSearchTerm] = useState("");
     const [isLoading, setIsLoading] = useState(true);
 
+    const itemsPerPage = 6; // จำนวน Branch ที่ต้องการแสดงต่อหน้า
+    const [currentPage, setCurrentPage] = useState(1);
+
+    // กรอง Branch
     const filteredBranches = branches.filter((branch) =>
         branch.name && branch.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
+    const indexOfLastBranch = currentPage * itemsPerPage;
+    const indexOfFirstBranch = indexOfLastBranch - itemsPerPage;
+    const currentBranches = filteredBranches.slice(indexOfFirstBranch, indexOfLastBranch);
+
+    const totalPages = Math.ceil(filteredBranches.length / itemsPerPage);
+
     useEffect(() => {
         const fetchBranches = async () => {
-            const token = Cookies.get("authToken"); // ดึง Token จาก Cookie
-            // console.log("Login successful, JWT Token received:", token);
-            if(token){
+            const token = Cookies.get("authToken");
+            if (token) {
                 try {
-                    // console.log("Fetching branches...");
                     setIsLoading(true);
                     const response = await axios.get("/api/Branch/branches", {
                         headers: {
                             "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         },
-                        withCredentials: true, // ส่งคำขอพร้อม Cookie
+                        withCredentials: true,
                     });
-    
-                    const data = response.data.data || []; // กำหนด Default ถ้าไม่มี Data
-                    // console.log("Branches loaded:", data);
-    
-                    setBranches(data); // บันทึก Branch ใน State
+
+                    const data = response.data.data || [];
+                    setBranches(data);
                 } catch (error) {
-                    // console.error("Failed to fetch branches:", error);
                     if (error.response?.status === 401) {
                         toast.error("Unauthorized. Please login.");
-                        navigate("/"); // Redirect ไปหน้า Login
+                        navigate("/"); 
                     } else if (error.response?.status === 403) {
                         toast.error("Access Denied: You do not have the required permissions.");
                     }
                 }
-            setIsLoading(false); // ปิดสถานะการโหลด
+                setIsLoading(false);
             }
         };
 
@@ -55,7 +60,7 @@ export default function SelectBranch() {
 
     const handleSelectBranch = (branchId) => {
         setSelectedBranch(branchId);
-        navigate(`/${branchId}/sale`); // Redirect ไป Sale หน้าต่าง ๆ
+        navigate(`/${branchId}/sale`);
     };
 
     return (
@@ -83,12 +88,12 @@ export default function SelectBranch() {
                         />
                     </div>
                     <div className={viewMode === "grid" ? "branch-grid" : "branch-list"}>
-                        {filteredBranches.length > 0 ? (
-                            filteredBranches.map((branch) => (
+                        {currentBranches.length > 0 ? (
+                            currentBranches.map((branch) => (
                                 <div
                                     key={branch.id}
                                     className={`branch-card ${selectedBranch === branch.id ? "active" : ""}`}
-                                    onClick={() => handleSelectBranch(branch.id)} // ส่ง ID
+                                    onClick={() => handleSelectBranch(branch.id)}
                                 >
                                     <img
                                         src={branch.iconUrl || "https://via.placeholder.com/50"}
@@ -98,9 +103,23 @@ export default function SelectBranch() {
                                 </div>
                             ))
                         ) : (
-                            <p>No branches found.</p> // แสดงข้อความเมื่อไม่มีข้อมูล
+                            <p>No branches found.</p>
                         )}
                     </div>
+
+                    {/* Pagination Controls */}
+                    <div className="pagination">
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                key={index + 1}
+                                onClick={() => setCurrentPage(index + 1)}
+                                className={currentPage === index + 1 ? 'active' : ''}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                    </div>
+
                     <div className="buttons">
                         <button onClick={() => navigate("/")}>Back</button>
                         <button onClick={() => navigate("/BranchList")}>Check Department</button>

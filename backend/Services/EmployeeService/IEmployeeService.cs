@@ -18,6 +18,7 @@ namespace backend.Services.EmployeeService
         Task<ServiceResponse<Employee>> GetEmployeeByEmail(string branchId ,string email);
         Task<ServiceResponse<Employee>> GetEmployeeById(string branchId, string employeeId);
         Task<ServiceResponse<string>> UpdateEmployee(string branchId, string employeeId, Employee updatedEmployee);
+        Task<bool> UpdateEmployeeStatusAsync(string branchId, string employeeId, string status);
         Task<ServiceResponse<string>> DeleteEmployee(string branchId, string employeeId);
         Task<ServiceResponse<string>> DeleteAllEmployees(string branchId);
         Task<ServiceResponse<string>> ResetEmployeeId(string branchId);

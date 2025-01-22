@@ -6,7 +6,7 @@ import Cookies from "js-cookie";
 import ConfirmationModal from "./ConfirmationModal";
 import Navbar from "../bar/Navbar";
 import Sidebar from "../bar/Sidebar";
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { FaEye, FaEyeSlash,FaEdit, FaTrash } from "react-icons/fa";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 
@@ -62,7 +62,8 @@ const ProductList = () => {
                 if (response.data.success) {
                     const productData = response.data.data.map(pro => ({
                         id: pro.id,
-                        ...pro.data
+                        ...pro.data,
+                        productStatus: pro.data.status || "active" // สถานะ active/inactive
                     }));
                     setProducts(productData);
                 } else {
@@ -84,43 +85,40 @@ const ProductList = () => {
         fetchProducts();
     }, [navigate, branchId, categoryId]);
 
-    const handleOpenDeleteModal = (id) => {
-        setDeleteProductId(id);
-        setIsConfirmModalOpen(true);
-    };
-
-    const handleCloseDeleteModal = () => {
-        setDeleteProductId(null);
-        setIsConfirmModalOpen(false);
-    };
-
-    const handleConfirmDelete = async () => {
+    const toggleProductStatus = async (id, currentStatus) => {
         const token = Cookies.get("authToken");
         if (!token) {
             toast.error("Your session has expired. Please login again.");
             navigate("/");
             return;
         }
-
+    
         try {
-            const response = await axios.delete(`/api/Product/branches/${branchId}/products/${deleteProductId}`, {
+            setIsLoading(true);
+            const newStatus = currentStatus === "active" ? "inactive" : "active"; // เปลี่ยนสถานะ
+            const response = await axios.put(`/api/Product/branches/${branchId}/products/${id}/status`, { // ใช้ id ตรงนี้
+                status: newStatus
+            }, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
-
+    
             if (response.status === 200) {
-                toast.success("Product deleted successfully!");
-                setProducts(products.filter((product) => product.id !== deleteProductId));
-                handleCloseDeleteModal();
+                toast.success(`Product status updated to ${newStatus}!`);
+                setProducts(products.map(product => 
+                    product.id === id ? { ...product, productStatus: newStatus } : product
+                ));
             } else {
-                toast.error("Failed to delete product.");
+                toast.error("Failed to update product status.");
             }
         } catch (error) {
-            console.error("Failed to delete product:", error);
-            toast.error("Failed to delete product: " + (error.response?.data?.message || "Unknown error"));
+            console.error("Failed to update product status:", error);
+            toast.error("Failed to update product status: " + (error.response?.data?.message || "Unknown error"));
+        } finally {
+            setIsLoading(false);
         }
     };
 
@@ -151,7 +149,6 @@ const ProductList = () => {
     const indexOfLastProduct = currentPage * itemsPerPage;
     const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
     const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
-
     const totalPages = Math.ceil(products.length / itemsPerPage);
 
     return (
@@ -189,15 +186,11 @@ const ProductList = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {products.map(({ id, ImgUrl, productName, price, stock }) => {
+                                {currentProducts.map(({ id, ImgUrl, productName, price, stock, productStatus }) => {
                                     const status = getProductStatus(stock);
                                     return (
                                         <tr key={id}>
-<<<<<<< HEAD
-                                            <td >
-=======
-                                            <td>
->>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
+                                            <td style={{ textAlign: 'center' }}>
                                                 <a href={`/${branchId}/product/${id}`} className="detail-link">{id}</a>
                                             </td>
                                             <td><img src={ImgUrl} alt={productName} style={{ width: "50px", height: "50px" }} /></td>
@@ -205,18 +198,21 @@ const ProductList = () => {
                                             <td>{price}</td>
                                             <td>{stock}</td>
                                             <td style={{ color: status.color }}>{status.icon} {status.text}</td>
-                                            {canEditOrDelete && (  
-                                                <td>
-                                                    <div className="row-product">
-                                                        <button className="icon-button" onClick={() => navigate(`/${branchId}/edit-product/${id}`)}>
-                                                            <FaEdit className="icon icon-blue" />
-                                                        </button>
-                                                        <button className="icon-button" onClick={() => handleOpenDeleteModal(id)}>
-                                                            <FaTrash className="icon-red" />
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            )}
+                                            <td style={{ color: productStatus === "active" ? "green" : "red" }}>
+                                                <div className="row-product">
+                                                    <button
+                                                        className="icon-button"
+                                                        onClick={() => navigate(`/${branchId}/edit-product/${id}`)}
+                                                    >
+                                                        <FaEdit className="icon icon-blue" />
+                                                    </button>
+                                                    {productStatus === "active" ? (
+                                                        <FaEye className="icon-green" onClick={() => toggleProductStatus(id, productStatus)} title="Deactivate" />
+                                                    ) : (
+                                                        <FaEyeSlash className="icon-red" onClick={() => toggleProductStatus(id, productStatus)} title="Activate" />
+                                                    )}
+                                                </div>
+                                            </td>
                                         </tr>
                                     );
                                 })}
@@ -235,15 +231,6 @@ const ProductList = () => {
                             </button>
                         ))}
                     </div>
-
-                    {isConfirmModalOpen && (
-                        <ConfirmationModal
-                            isOpen={isConfirmModalOpen}
-                            onClose={handleCloseDeleteModal}
-                            onConfirm={handleConfirmDelete}
-                            message="Are you sure you want to delete this product?"
-                        />
-                    )}
                 </div>
             </div>
         </div>

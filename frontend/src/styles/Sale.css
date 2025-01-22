@@ -139,6 +139,7 @@
     background-color: transparent; /* Ensure buttons have no background */
     border: none; /* Remove button border */
     padding: 0; /* Remove padding to avoid any unwanted space around icons */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
 }
 
 .icon-red {
