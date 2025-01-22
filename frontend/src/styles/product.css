@@ -107,25 +107,36 @@ input[type="text"] {
     color: red;
 }
 
-.icon {
-    background-color: transparent; /* Ensures buttons have no background */
-    border: none; /* Remove any button borders */
-    color: inherit; /* Color inherits from parent */
-    cursor: pointer; /* Change cursor to pointer */
-}
-
 .icon-button {
     background-color: transparent; /* Ensure buttons have no background */
     border: none; /* Remove button border */
     padding: 0; /* Remove padding to avoid any unwanted space around icons */
 }
 
+.icon {
+    background-color: transparent; /* Ensures buttons have no background */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+    margin: 0 5px; /* ระยะห่างระหว่างไอคอน */
+    transition: transform 0.2s; /* เอฟเฟกต์เมื่อชี้ไปที่ไอคอน */
+}
+
+.icon-green {
+    color: green; /* สีสำหรับ active */
+    font-size: 1.5em; /* ขนาดใหญ่ขึ้น */
+    transition: transform 0.2s; /* เอฟเฟกต์เมื่อชี้ไปที่ไอคอน */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+}
+
 .icon-red {
-    color: rgb(170, 0, 0);
+    color: red; /* สีสำหรับ inactive */
+    font-size: 1.5em; /* ขนาดใหญ่ขึ้น */
+    transition: transform 0.2s; /* เอฟเฟกต์เมื่อชี้ไปที่ไอคอน */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
 }
 
 .icon-blue {
-    color: rgb(0, 102, 255);
+    color: blue; /* สีสำหรับ edit */
+    font-size: 1.2em; /* ขนาดเล็กลง */
 }
 
 .row-product {

@@ -343,6 +343,40 @@ namespace backend.Services.ProductService
             }
         }
 
+        public async Task<bool> UpdateProductStatusAsync(string branchId, string productId, string status)
+        {
+            var productRef = _firestoreDb
+                .Collection("branches")
+                .Document(branchId)
+                .Collection("products")
+                .Document(productId);
+
+            var productSnapshot = await productRef.GetSnapshotAsync();
+
+            if (!productSnapshot.Exists)
+            {
+                return false; // ไม่พบผลิตภัณฑ์
+            }
+
+            try
+            {
+                // สร้าง Dictionary สำหรับการอัปเดตสถานะ
+                var updates = new Dictionary<string, object>
+                {
+                    { "status", status }
+                };
+
+                // อัปเดตสถานะ
+                await productRef.UpdateAsync(updates);
+                return true; // อัปเดตสำเร็จ
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating product status: {ex.Message}");
+                return false; // การอัปเดตล้มเหลว
+            }
+        }
+
         public async Task<ServiceResponse<string>> UpdateStock(string branchId, string productId, Products product)
         {
 

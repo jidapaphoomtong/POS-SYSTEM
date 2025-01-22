@@ -305,6 +305,40 @@ namespace backend.Services.EmployeeService
             }
         }
 
+        public async Task<bool> UpdateEmployeeStatusAsync(string branchId, string employeeId, string status)
+        {
+            DocumentReference employeeDoc = _firestoreDb
+                .Collection("branches")
+                .Document(branchId)
+                .Collection("employees")
+                .Document(employeeId);
+
+            var employeeSnapshot = await employeeDoc.GetSnapshotAsync();
+
+            if (!employeeSnapshot.Exists)
+            {
+                return false; // ไม่พบพนักงาน
+            }
+
+            try
+            {
+                // สร้าง Dictionary สำหรับการอัปเดตสถานะ
+                var updates = new Dictionary<string, object>
+                {
+                    { "status", status }
+                };
+
+                // อัปเดตสถานะ
+                await employeeDoc.UpdateAsync(updates);
+                return true; // อัปเดตสำเร็จ
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating employee status: {ex.Message}");
+                return false; // การอัปเดตล้มเหลว
+            }
+        }
+
         public async Task<ServiceResponse<string>> DeleteEmployee(string branchId, string employeeId)
         {
             try

@@ -28,6 +28,8 @@ namespace backend.Models
         public string branchId { get; set; } = string.Empty; // เพิ่มฟิลด์สำหรับ branchId
         [FirestoreProperty]
         public int quantity { get; set; } // เพิ่มฟิลด์ quantity
+        [FirestoreProperty]
+        public string status { get; set; } = string.Empty;
     }
     public class ProductsResponse
     {
@@ -35,5 +37,10 @@ namespace backend.Models
         public Dictionary<string, object> Data { get; set; }
         public List<object> Products { get; set; }
         public Category Category { get; set; }
+    }
+
+    public class StatusRequest
+    {
+        public string status { get; set; } = string.Empty; // สถานะที่ต้องการอัปเดต (active/inactive)
     }
 }

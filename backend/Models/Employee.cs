@@ -26,8 +26,10 @@ namespace backend.Models
         [FirestoreProperty]
         public IList<Role> roles { get; set; } = new List<Role>(); // กำหนดค่า Role นับตั้งแต่เริ่ม
         [FirestoreProperty]
-        public string branchId { get; set; } // เพิ่มฟิลด์สำหรับ branchId
+        public string branchId { get; set; } = string.Empty; // เพิ่มฟิลด์สำหรับ branchId
         [FirestoreProperty]
-        public string salt { get; set; } // เพิ่ม property นี้
+        public string salt { get; set; } = string.Empty; // เพิ่ม property นี้
+        [FirestoreProperty]
+        public string status { get; set; } = string.Empty; // เพิ่ม property นี้
     }
 }

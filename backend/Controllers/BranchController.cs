@@ -127,6 +127,19 @@ namespace backend.Controllers
             }
         }
 
+        [HttpPut("branches/{branchId}/status")]
+        public async Task<IActionResult> UpdateStatus(string branchId, [FromBody] StatusRequest request)
+        {
+            var result = await _branchService.UpdateBranchStatusAsync(branchId, request.status);
+
+            if (!result)
+            {
+                return NotFound(new { message = "Branch not found." });
+            }
+
+            return Ok(new { message = "Branch status updated successfully." });
+        }
+
         [CustomAuthorizeRole("Admin")]
         [HttpGet("branches/{branchId}")]
         public async Task<IActionResult> GetBranchById(string branchId)

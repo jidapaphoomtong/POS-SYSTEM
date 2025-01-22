@@ -34,10 +34,6 @@ h2 {
 .sales-history table {
     width: 100%;
     border-collapse: collapse;
-<<<<<<< HEAD
-=======
-    margin-top: 20px; /* เพิ่มพื้นที่ระหว่าง header กับตาราง */
->>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
 }
 
 .sales-history th,
@@ -59,4 +55,8 @@ h2 {
 
 .icon{
     color: #007bff;
+    background-color: transparent; /* Ensures buttons have no background */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+    margin: 0 5px; /* ระยะห่างระหว่างไอคอน */
+    transition: transform 0.2s; /* เอฟเฟกต์เมื่อชี้ไปที่ไอคอน */
 }

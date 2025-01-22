@@ -18,10 +18,8 @@ import EditProduct from './components/Product/EditProduct'
 import EmployeeDetail from './components/Employee/EmployeeDetail';
 import ProductDetail from './components/Product/ProductDetail';
 import SalesHistory from './components/SalesHistory';
-<<<<<<< HEAD
 import PurchaseDetail from './components/PurchaseDetail';
-=======
->>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
+
 
 function App() {
   return (
@@ -65,10 +63,7 @@ function App() {
             <Route path="add-product" element={<AddProduct />} />
             <Route path="product/:productId" element={<ProductDetail />} />
             <Route path="history" element={<SalesHistory/>}/>
-<<<<<<< HEAD
             <Route path="purchase/:purchaseId" element={<PurchaseDetail />} />
-=======
->>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
         </Route>
 
       </Routes>
