@@ -27,6 +27,8 @@ export default function Sale() {
     const [change, setChange] = useState(0); // เงินทอน
     const [errorMessage, setErrorMessage] = useState("");
     const { branchId } = useParams(); // สำหรับการดึงค่า branchId
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // จำนวนสินค้าที่จะแสดงต่อหน้า
 
     useEffect(() => {
         const fetchData = async () => {
@@ -341,6 +343,18 @@ export default function Sale() {
         }
     };
 
+    // ฟังก์ชันสำหรับการจัดการ pagination
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // คำนวณสินค้าที่จะแสดง
+    const indexOfLastProduct = currentPage * itemsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+    const currentProducts = items.slice(indexOfFirstProduct, indexOfLastProduct);
+
+    const totalPages = Math.ceil(items.length / itemsPerPage);
+
     return (
         <div className="sale-page">
             <NavBar />
@@ -398,7 +412,7 @@ export default function Sale() {
                                         <div className="row">
                                             <p>{item.productName} : {item.price} บาท</p>
                                             <button className="icon-button" onClick={() => handleRemoveItem(item.Id)}>
-                                                <FaTrash className="icon icon-red" />
+                                                <FaTrash className="icon-red" />
                                             </button>
                                         </div>
                                         <div className="row">
@@ -456,6 +470,17 @@ export default function Sale() {
                             </div>
                         )}
                     </div>
+                    <div className="pagination">
+                            {Array.from({ length: totalPages }, (_, index) => (
+                                <button
+                                    key={index + 1}
+                                    onClick={() => handlePageChange(index + 1)}
+                                    className={currentPage === index + 1 ? 'active' : ''}
+                                >
+                                    {index + 1}
+                                </button>
+                            ))}
+                        </div>
                 </div>
             </div>
         </div>

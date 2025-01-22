@@ -34,7 +34,6 @@ h2 {
 .sales-history table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 20px; /* เพิ่มพื้นที่ระหว่าง header กับตาราง */
 }
 
 .sales-history th,

@@ -13,6 +13,8 @@ import { toast } from "react-toastify";
 
 const EmployeeList = () => {
     const [employees, setEmployees] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // จำนวนสินค้าที่จะแสดงต่อหน้า
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [editEmployee, setEditEmployee] = useState(null);
@@ -115,6 +117,18 @@ const EmployeeList = () => {
                 toast.error("Failed to delete employee: " + (error.response?.data?.message || "Unknown error"));
             }
         };
+
+        // ฟังก์ชันสำหรับการจัดการ pagination
+        const handlePageChange = (pageNumber) => {
+            setCurrentPage(pageNumber);
+        };
+
+        // คำนวณสินค้าที่จะแสดง
+        const indexOfLastEmployee = currentPage * itemsPerPage;
+        const indexOfFirstEmployee = indexOfLastEmployee - itemsPerPage;
+        const currentEmployees = employees.slice(indexOfFirstEmployee, indexOfLastEmployee);
+
+        const totalPages = Math.ceil(employees.length / itemsPerPage);
         
     return (
         <div className="employee-container">
@@ -150,8 +164,8 @@ const EmployeeList = () => {
                             <tbody>
                                 {employees.map(({ id, firstName, lastName, email, roles }) => (
                                     <tr key={id}>
-                                        <td>
-                                            <a href={`/${branchId}/employee/${id}`} style={{ textAlign: 'center' }} className="detail-link">{id}</a>
+                                        <td style={{ textAlign: 'center' }}>
+                                            <a href={`/${branchId}/employee/${id}`} className="detail-link">{id}</a>
                                         </td>
                                         <td>{firstName}</td>
                                         <td>{lastName}</td>
@@ -181,6 +195,18 @@ const EmployeeList = () => {
                             </tbody>
                         </table>
                     )}
+
+                    <div className="pagination">
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                key={index + 1}
+                                onClick={() => handlePageChange(index + 1)}
+                                className={currentPage === index + 1 ? 'active' : ''}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                    </div>
 
                     {isConfirmModalOpen && (
                         <ConfirmationModal

@@ -13,6 +13,8 @@ import { toast } from "react-toastify";
 const BranchList = () => {
     const [branches, setBranches] = useState([]); 
     // const [showAddForm, setShowAddForm] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // จำนวนสินค้าที่จะแสดงต่อหน้า
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [editBranch, setEditBranch] = useState(null);
@@ -105,6 +107,18 @@ const BranchList = () => {
         }
     };
 
+    // ฟังก์ชันสำหรับการจัดการ pagination
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // คำนวณสินค้าที่จะแสดง
+    const indexOfLastBranch = currentPage * itemsPerPage;
+    const indexOfFirstBranch = indexOfLastBranch - itemsPerPage;
+    const currentBranch = branches.slice(indexOfFirstBranch, indexOfLastBranch);
+
+    const totalPages = Math.ceil(branches.length / itemsPerPage);
+
     return (
         <div className="branch-container">
             <div className="header">
@@ -162,6 +176,18 @@ const BranchList = () => {
                     </tbody>
                 </table>
             )}
+
+            <div className="pagination">
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                key={index + 1}
+                                onClick={() => handlePageChange(index + 1)}
+                                className={currentPage === index + 1 ? 'active' : ''}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                    </div>
 
             <button
                 className="back-button"

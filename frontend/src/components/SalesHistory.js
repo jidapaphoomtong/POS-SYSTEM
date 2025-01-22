@@ -13,6 +13,8 @@ const SalesHistory = () => {
     const [loading, setLoading] = useState(true);
     const { branchId } = useParams();
     const [selectedPurchase, setSelectedPurchase] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // จำนวนสินค้าที่จะแสดงต่อหน้า
 
     useEffect(() => {
         const fetchPurchases = async () => {
@@ -123,6 +125,18 @@ const SalesHistory = () => {
         }
     };
 
+    // ฟังก์ชันสำหรับการจัดการ pagination
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // คำนวณสินค้าที่จะแสดง
+    const indexOfLastPurchase = currentPage * itemsPerPage;
+    const indexOfFirstPurchase = indexOfLastPurchase - itemsPerPage;
+    const currentPurchases = purchases.slice(indexOfFirstPurchase, indexOfLastPurchase);
+
+    const totalPages = Math.ceil(purchases.length / itemsPerPage);
+
     return (
         <div className="history-container">
             <Navbar />
@@ -151,8 +165,8 @@ const SalesHistory = () => {
                                 {purchases.length > 0 ? (
                                     purchases.map((purchase) => (
                                         <tr key={purchase.id}>
-                                            <td>
-                                                <a href={`/${branchId}/purchase/${purchase.id}`} style={{ textAlign: 'center' }} className="detail-link">{purchase.id}</a>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <a href={`/${branchId}/purchase/${purchase.id}`} className="detail-link">{purchase.id}</a>
                                             </td>
                                             <td>{formatDate(purchase.date)}</td>
                                             <td>฿{purchase.total}</td>
@@ -173,6 +187,18 @@ const SalesHistory = () => {
                             </tbody>
                         </table>
                     )}
+
+                    <div className="pagination">
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                key={index + 1}
+                                onClick={() => handlePageChange(index + 1)}
+                                className={currentPage === index + 1 ? 'active' : ''}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                    </div>
 
                     {selectedPurchase && (
                         <div className="modal">
