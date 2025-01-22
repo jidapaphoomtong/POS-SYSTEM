@@ -46,7 +46,11 @@ const EmployeeDetail = () => {
                     });
                     // console.log('Roles:', response.data.roles); // ดูเนื้อหาที่ดึงมา
                 } else {
+<<<<<<< HEAD
                     toast.error(response.data.message || "Failed to fetch employee details.");
+=======
+                    alert(response.data.message || "Failed to fetch employee details.");
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                     navigate(`/${branchId}/EmployeeList`);
                 }
             } catch (error) {

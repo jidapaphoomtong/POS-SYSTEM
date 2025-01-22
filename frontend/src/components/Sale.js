@@ -27,6 +27,11 @@ export default function Sale() {
     const [change, setChange] = useState(0); // เงินทอน
     const [errorMessage, setErrorMessage] = useState("");
     const { branchId } = useParams(); // สำหรับการดึงค่า branchId
+<<<<<<< HEAD
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10; // จำนวนสินค้าที่จะแสดงต่อหน้า
+=======
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
 
     useEffect(() => {
         const fetchData = async () => {
@@ -187,7 +192,11 @@ export default function Sale() {
         }
 
         setPaymentMethod(type); // บันทึกประเภทการชำระเงิน
+<<<<<<< HEAD
         toast.success(`ชำระเงินสำเร็จด้วย ${type}`);
+=======
+        alert(`ชำระเงินสำเร็จด้วย ${type}`);
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
 
         // Generate receipt
         await generateReceipt(type);
@@ -246,6 +255,7 @@ export default function Sale() {
         receipt.items.forEach(item => {
             receiptWindow.document.write(`<li>${item.productName} : ฿${item.price} x ${item.quantity}</li>`);
         });
+<<<<<<< HEAD
         
         receiptWindow.document.write('</ul>');
         receiptWindow.document.write('-------------------------<br>');
@@ -256,6 +266,15 @@ export default function Sale() {
         receiptWindow.document.write(`<p>ผู้ขาย: ${receipt.seller}</p>`);
         receiptWindow.document.write('</body></html>');
         
+=======
+        receiptWindow.document.write('-------------------------\n');
+        receiptWindow.document.write(`ยอดรวม: ฿${receipt.total}\n`);
+        receiptWindow.document.write(`จำนวนเงินที่จ่าย: ฿${receipt.paidAmount}\n`);
+        receiptWindow.document.write(`เงินทอน: ฿${receipt.change}\n`);
+        receiptWindow.document.write(`ประเภทการจ่ายเงิน: ${receipt.type}\n`)
+        receiptWindow.document.write(`ผู้ขาย: ${receipt.seller}\n`)
+        receiptWindow.document.write('</pre>');
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
         receiptWindow.document.close();
         receiptWindow.focus();
         receiptWindow.print();
@@ -280,7 +299,11 @@ export default function Sale() {
                 firstName = firstNameFromToken;
             } catch (error) {
                 console.error("Invalid token:", error);
+<<<<<<< HEAD
                 toast.error("Have Something wrong");
+=======
+                alert("Have Something wrong");
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
             }
         }
     
@@ -330,16 +353,38 @@ export default function Sale() {
                     });
                 }
     
+<<<<<<< HEAD
                 toast.success("Purchases added successfully!");
             } else {
                 toast.error(`Request failed with status: ${response.status}`);
+=======
+                alert("Purchases added successfully!");
+            } else {
+                alert(`Request failed with status: ${response.status}`);
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
             }
     
         } catch (error) {
             console.error("Error during purchase:", error);
+<<<<<<< HEAD
             toast.error("Failed to save the purchase: " + error.message);
+=======
+            alert("Failed to save the purchase: " + error.message);
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
         }
     };
+
+    // ฟังก์ชันสำหรับการจัดการ pagination
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // คำนวณสินค้าที่จะแสดง
+    const indexOfLastProduct = currentPage * itemsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+    const currentProducts = items.slice(indexOfFirstProduct, indexOfLastProduct);
+
+    const totalPages = Math.ceil(items.length / itemsPerPage);
 
     return (
         <div className="sale-page">
@@ -398,7 +443,7 @@ export default function Sale() {
                                         <div className="row">
                                             <p>{item.productName} : {item.price} บาท</p>
                                             <button className="icon-button" onClick={() => handleRemoveItem(item.Id)}>
-                                                <FaTrash className="icon icon-red" />
+                                                <FaTrash className="icon-red" />
                                             </button>
                                         </div>
                                         <div className="row">
@@ -456,6 +501,17 @@ export default function Sale() {
                             </div>
                         )}
                     </div>
+                    <div className="pagination">
+                            {Array.from({ length: totalPages }, (_, index) => (
+                                <button
+                                    key={index + 1}
+                                    onClick={() => handlePageChange(index + 1)}
+                                    className={currentPage === index + 1 ? 'active' : ''}
+                                >
+                                    {index + 1}
+                                </button>
+                            ))}
+                        </div>
                 </div>
             </div>
         </div>

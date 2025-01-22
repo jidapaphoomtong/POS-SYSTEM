@@ -159,8 +159,34 @@ input[type="text"] {
     color: rgb(0, 102, 255);
 }
 
-.row-emplyee {
+.row-employee {
     display: flex;
     justify-content: center;
     align-items: center; /* เพื่อให้แน่ใจว่าองค์ประกอบอยู่กลางในแนวตั้ง */
+}
+
+.pagination {
+    display: flex;
+    justify-content: center; /* จัดกึ่งกลาง */
+    margin-top: 20px; /* เว้นระยะทางด้านบน */
+}
+
+.pagination button {
+    background-color: #007bff; /* สีพื้นหลัง */
+    color: white; /* สีตัวอักษร */
+    border: none; /* ไม่มีขอบ */
+    padding: 10px 15px; /* ระยะขอบ */
+    margin: 0 5px; /* ระยะห่างระหว่างปุ่ม */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+    border-radius: 5px; /* มุมโค้ง */
+    transition: background-color 0.3s; /* เอฟเฟกต์เปลี่ยนสี */
+}
+
+.pagination button:hover {
+    background-color: #0056b3; /* สีเมื่อชี้ */
+}
+
+.pagination button.active {
+    background-color: #0056b3; /* สีของปุ่มที่ถูกเลือก */
+    font-weight: bold; /* ทำให้ตัวหนา */
 }

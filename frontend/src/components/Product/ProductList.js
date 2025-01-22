@@ -12,6 +12,8 @@ import { toast } from "react-toastify";
 
 const ProductList = () => {
     const [products, setProducts] = useState([]);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // จำนวนสินค้าที่จะแสดงต่อหน้า
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
     const [deleteProductId, setDeleteProductId] = useState(null);
@@ -140,6 +142,18 @@ const ProductList = () => {
     // ฟังก์ชันที่ใช้ในการตรวจสอบบทบาท
     const canEditOrDelete = userRole !== "employee";
 
+    // ฟังก์ชันสำหรับการจัดการ pagination
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // คำนวณสินค้าที่จะแสดง
+    const indexOfLastProduct = currentPage * itemsPerPage;
+    const indexOfFirstProduct = indexOfLastProduct - itemsPerPage;
+    const currentProducts = products.slice(indexOfFirstProduct, indexOfLastProduct);
+
+    const totalPages = Math.ceil(products.length / itemsPerPage);
+
     return (
         <div className="product-container">
             <Navbar />
@@ -179,8 +193,12 @@ const ProductList = () => {
                                     const status = getProductStatus(stock);
                                     return (
                                         <tr key={id}>
+<<<<<<< HEAD
+                                            <td >
+=======
                                             <td>
-                                                <a href={`/${branchId}/product/${id}`} style={{ textAlign: 'center' }} className="detail-link">{id}</a>
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
+                                                <a href={`/${branchId}/product/${id}`} className="detail-link">{id}</a>
                                             </td>
                                             <td><img src={ImgUrl} alt={productName} style={{ width: "50px", height: "50px" }} /></td>
                                             <td>{productName}</td>
@@ -205,6 +223,18 @@ const ProductList = () => {
                             </tbody>
                         </table>
                     )}
+
+                    <div className="pagination">
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                key={index + 1}
+                                onClick={() => handlePageChange(index + 1)}
+                                className={currentPage === index + 1 ? 'active' : ''}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                    </div>
 
                     {isConfirmModalOpen && (
                         <ConfirmationModal

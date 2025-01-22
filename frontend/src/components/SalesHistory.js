@@ -4,19 +4,30 @@ import axios from "axios";
 import Cookies from "js-cookie";
 import "../styles/history.css";
 import { FaPrint } from "react-icons/fa";
+<<<<<<< HEAD
 import Navbar from "./bar/Navbar";
 import Sidebar from "./bar/Sidebar";
 import { toast } from "react-toastify";
+=======
+import Navbar from "./bar/Navbar"; // นำเข้า Navbar
+import Sidebar from "./bar/Sidebar"; // นำเข้า Sidebar
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
 
 const SalesHistory = () => {
     const [purchases, setPurchases] = useState([]);
     const [loading, setLoading] = useState(true);
     const { branchId } = useParams();
+<<<<<<< HEAD
     const [selectedPurchase, setSelectedPurchase] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 6; // จำนวนสินค้าที่จะแสดงต่อหน้า
+=======
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
 
     useEffect(() => {
         const fetchPurchases = async () => {
             const token = Cookies.get("authToken");
+<<<<<<< HEAD
         
             if (!branchId) {
                 toast.error("Branch ID is missing!");
@@ -25,21 +36,39 @@ const SalesHistory = () => {
         
             try {
                 const response = await axios.get(`/api/Purchase/all-purchases/${branchId}`, { // เปลี่ยนให้ตรงกับ URL ที่คุณได้สร้างไว้
+=======
+
+            if (!branchId) {
+                alert("Branch ID is missing!");
+                return;
+            }
+
+            try {
+                const response = await axios.get(`/api/Purchase/all-purchases/${branchId}`, {
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
                     },
                     withCredentials: true,
                 });
+<<<<<<< HEAD
         
                 if (response.data) {
                     const purchasesData = response.data.map(pur => ({
                         id: pur.id || "N/A",
+=======
+
+                if (response.data) {
+                    const purchasesData = response.data.map(pur => ({
+                        id: pur.id || "N/A", 
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                         total: pur.total || 0,
                         paidAmount: pur.paidAmount || 0,
                         change: pur.change || 0,
                         date: pur.date || new Date().toISOString(),
                         seller: pur.seller || "Unknown",
+<<<<<<< HEAD
                         paymentMethod: pur.paymentMethod || "Unknown",
                         products: pur.products // เพิ่มฟิลด์ products ในที่นี้
                     }));
@@ -50,6 +79,19 @@ const SalesHistory = () => {
             } catch (error) {
                 console.error("Error fetching purchases:", error);
                 toast.error("Error fetching purchases.");
+=======
+                        paymentMethod: pur.paymentMethod || "Unknown", // เพิ่ม paymentMethod
+                    }));
+                    setPurchases(purchasesData);
+                    console.log("Purchase Data", purchasesData);
+                } else {
+                    console.log("API response was not successful:", response.data);
+                    alert(`Failed to fetch purchases: ${response.data.message}`);
+                }
+            } catch (error) {
+                console.error("Error fetching purchases:", error);
+                alert("Error fetching purchases.");
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
             } finally {
                 setLoading(false);
             }
@@ -58,6 +100,7 @@ const SalesHistory = () => {
         fetchPurchases();
     }, [branchId]);
 
+<<<<<<< HEAD
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const day = String(date.getDate()).padStart(2, '0');
@@ -123,6 +166,24 @@ const SalesHistory = () => {
         }
     };
 
+    // ฟังก์ชันสำหรับการจัดการ pagination
+    const handlePageChange = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // คำนวณสินค้าที่จะแสดง
+    const indexOfLastPurchase = currentPage * itemsPerPage;
+    const indexOfFirstPurchase = indexOfLastPurchase - itemsPerPage;
+    const currentPurchases = purchases.slice(indexOfFirstPurchase, indexOfLastPurchase);
+
+    const totalPages = Math.ceil(purchases.length / itemsPerPage);
+
+=======
+    const handlePrint = (id) => {
+        window.print(); // คุณสามารถปรับปรุงให้แสดงผลแบบ bill จริงได้ที่นี่
+    };
+
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
     return (
         <div className="history-container">
             <Navbar />
@@ -133,6 +194,7 @@ const SalesHistory = () => {
                         <h2>Sales History ({purchases.length})</h2>
                     </div>
                     <div className="sales-history">
+<<<<<<< HEAD
                     {loading ? (
                         <p>Loading...</p>
                     ) : (
@@ -151,8 +213,8 @@ const SalesHistory = () => {
                                 {purchases.length > 0 ? (
                                     purchases.map((purchase) => (
                                         <tr key={purchase.id}>
-                                            <td>
-                                                <a href={`/${branchId}/purchase/${purchase.id}`} style={{ textAlign: 'center' }} className="detail-link">{purchase.id}</a>
+                                            <td style={{ textAlign: 'center' }}>
+                                                <a href={`/${branchId}/purchase/${purchase.id}`} className="detail-link">{purchase.id}</a>
                                             </td>
                                             <td>{formatDate(purchase.date)}</td>
                                             <td>฿{purchase.total}</td>
@@ -174,6 +236,18 @@ const SalesHistory = () => {
                         </table>
                     )}
 
+                    <div className="pagination">
+                        {Array.from({ length: totalPages }, (_, index) => (
+                            <button
+                                key={index + 1}
+                                onClick={() => handlePageChange(index + 1)}
+                                className={currentPage === index + 1 ? 'active' : ''}
+                            >
+                                {index + 1}
+                            </button>
+                        ))}
+                    </div>
+
                     {selectedPurchase && (
                         <div className="modal">
                             <h2>Purchase Details</h2>
@@ -193,6 +267,46 @@ const SalesHistory = () => {
                             <button onClick={() => setSelectedPurchase(null)}>Close</button>
                         </div>
                     )}
+=======
+                        {loading ? (
+                            <p>Loading...</p>
+                        ) : (
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Bill No.</th>
+                                        <th>Date</th>
+                                        <th>Total</th>
+                                        <th>Employee</th>
+                                        <th>Payment Method</th> {/* เปลี่ยนเป็น Payment Method */}
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {purchases.length > 0 ? (
+                                        purchases.map((purchase) => (
+                                            <tr key={purchase.id}>
+                                                <td>{purchase.id}</td>
+                                                <td>{new Date(purchase.date).toLocaleDateString()}</td>
+                                                <td>${purchase.total}</td>
+                                                <td>{purchase.seller}</td>
+                                                <td>{purchase.paymentMethod}</td> {/* เปลี่ยนเป็น paymentMethod */}
+                                                <td className="actions">
+                                                    <button onClick={() => handlePrint(purchase.id)}>
+                                                        <FaPrint className="icon" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6">No purchases found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                     </div>
                 </div>
             </div>
