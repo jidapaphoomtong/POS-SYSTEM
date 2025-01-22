@@ -34,6 +34,10 @@ h2 {
 .sales-history table {
     width: 100%;
     border-collapse: collapse;
+<<<<<<< HEAD
+=======
+    margin-top: 20px; /* เพิ่มพื้นที่ระหว่าง header กับตาราง */
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
 }
 
 .sales-history th,

@@ -117,6 +117,7 @@ const EmployeeList = () => {
                 toast.error("Failed to delete employee: " + (error.response?.data?.message || "Unknown error"));
             }
         };
+<<<<<<< HEAD
 
         // ฟังก์ชันสำหรับการจัดการ pagination
         const handlePageChange = (pageNumber) => {
@@ -129,6 +130,8 @@ const EmployeeList = () => {
         const currentEmployees = employees.slice(indexOfFirstEmployee, indexOfLastEmployee);
 
         const totalPages = Math.ceil(employees.length / itemsPerPage);
+=======
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
         
     return (
         <div className="employee-container">
@@ -164,7 +167,11 @@ const EmployeeList = () => {
                             <tbody>
                                 {employees.map(({ id, firstName, lastName, email, roles }) => (
                                     <tr key={id}>
+<<<<<<< HEAD
                                         <td style={{ textAlign: 'center' }}>
+=======
+                                        <td>
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                                             <a href={`/${branchId}/employee/${id}`} className="detail-link">{id}</a>
                                         </td>
                                         <td>{firstName}</td>
@@ -172,6 +179,7 @@ const EmployeeList = () => {
                                         <td>{email}</td>
                                         <td>{roles.map(role => role.Name).join(', ')}</td>
                                         <td>
+<<<<<<< HEAD
                                             <div className="row-employee">
                                                 <button
                                                 className="icon-button"
@@ -187,6 +195,22 @@ const EmployeeList = () => {
                                                     onClick={() => handleOpenDeleteModal(id)}
                                                 >
                                                     <FaTrash className="icon-red" />
+=======
+                                            <button
+                                            className="icon-button"
+                                                onClick={() => {
+                                                    // ส่งไปที่หน้า EditEmployee พร้อมกับ employeeId และ branchId
+                                                    navigate(`/${branchId}/edit-employee/${id}`);
+                                                }}
+                                            >
+                                                <FaEdit className="icon icon-blue" />
+                                            </button>
+                                            <button
+                                            className="icon-button"
+                                                onClick={() => handleOpenDeleteModal(id)}
+                                            >
+                                                <FaTrash className="icon icon-red" />
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                                             </button>
                                             </div>
                                         </td>

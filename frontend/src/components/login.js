@@ -52,7 +52,10 @@ const Login = () => {
                 const decodedToken = jwtDecode(token);
                 const emailFromToken = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || 'No email found';
                 const roleFromToken = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'No role found';
+<<<<<<< HEAD
                 toast.success("Login Successful!🎉");
+=======
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                 navigate(`/${branchId}/sale`); 
 
             } else {

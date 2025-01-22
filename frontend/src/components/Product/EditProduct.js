@@ -23,7 +23,11 @@ const EditProduct = () => {
     // ฟังก์ชันโหลดรายละเอียดของ Product
     useEffect(() => {
         if (!productId) {
+<<<<<<< HEAD
             toast.error("Product ID is missing.");
+=======
+            alert("Product ID is missing.");
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
             navigate(`/${branchId}/ProductList`);
             return;
         }
@@ -54,12 +58,20 @@ const EditProduct = () => {
                         categoryId: response.data.categoryId,
                     });
                 } else {
+<<<<<<< HEAD
                     toast.error(response.data.message || "Failed to fetch product details.");
+=======
+                    alert(response.data.message || "Failed to fetch product details.");
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                     navigate(`/${branchId}/ProductList`);
                 }
             } catch (error) {
                 console.error("Failed to fetch product details:", error);
+<<<<<<< HEAD
                 toast.error(error.response ? error.response.data.message : "Failed to load product details.");
+=======
+                alert(error.response ? error.response.data.message : "Failed to load product details.");
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                 navigate(`/${branchId}/ProductList`);
             } finally {
                 setIsLoading(false);

@@ -27,8 +27,11 @@ export default function Sale() {
     const [change, setChange] = useState(0); // เงินทอน
     const [errorMessage, setErrorMessage] = useState("");
     const { branchId } = useParams(); // สำหรับการดึงค่า branchId
+<<<<<<< HEAD
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10; // จำนวนสินค้าที่จะแสดงต่อหน้า
+=======
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
 
     useEffect(() => {
         const fetchData = async () => {
@@ -189,7 +192,11 @@ export default function Sale() {
         }
 
         setPaymentMethod(type); // บันทึกประเภทการชำระเงิน
+<<<<<<< HEAD
         toast.success(`ชำระเงินสำเร็จด้วย ${type}`);
+=======
+        alert(`ชำระเงินสำเร็จด้วย ${type}`);
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
 
         // Generate receipt
         await generateReceipt(type);
@@ -248,6 +255,7 @@ export default function Sale() {
         receipt.items.forEach(item => {
             receiptWindow.document.write(`<li>${item.productName} : ฿${item.price} x ${item.quantity}</li>`);
         });
+<<<<<<< HEAD
         
         receiptWindow.document.write('</ul>');
         receiptWindow.document.write('-------------------------<br>');
@@ -258,6 +266,15 @@ export default function Sale() {
         receiptWindow.document.write(`<p>ผู้ขาย: ${receipt.seller}</p>`);
         receiptWindow.document.write('</body></html>');
         
+=======
+        receiptWindow.document.write('-------------------------\n');
+        receiptWindow.document.write(`ยอดรวม: ฿${receipt.total}\n`);
+        receiptWindow.document.write(`จำนวนเงินที่จ่าย: ฿${receipt.paidAmount}\n`);
+        receiptWindow.document.write(`เงินทอน: ฿${receipt.change}\n`);
+        receiptWindow.document.write(`ประเภทการจ่ายเงิน: ${receipt.type}\n`)
+        receiptWindow.document.write(`ผู้ขาย: ${receipt.seller}\n`)
+        receiptWindow.document.write('</pre>');
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
         receiptWindow.document.close();
         receiptWindow.focus();
         receiptWindow.print();
@@ -282,7 +299,11 @@ export default function Sale() {
                 firstName = firstNameFromToken;
             } catch (error) {
                 console.error("Invalid token:", error);
+<<<<<<< HEAD
                 toast.error("Have Something wrong");
+=======
+                alert("Have Something wrong");
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
             }
         }
     
@@ -332,14 +353,24 @@ export default function Sale() {
                     });
                 }
     
+<<<<<<< HEAD
                 toast.success("Purchases added successfully!");
             } else {
                 toast.error(`Request failed with status: ${response.status}`);
+=======
+                alert("Purchases added successfully!");
+            } else {
+                alert(`Request failed with status: ${response.status}`);
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
             }
     
         } catch (error) {
             console.error("Error during purchase:", error);
+<<<<<<< HEAD
             toast.error("Failed to save the purchase: " + error.message);
+=======
+            alert("Failed to save the purchase: " + error.message);
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
         }
     };
 

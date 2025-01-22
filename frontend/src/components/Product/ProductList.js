@@ -193,7 +193,11 @@ const ProductList = () => {
                                     const status = getProductStatus(stock);
                                     return (
                                         <tr key={id}>
+<<<<<<< HEAD
                                             <td >
+=======
+                                            <td>
+>>>>>>> b76d944b9c845d077e2ccb7b9355d9c40fb1657f
                                                 <a href={`/${branchId}/product/${id}`} className="detail-link">{id}</a>
                                             </td>
                                             <td><img src={ImgUrl} alt={productName} style={{ width: "50px", height: "50px" }} /></td>
