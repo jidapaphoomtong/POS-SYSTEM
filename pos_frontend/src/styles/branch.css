@@ -1,0 +1,231 @@
+/* Container styles for forms */
+.add-branch-container, .edit-branch-container {
+    max-width: 600px; /* Width แนะนำ */
+    margin: auto; /* จัดกลางในแนวนอน */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex; /* ใช้ flexbox */
+    flex-direction: column; /* เรียงตามคอลัมน์ */
+    align-items: center; /* จัดกลางในแนวตั้ง */
+    justify-content: center; /* จัดกลางในแนวตั้ง */
+    min-height: 80vh; /* เพิ่มความสูงขั้นต่ำ */
+}
+
+.branch-detail-container {
+    max-width: 600px; /* ความกว้างสูงสุดของ Container */
+    margin: auto; /* จัดกลางในแนวนอน */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.branch-detail-container h2 {
+    font-size: 26px;
+    margin-bottom: 10px;
+    text-align: center; /* จัดกลางข้อความในหัวข้อ */
+}
+
+.branch-detail-container p {
+    font-size: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.branch-detail-container img {
+    display: block;
+    margin: 0 auto; /* จัดกลางภาพ */
+    max-width: 100%; /* ให้ขนาดสูงสุดภาพไม่เกิน 100% */
+    height: auto; /* ทำให้รักษาสัดส่วน */
+}
+
+/* Header style */
+.add-branch-container h2, .edit-branch-container h2 {
+    font-size: 24px;
+    margin-bottom: 20px;
+    text-align: center; /* จัดกลางข้อความในหัวข้อ */
+}
+
+/* Input fields style */
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 1rem;
+    border: 2px solid lightblue;
+    border-radius: 10px;
+    box-sizing: border-box; /* ทำให้ padding ไม่กระทบกับขนาด */
+}
+
+/* Button styles */
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.form-buttons button {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+}
+
+.form-buttons button[type="button"] {
+    background-color: #f44336; /* Red for Cancel */
+    color: white;
+}
+
+.form-buttons button[type="submit"] {
+    background-color: #4caf50; /* Green for Save */
+    color: white;
+}
+
+/* Table styling */
+.branch-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.branch-table th,
+.branch-table td {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+.branch-table tr:nth-child(even) {
+    background-color: #f3f3f3;
+}
+
+.branch-table th {
+    background-color: #f2f2f2;
+}
+
+/* Button styles */
+.add-button,
+.edit-button,
+.delete-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.add-button {
+    background-color: #4caf50;
+    color: white;
+}
+
+.add-button:hover {
+    background-color: #45a049;
+}
+
+.edit-button {
+    background-color: #008cba; /* Blue for edit */
+    color: white;
+}
+
+.edit-button:hover {
+    background-color: #007bb5; /* Darker blue */
+}
+
+.delete-button {
+    background-color: #f44336; /* Red for delete */
+    color: white;
+}
+
+.delete-button:hover {
+    background-color: #d32f2f; /* Darker red */
+}
+
+/* Modal styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 400px;
+    max-width: 80%;
+}
+
+/* Confirmation modal styles */
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+/* General styles for buttons in modal */
+.modal-buttons button,
+.form-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-buttons button:first-child {
+    background-color: #f44336; /* Red for cancel */
+    color: white;
+}
+
+.modal-buttons button:last-child,
+.form-buttons button:last-child {
+    background-color: #4CAF50; /* Green for save */
+    color: white;
+}
+
+.modal-buttons button:hover,
+.form-buttons button:hover {
+    opacity: 0.8; /* Add hover effect */
+}
+
+.row-branch {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* เพื่อให้แน่ใจว่าองค์ประกอบอยู่กลางในแนวตั้ง */
+}
+
+.pagination {
+    display: flex;
+    justify-content: center; /* จัดกึ่งกลาง */
+    margin-top: 20px; /* เว้นระยะทางด้านบน */
+}
+
+.pagination button {
+    background-color: #007bff; /* สีพื้นหลัง */
+    color: white; /* สีตัวอักษร */
+    border: none; /* ไม่มีขอบ */
+    padding: 10px 15px; /* ระยะขอบ */
+    margin: 0 5px; /* ระยะห่างระหว่างปุ่ม */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+    border-radius: 5px; /* มุมโค้ง */
+    transition: background-color 0.3s; /* เอฟเฟกต์เปลี่ยนสี */
+}
+
+.pagination button:hover {
+    background-color: #0056b3; /* สีเมื่อชี้ */
+}
+
+.pagination button.active {
+    background-color: #0056b3; /* สีของปุ่มที่ถูกเลือก */
+    font-weight: bold; /* ทำให้ตัวหนา */
+}

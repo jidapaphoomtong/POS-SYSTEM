@@ -1,0 +1,203 @@
+.employee-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.employee-detail-container{
+    max-width: 600px; /* ความกว้างสูงสุดของ Container */
+    margin: auto; /* จัดกลางในแนวนอน */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 80px auto; /* Sidebar 80px, Main content takes the remaining space */
+    height: 100%;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: #f9f9f9; /* Adjust background color if needed */
+}
+
+.main-content {
+    padding: 20px;
+    overflow-y: auto; /* Allow scrolling for long content */
+    background-color: #f9f9f9; /* Ensure consistency with background */
+}
+
+.employee-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.employee-table th,
+.employee-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.add-button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    cursor: pointer;
+}
+
+.add-button:hover {
+    background-color: #0056b3;
+}
+
+.delete-button {
+    color: red;
+}
+
+.add-employee-container, .edit-employee-container {
+    max-width: 600px; /* Width แนะนำ */
+    margin: auto; /* จัดกลางในแนวนอน */
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f9f9f9;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    display: flex; /* ใช้ flexbox */
+    flex-direction: column; /* เรียงตามคอลัมน์ */
+    align-items: center; /* จัดกลางในแนวตั้ง */
+    justify-content: center; /* จัดกลางในแนวตั้ง */
+    min-height: 80vh; /* เพิ่มความสูงขั้นต่ำ */
+}
+
+.edit-employee-form {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 400px;
+}
+
+.edit-employee-form input {
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.form-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+}
+
+.form-buttons button {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+}
+
+.cancel-button {
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.save-button {
+    background-color: green;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 1rem;
+    border: 2px solid lightblue;
+    border-radius: 10px;
+    box-sizing: border-box; /* ทำให้ padding ไม่กระทบกับขนาด */
+}
+
+.icon {
+    background-color: transparent; /* Ensures buttons have no background */
+    border: none; /* Remove any button borders */
+    color: inherit; /* Color inherits from parent */
+    cursor: pointer; /* Change cursor to pointer */
+}
+
+.icon-button {
+    background-color: transparent; /* Ensure buttons have no background */
+    border: none; /* Remove button border */
+    padding: 0; /* Remove padding to avoid any unwanted space around icons */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+}
+
+.icon-green {
+    color: green; /* สีสำหรับ active */
+    font-size: 1.5em; /* ขนาดใหญ่ขึ้น */
+    transition: transform 0.2s; /* เอฟเฟกต์เมื่อชี้ไปที่ไอคอน */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+}
+
+.icon-red {
+    color: red; /* สีสำหรับ inactive */
+    font-size: 1.5em; /* ขนาดใหญ่ขึ้น */
+    transition: transform 0.2s; /* เอฟเฟกต์เมื่อชี้ไปที่ไอคอน */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+}
+
+.icon-blue {
+    color: rgb(0, 102, 255);
+}
+
+.row-employee {
+    display: flex;
+    justify-content: center;
+    align-items: center; /* เพื่อให้แน่ใจว่าองค์ประกอบอยู่กลางในแนวตั้ง */
+}
+
+.pagination {
+    display: flex;
+    justify-content: center; /* จัดกึ่งกลาง */
+    margin-top: 20px; /* เว้นระยะทางด้านบน */
+}
+
+.pagination button {
+    background-color: #007bff; /* สีพื้นหลัง */
+    color: white; /* สีตัวอักษร */
+    border: none; /* ไม่มีขอบ */
+    padding: 10px 15px; /* ระยะขอบ */
+    margin: 0 5px; /* ระยะห่างระหว่างปุ่ม */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+    border-radius: 5px; /* มุมโค้ง */
+    transition: background-color 0.3s; /* เอฟเฟกต์เปลี่ยนสี */
+}
+
+.pagination button:hover {
+    background-color: #0056b3; /* สีเมื่อชี้ */
+}
+
+.pagination button.active {
+    background-color: #0056b3; /* สีของปุ่มที่ถูกเลือก */
+    font-weight: bold; /* ทำให้ตัวหนา */
+}

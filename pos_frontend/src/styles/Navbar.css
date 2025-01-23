@@ -1,0 +1,126 @@
+/* Navbar Background */
+.navbar {
+    background-color: #7ccfe8; /* สีฟ้า */
+    padding: 10px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Container */
+  .navbar-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* ทำให้เนื้อหาทั้งหมดอยู่ที่ขวาสุด */
+    width: 100%; /* ใช้พื้นที่ทั้งหมด */
+    max-width: 1200px; /* สามารถกำหนดขนาดสูงสุดได้ */
+  }
+  
+  /* Search Bar */
+  .search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #cdeff7; /* สีฟ้าจาง */
+    border-radius: 20px;
+    padding: 5px 15px;
+    flex-grow: 1;
+    max-width: 600px;
+  }
+  
+  .search-bar input {
+    border: none;
+    outline: none;
+    background: transparent;
+    width: 100%;
+    font-size: 16px;
+    color: #333;
+  }
+  
+  .search-icon {
+    color: #1d75cc; /* สีไอคอน */
+    font-size: 16px;
+    margin-left: 10px;
+  }
+  
+  /* Navbar Icons */
+  .navbar-icons {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  
+  .icon {
+    font-size: 22px;
+    cursor: pointer;
+  }
+  
+  .bell-icon {
+    color: #1d1dff; /* สีฟ้าไอคอนกระดิ่ง */
+  }
+  
+  .user-info {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .user-icon {
+    color: #2a83cf; /* สีฟ้าอวาตาร์ */
+  }
+  
+  .user-info span {
+    font-size: 16px;
+    color: #000;
+    font-weight: bold;
+  }
+  
+  .menu-icon {
+    color: #2a83cf; /* สีฟ้าไอคอนเมนู */
+  }
+
+/* Dropdown */
+.dropdown {
+    position: absolute;
+    right: 10px; /* ขยับออกจากฝั่งขวา 10px */
+    left: auto; /* ยกเลิกการตั้งค่า left หากมี */
+    background-color: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Increased shadow depth */
+    border-radius: 5px;
+    margin-top: 8px; /* Reduced space below the menu icon */
+    z-index: 1000; /* Higher z-index to ensure visibility over other elements */
+    width: 200px; /* Set a fixed width for better alignment */
+    overflow: hidden; /* Prevent overflow from long text */
+    animation: fadeIn 0.2s; /* Add a simple fade-in effect */
+}
+
+/* Dropdown List Style */
+.dropdown ul {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Dropdown List Item Style */
+.dropdown li {
+    padding: 10px 15px; /* Slightly adjusted padding for better spacing */
+    cursor: pointer;
+    transition: background-color 0.2s; /* Smooth hover transition */
+    color: #333; /* Changed text color for better visibility */
+}
+
+.dropdown li:hover {
+    background-color: #e0f7fa; /* Light blue hover effect */
+}
+
+/* Fade-in Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px); /* Slight upward movement for effect */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
