@@ -27,8 +27,6 @@ const Sidebar = () => {
             toast.error("Have Something wrong");
         }
     }
-
-
     
     if (!branchId) {
         alert("Branch ID is missing!");
@@ -48,7 +46,7 @@ const Sidebar = () => {
     };
 
     const handleDashboard = () => {
-        navigate(`/`);
+        navigate(`/${branchId}/dashboard`);
     };
 
     const handleStock = () => {

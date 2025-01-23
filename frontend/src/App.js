@@ -19,6 +19,7 @@ import EmployeeDetail from './components/Employee/EmployeeDetail';
 import ProductDetail from './components/Product/ProductDetail';
 import SalesHistory from './components/SalesHistory';
 import PurchaseDetail from './components/PurchaseDetail';
+import Dashboard from './components/Dashboard/Dashboard';
 
 
 function App() {
@@ -64,6 +65,7 @@ function App() {
             <Route path="product/:productId" element={<ProductDetail />} />
             <Route path="history" element={<SalesHistory/>}/>
             <Route path="purchase/:purchaseId" element={<PurchaseDetail />} />
+            <Route path='dashboard' element={<Dashboard/>}/>
         </Route>
 
       </Routes>

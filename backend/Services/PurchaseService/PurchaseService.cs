@@ -76,7 +76,7 @@ namespace backend.Services.PurchaseService
 
                 if (purchases.Count == 0)
                 {
-                    return ServiceResponse<IEnumerable<Purchase>>.CreateFailure("Don't have purchases in this branch.");
+                    return ServiceResponse<IEnumerable<Purchase>>.CreateFailure("Don't have purchase data in this branch.");
                 }
 
                 return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(purchases, "Purchases retrieved successfully!");
@@ -117,25 +117,73 @@ namespace backend.Services.PurchaseService
             }
         }
 
-        public async Task<ServiceResponse<IEnumerable<Purchase>>> GetMonthlySales(string branchId, int year, int month)
+        public async Task<ServiceResponse<SalesSummaryDto>> GetSalesSummary(string branchId)
         {
             try
             {
                 var purchasesQuery = _firestoreDb
                     .Collection("branches")
                     .Document(branchId)
+                    .Collection("purchases");
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                if (!purchases.Any())
+                {
+                    return ServiceResponse<SalesSummaryDto>.CreateFailure("Don't have purchase data in this branch.");
+                }
+
+                var totalSales = purchases.Sum(p => p.Total);
+                var totalTransactions = purchases.Count;
+
+                var dailySales = purchases
+                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd"))
+                    .Select(g => new DailySalesDto
+                    {
+                        Date = g.Key,
+                        Amount = g.Sum(p => p.Total)
+                    })
+                    .ToList();
+
+                var summary = new SalesSummaryDto
+                {
+                    TotalSales = totalSales,
+                    TotalTransactions = totalTransactions,
+                    DailySales = dailySales
+                };
+
+                return ServiceResponse<SalesSummaryDto>.CreateSuccess(summary, "สรุปยอดขายได้รับแล้ว!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<SalesSummaryDto>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<IEnumerable<Purchase>>> GetMonthlySales(string branchId, int year, int month)
+        {
+            try
+            {
+                // สร้างวันที่เริ่มต้นและสิ้นสุดในรูปแบบ UTC
+                var startDate = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+                var endDate = new DateTime(year, month + 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
                     .Collection("purchases")
-                    .WhereGreaterThan("Date", new DateTime(year, month, 1))
-                    .WhereLessThan("Date", new DateTime(year, month + 1, 1));
+                    .WhereGreaterThan("Date", startDate)
+                    .WhereLessThan("Date", endDate);
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 var monthlySales = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
 
-                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(monthlySales, "Monthly sales retrieved successfully!");
+                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(monthlySales, "ดึงข้อมูลยอดขายรายเดือนได้สำเร็จ!");
             }
             catch (Exception ex)
             {
-                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch monthly sales: {ex.Message}");
+                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
             }
         }
         

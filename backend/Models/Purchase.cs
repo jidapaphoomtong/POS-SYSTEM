@@ -33,4 +33,17 @@ namespace backend.Models
         [FirestoreProperty]
         public string PaymentMethod { get; set; } = string.Empty; 
     }
+
+    public class SalesSummaryDto
+    {
+        public double TotalSales { get; set; }
+        public int TotalTransactions { get; set; }
+        public List<DailySalesDto> DailySales { get; set; }
+    }
+
+    public class DailySalesDto
+    {
+        public string Date { get; set; }
+        public double Amount { get; set; }
+    }
 }

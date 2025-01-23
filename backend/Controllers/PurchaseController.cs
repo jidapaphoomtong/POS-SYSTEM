@@ -79,5 +79,16 @@ namespace backend.Controllers
 
             return BadRequest(response);
         }
+
+        [HttpGet("sales-summary/{branchId}")]
+        public async Task<IActionResult> GetSalesSummary(string branchId)
+        {
+            var result = await _purchaseService.GetSalesSummary(branchId);
+            if (result.Success)
+            {
+                return Ok(result.Data);
+            }
+            return BadRequest(result.Message);
+        }
     }
 }
