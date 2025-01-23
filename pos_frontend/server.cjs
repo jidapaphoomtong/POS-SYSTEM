@@ -17,11 +17,11 @@ app.use(
 );
 
 // เสิร์ฟไฟล์ static ของ React build
-app.use(express.static(path.join(__dirname, 'build')));
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // สำหรับคำขอ (requests) อื่นๆ ให้ส่งกลับ index.html เพื่อรองรับ React Router
 app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+    res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
 const PORT = process.env.PORT || 3000;
