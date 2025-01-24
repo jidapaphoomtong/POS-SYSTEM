@@ -43,17 +43,36 @@ const Login = () => {
             Cookies.set("authToken", token, { expires: 1, secure: true, sameSite: "Strict" });
             Cookies.set("branchId", response.data.branchId, { expires: 1, secure: true, sameSite: "Strict" });
 
+            let firstName = "";
+            if (token) {
+                try {
+                    const decodedToken = jwtDecode(token);
+                    const firstNameFromToken = decodedToken["firstName"] || 'No role found';
+                    const emailFromToken = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || 'No email found';
+                    const roleFromToken = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'No role found';
+                    firstName = firstNameFromToken; // Adjust according to your JWT structure
+                    // console.log(firstName);
+
+                } catch (error) {
+                    console.error("Invalid token:", error);
+                    toast.error("Have Something wrong");
+                }
+            }
+
+            // // เพิ่มการแจ้งเตือนเมื่อเข้าสู่ระบบสำเร็จ
+            // await axios.post('/api/notifications/branch-view', {
+            //     BranchId: branchId,
+            //     UserName: firstName,
+            //     Role: role, // ส่ง role
+            // });
+
             // นำทางตาม Role
             if (role === "Admin") {
                 toast.success("Login Successful!🎉");
                 navigate("/select-branch");
 
             } else if (role === "Manager" || role === "Employee") {
-                const decodedToken = jwtDecode(token);
-                const emailFromToken = decodedToken["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"] || 'No email found';
-                const roleFromToken = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'No role found';
                 toast.success("Login Successful!🎉");
-
                 navigate(`/${branchId}/sale`); 
 
             } else {

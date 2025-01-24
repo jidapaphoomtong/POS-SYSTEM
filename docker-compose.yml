@@ -9,7 +9,7 @@ services:
 
   frontend:
     build:
-      context: ./frontend
+      context: ./pos_frontend
       dockerfile: Dockerfile
     image: "${REGION}-docker.pkg.dev/${PROJECT_ID}/${REPO_NAME}/frontend:${GITHUB_SHA}"
     ports:

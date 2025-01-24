@@ -1,5 +1,4 @@
 /* src/components/Dashboard.css */
-
 .dashboard {
     display: flex;
     flex-direction: column;
@@ -46,9 +45,7 @@
 }
 
 .sales-chart {
-    width: 1427px; /* ลบระยะขอบที่ต้องการ เช่น 20px */
-    height: 300px;            /* กำหนดความสูงตามต้องการ */
-    margin: 0 auto;          /* จัดกลางถ้าต้องการ */
+    width: 100%; /* ลบระยะขอบที่ต้องการ เช่น 20px */
+    height: 60px;            /* กำหนดความสูงตามต้องการ */
     box-sizing: border-box;   /* รวม padding และ border ในความกว้าง */
-    padding: 10px;           /* ถ้าต้องการ padding */
 }

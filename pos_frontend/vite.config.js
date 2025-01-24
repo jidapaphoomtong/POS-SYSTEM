@@ -9,7 +9,6 @@ export default defineConfig({
     proxy: {
       '/api':{
         target: 'http://localhost:5293/api',
-        // target: 'https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api', // เปลี่ยน URL backend ที่คุณต้องการ
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, ''),
       }

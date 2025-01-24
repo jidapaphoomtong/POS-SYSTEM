@@ -186,6 +186,58 @@ namespace backend.Services.PurchaseService
                 return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
             }
         }
+
+        public async Task<ServiceResponse<IEnumerable<Purchase>>> GetYearlySales(string branchId, int year)
+        {
+            try
+            {
+                // สร้างวันที่เริ่มต้นและสิ้นสุดในรูปแบบ UTC
+                var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                var endDate = new DateTime(year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases")
+                    .WhereGreaterThan("Date", startDate)
+                    .WhereLessThan("Date", endDate);
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var yearlySales = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(yearlySales, "ดึงข้อมูลยอดขายรายปีได้สำเร็จ!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<IEnumerable<Purchase>>> GetSalesByEmployee(string branchId, string employeeId)
+        {
+            try
+            {
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases")
+                    .WhereEqualTo("Seller", employeeId); // สมมุติว่า field ของพนักงานคือ "Seller"
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var employeeSales = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                if (!employeeSales.Any())
+                {
+                    return ServiceResponse<IEnumerable<Purchase>>.CreateFailure("No sales found for this employee.");
+                }
+
+                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(employeeSales, "ดึงข้อมูลยอดขายโดยพนักงานได้สำเร็จ!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch employee sales: {ex.Message}");
+            }
+        }
         
         public async Task<ServiceResponse<bool>> DeleteAllPurchases(string branchId)
         {

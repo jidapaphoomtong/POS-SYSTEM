@@ -1,43 +1,34 @@
 # -----------------------------
-# Stage 1: Build React App
+# Stage 1: Build (Vite)
 # -----------------------------
-FROM node:18-alpine AS builder
-
-WORKDIR /app
-
-# คัดลอก package.json และ package-lock.json (ถ้ามี)
-COPY package*.json ./
-
-# ติดตั้ง dependencies สำหรับ build
-RUN npm install
-
-# คัดลอก source code ทั้งหมด
-COPY . .
-
-# สร้าง production build ของ React App
-RUN npm run build
-
-# -----------------------------
-# Stage 2: Deploy ด้วย Express Server
-# -----------------------------
-FROM node:18-alpine
-
-WORKDIR /app
-
-# คัดลอกไฟล์ package.json เพื่อทำการติดตั้ง production dependencies
-COPY package*.json ./
-
-# ติดตั้ง dependencies แบบ production
-RUN npm install --only=production
-
-# คัดลอกไฟล์ build ที่ได้จาก Stage 1
-COPY --from=builder /app/dist ./dist
-
-# คัดลอกไฟล์ server.js เพื่อใช้งาน Express server
-COPY server.cjs ./
-
-# เปิด port 3000
-EXPOSE 3000
-
-# รัน Express server
-CMD [ "npm", "start" ]
+    FROM node:20-alpine AS build
+    WORKDIR /app
+    
+    COPY package.json package-lock.json ./
+    RUN npm install
+    
+    COPY . . 
+    RUN npm run build  # จะสร้างไฟล์ลงใน /app/dist
+    
+    # -----------------------------
+    # Stage 2: Production
+    # -----------------------------
+    FROM node:20-alpine
+    WORKDIR /app
+    
+    # Copy เฉพาะโฟลเดอร์ dist
+    COPY --from=build /app/dist ./dist
+    
+    # Copy โค้ด server.js (ESM) + package.json สำหรับ Production
+    COPY --from=build /app/server.js .
+    COPY --from=build /app/package.json .
+    COPY --from=build /app/package-lock.json .
+    
+    # ติดตั้งเฉพาะ dependencies ที่จำเป็น (prod)
+    RUN npm install --omit=dev
+    
+    # เปิด port 3000
+    EXPOSE 3000
+    
+    # รัน server.js
+    CMD ["node", "server.js"]

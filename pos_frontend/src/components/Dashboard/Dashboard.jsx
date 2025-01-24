@@ -6,13 +6,16 @@ import { toast } from "react-toastify";
 import Navbar from '../bar/Navbar';
 import Sidebar from '../bar/Sidebar';
 import SalesChart from './SalesChart';
-import "../../styles/dashboard.css"
+import "../../styles/dashboard.css";
+import { IoBarChart } from "react-icons/io5";
+import { FaChartLine } from "react-icons/fa6";
 
 const Dashboard = () => {
     const [summaryData, setSummaryData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
-    const { branchId } = useParams(); // รับ branchId จาก URL
+    const [viewType, setViewType] = useState('line');  // 'line' or 'bar'
+    const { branchId } = useParams();
     const token = Cookies.get("authToken");
 
     useEffect(() => {
@@ -68,18 +71,13 @@ const Dashboard = () => {
                                 <p>฿{summaryData ? (summaryData.totalSales / summaryData.totalTransactions).toFixed(2) : 0}</p>
                             </div>
                         </div>
-
-                        <h3>Daily Sales</h3>
-                        {/* <ul>
-                            {dailySales.map((dailySale) => (
-                                <li key={dailySale.date}>
-                                    {dailySale.date}: ฿{dailySale.amount}
-                                </li>
-                            ))}
-                        </ul> */}
+                        <h1></h1>
+                        <div className="chart-type-selector">
+                            <IoBarChart onClick={() => setViewType('bar')} />
+                            <FaChartLine onClick={() => setViewType('line')} />
+                        </div>
+                        <SalesChart dailySales={dailySales} viewType={viewType} />
                     </div>
-
-                    <SalesChart dailySales={dailySales} />
                 </div>
             </div>
         </div>
