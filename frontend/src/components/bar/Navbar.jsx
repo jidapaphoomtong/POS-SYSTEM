@@ -8,7 +8,29 @@ import { toast } from "react-toastify";
 
 const Navbar = () => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
-    const [notifications] = useState(["Notification 1", "Notification 2"]); // Simulated notifications
+    const [notifications, setNotifications] = useState([]);
+    const [unreadCount, setUnreadCount] = useState(0);
+    const [isNotificationOpen, setNotificationOpen] = useState(false);
+
+    const fetchNotifications = async () => {
+        try {
+            const response = await axios.get('http://localhost:5000/api/notifications'); // URL ของ API
+            setNotifications(response.data);
+            setUnreadCount(response.data.filter(n => !n.read).length);
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+            toast.error('Failed to fetch notifications');
+        }
+    };
+
+    const handleNotificationClick = () => {
+        setNotificationOpen(!isNotificationOpen);
+        setUnreadCount(0); // หรือสามารถรีเซ็ตจำนวนที่ยังไม่ได้อ่านได้ที่นี่
+    };
+
+    useEffect(() => {
+        fetchNotifications(); // เรียก notifications ตอน mount
+    }, []);
 
     const handleToggleDropdown = () => {
         setDropdownOpen(!isDropdownOpen);
@@ -40,9 +62,24 @@ const Navbar = () => {
             </div> */}
 
             <div className="navbar-icons">
-                <div className="notification-icon" onClick={() => alert(notifications.join(', '))}>
+                <div className="notification-icon" onClick={handleNotificationClick}>
                     <FaBell className="icon bell-icon" />
-                </div>
+                    {unreadCount > 0 && (
+                            <span className="notification-badge">{unreadCount}</span>
+                        )}
+                    </div>
+                    {isNotificationOpen && (
+                        <div className="notification-dropdown">
+                            <ul>
+                                {notifications.map((notification, index) => (
+                                    <li key={index}>
+                                        {notification.message} {notification.read ? '(Read)' : '(Unread)'}
+                                    </li>
+                                ))}
+                                {notifications.length === 0 && <li>No notifications</li>}
+                            </ul>
+                        </div>
+                    )}
                 <div className="user-info">
                     <FaUser className="icon user-icon" />
                     <span>{firstName}</span>

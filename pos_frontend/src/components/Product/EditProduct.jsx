@@ -56,13 +56,11 @@ const EditProduct = () => {
                     });
                 } else {
                     toast.error(response.data.message || "Failed to fetch product details.");
-
                     navigate(`/${branchId}/ProductList`);
                 }
             } catch (error) {
-                console.error("Failed to fetch product details:", error);
+                // console.error("Failed to fetch product details:", error);
                 toast.error(error.response ? error.response.data.message : "Failed to load product details.");
-
                 navigate(`/${branchId}/ProductList`);
             } finally {
                 setIsLoading(false);
@@ -101,7 +99,7 @@ const EditProduct = () => {
             }
             navigate(`/${branchId}/ProductList`); // นำทางกลับไปที่ Product List
         } catch (error) {
-            console.error("Failed to update product:", error);
+            // console.error("Failed to update product:", error);
             toast.error(error.response ? error.response.data.message : "Failed to update product.");
         } finally {
             setIsLoading(false);

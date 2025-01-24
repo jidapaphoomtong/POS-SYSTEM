@@ -97,7 +97,7 @@ const EditEmployee = () => {
             passwordHash: existingPasswordHash // ดึงค่าจากที่เก็บข้อมูล
         };
     
-        console.log('Employee Data:', employeeData); // ดูข้อมูลก่อนส่ง
+        // console.log('Employee Data:', employeeData); // ดูข้อมูลก่อนส่ง
     
         try {
             const response = await axios.put(`/api/Employee/branches/${branchId}/employees/${employeeId}`, employeeData, {
@@ -115,7 +115,7 @@ const EditEmployee = () => {
             }
         } catch (error) {
             toast.error("Failed to update employee.");
-            console.error("Error updating employee:", error.response ? error.response.data : error.message);
+            // console.error("Error updating employee:", error.response ? error.response.data : error.message);
         } finally {
             setIsLoading(false);
         }

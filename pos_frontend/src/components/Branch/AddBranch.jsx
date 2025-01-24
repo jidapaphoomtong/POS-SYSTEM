@@ -46,12 +46,13 @@ const AddBranch = ({ onAddSuccess }) => {
                 withCredentials: true,
             });
         
-            // Check for successful response
             if (response.status === 200) {
-                // Check if response.data is defined
                 if (response.data) {
-                        toast.success("Branch added successfully!");
-                        navigate("/BranchList");
+                    // const message = `Branch added: ${formData.name}`;
+                    // await axios.post('/api/notifications', { message });
+
+                    toast.success("Branch added successfully!");
+                    navigate("/BranchList");
                 } else {
                     toast.error("Response data is empty.");
                 }

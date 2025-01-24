@@ -61,7 +61,7 @@
   
   .user-info {
     display: flex;
-    align-items: center;
+    align-items: Top;
     gap: 5px;
   }
   
@@ -124,3 +124,46 @@
         transform: translateY(0);
     }
 }
+
+.notification-icon {
+  position: relative; /* ต้องใช้ position: relative เพื่อให้ notification badge อยู่ที่ตำแหน่งที่ถูกต้อง */
+  margin-right: -10.8px;
+  margin-top: 5.575px;
+  cursor: pointer;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: red;
+  color: white;
+  border-radius: 50%;
+  padding: 2px 6px;
+  font-size: 12px;
+}
+
+.notification-dropdown {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000; /* ทำให้ dropdown อยู่ด้านบน */
+  margin-top: 5px;
+}
+
+.notification-dropdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notification-dropdown li {
+  padding: 8px 16px;
+  cursor: pointer;
+}
+
+.notification-dropdown li:hover {
+  background-color: #f0f0f0; /* เปลี่ยนสีเมื่อ hover */
+}
+

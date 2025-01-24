@@ -57,6 +57,9 @@ const AddProduct = () => {
             // console.log(response);
         
             if (response.status === 200) {
+                // const message = `Product added: ${formData.productName}`;
+                // await axios.post('/api/notifications', { message });
+
                 toast.success("Product added successfully!");
                 navigate(`/ProductList?branch=${branchId}`);
             } else {

@@ -50,7 +50,7 @@ const EmployeeDetail = () => {
                     navigate(`/${branchId}/EmployeeList`);
                 }
             } catch (error) {
-                console.error("Failed to fetch employee details:", error);
+                // console.error("Failed to fetch employee details:", error);
                 toast.error(error.response ? error.response.data.message : "Failed to load employee details.");
             } finally {
                 setIsLoading(false);

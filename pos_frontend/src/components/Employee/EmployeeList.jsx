@@ -122,7 +122,7 @@ const EmployeeList = () => {
                     toast.error("Failed to update employee status.");
                 }
             } catch (error) {
-                console.error("Failed to update employee status:", error);
+                // console.error("Failed to update employee status:", error);
                 toast.error("Failed to update employee status: " + (error.response?.data?.message || "Unknown error"));
             } finally {
                 setIsLoading(false);

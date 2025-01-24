@@ -58,6 +58,9 @@ const AddEmployee = () => {
             });
     
             if (response.status === 200) {
+                // const message = `New employee added: ${formData.firstName} ${formData.lastName}`;
+                // await axios.post('/api/notifications', { message });
+
                 toast.success("Employee added successfully!");
 
                 navigate(`/${branchId}/EmployeeList`);

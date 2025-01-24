@@ -47,7 +47,7 @@ const ProductDetail = () => {
                     toast.error(response.data.message || "Failed to fetch product details.");
                 }
             } catch (error) {
-                console.error("Failed to fetch product details:", error);
+                // console.error("Failed to fetch product details:", error);
                 toast.error(error.response ? error.response.data.message : "Failed to load product details.");
             } finally {
                 setIsLoading(false);
