@@ -138,11 +138,13 @@ namespace backend.Services.PurchaseService
                 var totalTransactions = purchases.Count;
 
                 var dailySales = purchases
-                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd"))
+                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd")) // เปลี่ยนเป็น GroupBy ตาม Date
                     .Select(g => new DailySalesDto
                     {
                         Date = g.Key,
-                        Amount = g.Sum(p => p.Total)
+                        Amount = g.Sum(p => p.Total),
+                        // นี่คือการเรียกคืนเวลาที่ขายโดยอิงจากเอกสารแรกในกลุ่ม
+                        Time = g.Select(p => p.Date.ToString("HH:mm:ss")).FirstOrDefault() // ตัวอย่างการเรียกคืนเวลา
                     })
                     .ToList();
 

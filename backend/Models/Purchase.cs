@@ -45,5 +45,6 @@ namespace backend.Models
     {
         public string Date { get; set; }
         public double Amount { get; set; }
+        public string Time { get; set; }
     }
 }

@@ -198,6 +198,9 @@ export default function Sale() {
         // บันทึกคำสั่งซื้อ
         await saveOrder(type); // <-- เรียกใช้ฟังก์ชันสำหรับบันทึกคำสั่งซื้อ
 
+        // รีเซ็ต selectedItems หลังจากชำระเงินสำเร็จ
+        setSelectedItems({}); // รีเซ็ตรายการที่เลือก
+
         handleClosePaymentModal(); // ปิด modal หลังจากชำระเงินสำเร็จ
     };
 

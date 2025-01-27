@@ -1,103 +1,83 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../../styles/Navbar.css";
-import { FaSearch, FaBell, FaUser, FaBars } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { FaBell, FaUser, FaBars } from "react-icons/fa";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 
 const Navbar = () => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
-    const [notifications, setNotifications] = useState([]);
-    const [unreadCount, setUnreadCount] = useState(0);
-    const [isNotificationOpen, setNotificationOpen] = useState(false);
+    const [userData, setUserData] = useState(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
-    // const fetchNotifications = async () => {
-    //     try {
-    //         const response = await axios.get('/api/notifications'); // URL ของ API
-    //         setNotifications(response.data);
-    //         setUnreadCount(response.data.filter(n => !n.read).length);
-    //     } catch (error) {
-    //         console.error('Error fetching notifications:', error);
-    //         toast.error('Failed to fetch notifications');
-    //     }
-    // };
-
-    // const handleNotificationClick = () => {
-    //     setNotificationOpen(!isNotificationOpen);
-    //     setUnreadCount(0); // หรือสามารถรีเซ็ตจำนวนที่ยังไม่ได้อ่านได้ที่นี่
-    // };
-
-    // useEffect(() => {
-    //     fetchNotifications(); // เรียก notifications ตอน mount
-    // }, []);
-
-    const handleToggleDropdown = () => {
-        setDropdownOpen(!isDropdownOpen);
-    };
-    const navigate = useNavigate();
-    // Extract token and decode it to get user role
+    useEffect(() => {
         const token = Cookies.get("authToken");
-        // console.log(token)
-        let firstName = "";
-    
+        
         if (token) {
             try {
                 const decodedToken = jwtDecode(token);
-                const firstNameFromToken = decodedToken["firstName"] || 'No role found';
-                firstName = firstNameFromToken; // Adjust according to your JWT structure
-                // console.log(firstName);
-
+                setUserData(decodedToken);
             } catch (error) {
                 console.error("Invalid token:", error);
                 toast.error("Have Something wrong");
             }
         }
+    }, []);
+
+    const handleToggleDropdown = () => {
+        setDropdownOpen(!isDropdownOpen);
+    };
+
+    const showUserInfoModal = () => {
+        setIsModalOpen(true);
+    };
+
+    const closeUserInfoModal = () => {
+        setIsModalOpen(false);
+    };
+
     return (
         <nav className="navbar">
-        <div className="navbar-container">
-            {/* <div className="search-bar">
-            <input type="text" placeholder="Search..." />
-            <FaSearch className="search-icon" />
-            </div> */}
-
-            <div className="navbar-icons">
-                <div className="notification-icon">
-                    <FaBell className="icon bell-icon" />
-                    {/* {unreadCount > 0 && (
-                            <span className="notification-badge">{unreadCount}</span>
-                        )} */}
+            <div className="navbar-container">
+                <div className="navbar-icons">
+                    <div className="notification-icon">
+                        <FaBell className="icon bell-icon" />
                     </div>
-                    {/* {isNotificationOpen && (
-                        <div className="notification-dropdown">
-                            <ul>
-                                {notifications.map((notification, index) => (
-                                    <li key={index}>
-                                        {notification.message} {notification.read ? '(Read)' : '(Unread)'}
-                                    </li>
-                                ))}
-                                {notifications.length === 0 && <li>No notifications</li>}
-                            </ul>
-                        </div>
-                    )} */}
-                <div className="user-info">
-                    <FaUser className="icon user-icon" />
-                    <span>{firstName}</span>
-                </div>
-                <div className="menu-icon" onClick={handleToggleDropdown}>
-                    <FaBars />
-                    {isDropdownOpen && (
-                        <div className="dropdown">
-                            <ul>
-                                <li>Admin Info 1</li>
-                                <li>Admin Info 2</li>
-                                <li>Admin Info 3</li>
-                            </ul>
-                        </div>
-                    )}
+                    <div className="user-info">
+                        <FaUser className="icon user-icon" />
+                        <span>{userData ? userData.firstName : 'Guest'}</span>
+                    </div>
+                    <div className="menu-icon" onClick={handleToggleDropdown}>
+                        <FaBars />
+                        {isDropdownOpen && (
+                            <div className="dropdown">
+                                <ul>
+                                    <li onClick={showUserInfoModal}>User Info</li>
+                                </ul>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {/* Modal สำหรับแสดงรายละเอียดผู้ใช้ */}
+            {isModalOpen && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <span className="close" onClick={closeUserInfoModal}>&times;</span>
+                        <h2>User Detail</h2>
+                        {userData ? (
+                            <div>
+                                <p><strong>First Name:</strong> {userData.firstName || 'N/A'}</p>
+                                <p><strong>Email:</strong> {userData['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress'] || 'N/A'}</p>
+                                <p><strong>Role:</strong> {userData['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'] || 'N/A'}</p>
+                            </div>
+                        ) : (
+                            <p>No user data found. Please log in.</p>
+                        )}
+                    </div>
+                </div>
+            )}
         </nav>
     );
 };

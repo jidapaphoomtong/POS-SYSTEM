@@ -19,21 +19,21 @@ const SalesHistory = () => {
     useEffect(() => {
         const fetchPurchases = async () => {
             const token = Cookies.get("authToken");
-        
+
             if (!branchId) {
                 toast.error("Branch ID is missing!");
                 return;
             }
-        
+
             try {
-                const response = await axios.get(`/api/Purchase/all-purchases/${branchId}`, { // เปลี่ยนให้ตรงกับ URL ที่คุณได้สร้างไว้
+                const response = await axios.get(`/api/Purchase/all-purchases/${branchId}`, {
                     headers: {
                         "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                         Authorization: `Bearer ${token}`,
                     },
                     withCredentials: true,
                 });
-        
+
                 if (response.data) {
                     const purchasesData = response.data.map(pur => ({
                         id: pur.id || "N/A",
@@ -67,16 +67,15 @@ const SalesHistory = () => {
             year: 'numeric',
             hour: '2-digit',
             minute: '2-digit',
-            hour12: false, // ถ้าคุณต้องการเวลาในรูปแบบ 24 ชั่วโมง
+            hour12: false,
         };
         const date = new Date(dateString);
-        return date.toLocaleString('th-TH', options); // ปรับเป็น 'th-TH' เพื่อให้ได้รูปแบบ DD/MM/YYYY HH:mm
+        return date.toLocaleString('th-TH', options);
     };
 
     const handlePrint = (id) => {
         const purchase = purchases.find(p => p.id === id);
         if (purchase) {
-            // Call the print function here
             printReceipt(purchase);
         }
     };
@@ -88,11 +87,11 @@ const SalesHistory = () => {
         receiptWindow.document.write(`<p>วันที่: ${new Date(receipt.date).toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' })}</p>`);
         receiptWindow.document.write('<h3>รายการสินค้า:</h3>');
         receiptWindow.document.write('<ul>');
-    
-        receipt.products.forEach(item => { // เปลี่ยนจาก items เป็น products
-            receiptWindow.document.write(`<li>${item.productName} : ฿${item.price} x ${item.stock}</li>`); // ใช้ item.stock
+
+        receipt.products.forEach(item => {
+            receiptWindow.document.write(`<li>${item.productName} : ฿${item.price} x ${item.stock}</li>`);
         });
-    
+
         receiptWindow.document.write('</ul>');
         receiptWindow.document.write('-------------------------<br>');
         receiptWindow.document.write(`<p><strong>ยอดรวม: ฿${receipt.total}</strong></p>`);
@@ -101,7 +100,7 @@ const SalesHistory = () => {
         receiptWindow.document.write(`<p>ประเภทการจ่ายเงิน: ${receipt.paymentMethod}</p>`);
         receiptWindow.document.write(`<p>ผู้ขาย: ${receipt.seller}</p>`);
         receiptWindow.document.write('</body></html>');
-    
+
         receiptWindow.document.close();
         receiptWindow.focus();
         receiptWindow.print();
@@ -111,14 +110,14 @@ const SalesHistory = () => {
     const viewPurchaseDetails = async (id) => {
         try {
             const token = Cookies.get("authToken");
-            const response = await axios.get(`/api/Purchase/branches/${branchId}/purchases/${id}`, { // ใช้ URL ที่ตรงกับ API
+            const response = await axios.get(`/api/Purchase/branches/${branchId}/purchases/${id}`, {
                 headers: {
                     "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
-    
+
             if (response.data) {
                 setSelectedPurchase(response.data);
             } else {
@@ -130,17 +129,40 @@ const SalesHistory = () => {
         }
     };
 
-    // ฟังก์ชันสำหรับการจัดการ pagination
+    // Pagination logic
+    const totalPages = Math.ceil(purchases.length / itemsPerPage);
     const handlePageChange = (pageNumber) => {
         setCurrentPage(pageNumber);
     };
+    
+    const handlePreviousPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(currentPage - 1);
+        }
+    };
 
-    // คำนวณสินค้าที่จะแสดง
+    const handleNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(currentPage + 1);
+        }
+    };
+
+    // Calculate the pages to display
+    const pageNumbersToShow = [];
+    const maxPageNumbersToShow = 5; // Max number of page buttons to show
+    let startPage = Math.max(1, currentPage - Math.floor(maxPageNumbersToShow / 2));
+    let endPage = Math.min(totalPages, startPage + maxPageNumbersToShow - 1);
+    if (endPage - startPage < maxPageNumbersToShow - 1) {
+        startPage = Math.max(1, endPage - maxPageNumbersToShow + 1);
+    }
+    for (let i = startPage; i <= endPage; i++) {
+        pageNumbersToShow.push(i);
+    }
+
+    // Calculate items to display on the current page
     const indexOfLastPurchase = currentPage * itemsPerPage;
     const indexOfFirstPurchase = indexOfLastPurchase - itemsPerPage;
     const currentPurchases = purchases.slice(indexOfFirstPurchase, indexOfLastPurchase);
-
-    const totalPages = Math.ceil(purchases.length / itemsPerPage);
 
     return (
         <div className="history-container">
@@ -152,78 +174,83 @@ const SalesHistory = () => {
                         <h2>Sales History ({purchases.length})</h2>
                     </div>
                     <div className="sales-history">
-                    {loading ? (
-                        <p>Loading...</p>
-                    ) : (
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Bill No.</th>
-                                    <th>Date</th>
-                                    <th>Total</th>
-                                    <th>Employee</th>
-                                    <th>Payment Method</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {purchases.length > 0 ? (
-                                    purchases.map((purchase) => (
-                                        <tr key={purchase.id}>
-                                            <td style={{ textAlign: 'center' }}>
-                                                <a href={`/${branchId}/purchase/${purchase.id}`} className="detail-link">{purchase.id}</a>
-                                            </td>
-                                            <td>{formatDate(purchase.date)}</td>
-                                            <td>฿{purchase.total}</td>
-                                            <td>{purchase.seller}</td>
-                                            <td>{purchase.paymentMethod}</td>
-                                            <td className="actions" style={{ textAlign: 'center' }}>
-                                                <button onClick={() => handlePrint(purchase.id)}>
-                                                    <FaPrint className="icon" />
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                ) : (
+                        {loading ? (
+                            <p>Loading...</p>
+                        ) : (
+                            <table>
+                                <thead>
                                     <tr>
-                                        <td colSpan="6">No purchases found.</td>
+                                        <th>Bill No.</th>
+                                        <th>Date</th>
+                                        <th>Total</th>
+                                        <th>Employee</th>
+                                        <th>Payment Method</th>
+                                        <th>Actions</th>
                                     </tr>
-                                )}
-                            </tbody>
-                        </table>
-                    )}
+                                </thead>
+                                <tbody>
+                                    {currentPurchases.length > 0 ? (
+                                        currentPurchases.map((purchase) => (
+                                            <tr key={purchase.id}>
+                                                <td style={{ textAlign: 'center' }}>
+                                                    <a href={`/${branchId}/purchase/${purchase.id}`} className="detail-link">{purchase.id}</a>
+                                                </td>
+                                                <td>{formatDate(purchase.date)}</td>
+                                                <td>฿{purchase.total}</td>
+                                                <td>{purchase.seller}</td>
+                                                <td>{purchase.paymentMethod}</td>
+                                                <td className="actions" style={{ textAlign: 'center' }}>
+                                                    <button onClick={() => handlePrint(purchase.id)}>
+                                                        <FaPrint className="icon" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="6">No purchases found.</td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </table>
+                        )}
 
-                    <div className="pagination">
-                        {Array.from({ length: totalPages }, (_, index) => (
-                            <button
-                                key={index + 1}
-                                onClick={() => handlePageChange(index + 1)}
-                                className={currentPage === index + 1 ? 'active' : ''}
-                            >
-                                {index + 1}
-                            </button>
-                        ))}
-                    </div>
-
-                    {selectedPurchase && (
-                        <div className="modal">
-                            <h2>Purchase Details</h2>
-                            <p>Bill No: {selectedPurchase.id}</p>
-                            <p>Date: {formatDate(selectedPurchase.date)}</p> {/* ใช้ฟังก์ชันที่สร้างขึ้น */}
-                            <p>Total: ฿{selectedPurchase.total}</p>
-                            <p>Paid Amount: ฿{selectedPurchase.paidAmount}</p>
-                            <p>Change: ฿{selectedPurchase.change}</p>
-                            <p>Seller: {selectedPurchase.seller}</p>
-                            <p>Payment Method: {selectedPurchase.paymentMethod}</p>
-                            <h3>Items:</h3>
-                            <ul>
-                                {selectedPurchase.products.map(item => (
-                                    <li key={item.id}>{item.productName} - ฿{item.price} x {item.stock}</li>
-                                ))}
-                            </ul>
-                            <button onClick={() => setSelectedPurchase(null)}>Close</button>
+                        <div className="pagination">
+                            {/* <button onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</button> */}
+                            {pageNumbersToShow.map((pageNumber) => (
+                                <button
+                                    key={pageNumber}
+                                    onClick={() => handlePageChange(pageNumber)}
+                                    className={currentPage === pageNumber ? 'active' : ''}
+                                >
+                                    {pageNumber}
+                                </button>
+                            ))}
+                            {/* <button onClick={handleNextPage} disabled={currentPage === totalPages}>Next</button> */}
+                            {/* <div className="current-page-indicator">
+                                Page {currentPage} of {totalPages}
+                            </div> */}
                         </div>
-                    )}
+
+                        {selectedPurchase && (
+                            <div className="modal">
+                                <h2>Purchase Details</h2>
+                                <p>Bill No: {selectedPurchase.id}</p>
+                                <p>Date: {formatDate(selectedPurchase.date)}</p>
+                                <p>Total: ฿{selectedPurchase.total}</p>
+                                <p>Paid Amount: ฿{selectedPurchase.paidAmount}</p>
+                                <p>Change: ฿{selectedPurchase.change}</p>
+                                <p>Seller: {selectedPurchase.seller}</p>
+                                <p>Payment Method: {selectedPurchase.paymentMethod}</p>
+                                <h3>Items:</h3>
+                                <ul>
+                                    {selectedPurchase.products.map(item => (
+                                        <li key={item.id}>{item.productName} - ฿{item.price} x {item.stock}</li>
+                                    ))}
+                                </ul>
+                                <button onClick={() => setSelectedPurchase(null)}>Close</button>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
