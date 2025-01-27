@@ -10,8 +10,8 @@ const app = express();
 app.use(
     '/api',
     createProxyMiddleware({
-        // target: 'http://localhost:5293/api',
-        target: 'https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api', // เปลี่ยน URL backend ที่คุณต้องการ
+        target: 'http://localhost:5293/api',
+        // target: 'https://jidapa-backend-service-qh6is2mgxa-as.a.run.app/api', // เปลี่ยน URL backend ที่คุณต้องการ
         changeOrigin: true,
     })
 );

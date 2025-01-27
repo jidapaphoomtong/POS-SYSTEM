@@ -1,0 +1,62 @@
+.history-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 80px auto;
+    height: 100%;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+}
+
+.main-content {
+    padding: 20px;
+    overflow-y: auto;
+}
+
+h2 {
+    margin: 0; /* ลบ margin ของหัวเรื่อง */
+}
+
+.sales-history {
+    padding: 20px;
+}
+
+.sales-history table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.sales-history th,
+.sales-history td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.sales-history th {
+    color: rgb(0, 0, 0); /* ตัวอักษรสีขาว */
+}
+
+.actions button {
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+}
+
+.icon{
+    color: #007bff;
+    background-color: transparent; /* Ensures buttons have no background */
+    cursor: pointer; /* เปลี่ยนเป็นรูปมือเมื่อชี้ */
+    margin: 0 5px; /* ระยะห่างระหว่างไอคอน */
+    transition: transform 0.2s; /* เอฟเฟกต์เมื่อชี้ไปที่ไอคอน */
+}

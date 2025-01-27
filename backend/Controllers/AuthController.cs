@@ -190,6 +190,18 @@ namespace backend.Controllers
             // Generate Token
             var accessToken = _tokenService.GenerateAccessToken(claims);
 
+            // // เพิ่มการแจ้งเตือนเมื่อเข้าสู่ระบบสำเร็จ
+            // var notificationMessage = $"{firstName} has logged in to branch: {branchId}";
+            // var notification = new Notification
+            // {
+            //     Message = notificationMessage,
+            //     BranchId = branchId,
+            //     Role = role,
+            //     IsVisible = true // กำหนดให้แจ้งเตือนนี้เป็น visible
+            // };
+            // // สร้างการแจ้งเตือน
+            // _notificationService.CreateNotification(notification);
+
              // ตั้งค่าสำหรับ Cookies
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);

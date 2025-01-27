@@ -24,3 +24,6 @@
 LICENSE
 README.md
 node_modules
+build
+dist
+npm-debug.log

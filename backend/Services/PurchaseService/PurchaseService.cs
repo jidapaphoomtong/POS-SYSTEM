@@ -76,7 +76,7 @@ namespace backend.Services.PurchaseService
 
                 if (purchases.Count == 0)
                 {
-                    return ServiceResponse<IEnumerable<Purchase>>.CreateFailure("Don't have purchases in this branch.");
+                    return ServiceResponse<IEnumerable<Purchase>>.CreateFailure("Don't have purchase data in this branch.");
                 }
 
                 return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(purchases, "Purchases retrieved successfully!");
@@ -117,7 +117,105 @@ namespace backend.Services.PurchaseService
             }
         }
 
+        public async Task<ServiceResponse<SalesSummaryDto>> GetSalesSummary(string branchId)
+        {
+            try
+            {
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases");
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                if (!purchases.Any())
+                {
+                    return ServiceResponse<SalesSummaryDto>.CreateFailure("Don't have purchase data in this branch.");
+                }
+
+                var totalSales = purchases.Sum(p => p.Total);
+                var totalTransactions = purchases.Count;
+
+                var dailySales = purchases
+                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd")) // เปลี่ยนเป็น GroupBy ตาม Date
+                    .Select(g => new DailySalesDto
+                    {
+                        Date = g.Key,
+                        Amount = g.Sum(p => p.Total),
+                        // นี่คือการเรียกคืนเวลาที่ขายโดยอิงจากเอกสารแรกในกลุ่ม
+                        Time = g.Select(p => p.Date.ToString("HH:mm:ss")).FirstOrDefault() // ตัวอย่างการเรียกคืนเวลา
+                    })
+                    .ToList();
+
+                var summary = new SalesSummaryDto
+                {
+                    TotalSales = totalSales,
+                    TotalTransactions = totalTransactions,
+                    DailySales = dailySales
+                };
+
+                return ServiceResponse<SalesSummaryDto>.CreateSuccess(summary, "สรุปยอดขายได้รับแล้ว!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<SalesSummaryDto>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
+            }
+        }
+
         public async Task<ServiceResponse<IEnumerable<Purchase>>> GetMonthlySales(string branchId, int year, int month)
+        {
+            try
+            {
+                // สร้างวันที่เริ่มต้นและสิ้นสุดในรูปแบบ UTC
+                var startDate = new DateTime(year, month, 1, 0, 0, 0, DateTimeKind.Utc);
+                var endDate = new DateTime(year, month + 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases")
+                    .WhereGreaterThan("Date", startDate)
+                    .WhereLessThan("Date", endDate);
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var monthlySales = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(monthlySales, "ดึงข้อมูลยอดขายรายเดือนได้สำเร็จ!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<IEnumerable<Purchase>>> GetYearlySales(string branchId, int year)
+        {
+            try
+            {
+                // สร้างวันที่เริ่มต้นและสิ้นสุดในรูปแบบ UTC
+                var startDate = new DateTime(year, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                var endDate = new DateTime(year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases")
+                    .WhereGreaterThan("Date", startDate)
+                    .WhereLessThan("Date", endDate);
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var yearlySales = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(yearlySales, "ดึงข้อมูลยอดขายรายปีได้สำเร็จ!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<IEnumerable<Purchase>>> GetSalesByEmployee(string branchId, string employeeId)
         {
             try
             {
@@ -125,17 +223,21 @@ namespace backend.Services.PurchaseService
                     .Collection("branches")
                     .Document(branchId)
                     .Collection("purchases")
-                    .WhereGreaterThan("Date", new DateTime(year, month, 1))
-                    .WhereLessThan("Date", new DateTime(year, month + 1, 1));
+                    .WhereEqualTo("Seller", employeeId); // สมมุติว่า field ของพนักงานคือ "Seller"
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
-                var monthlySales = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+                var employeeSales = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
 
-                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(monthlySales, "Monthly sales retrieved successfully!");
+                if (!employeeSales.Any())
+                {
+                    return ServiceResponse<IEnumerable<Purchase>>.CreateFailure("No sales found for this employee.");
+                }
+
+                return ServiceResponse<IEnumerable<Purchase>>.CreateSuccess(employeeSales, "ดึงข้อมูลยอดขายโดยพนักงานได้สำเร็จ!");
             }
             catch (Exception ex)
             {
-                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch monthly sales: {ex.Message}");
+                return ServiceResponse<IEnumerable<Purchase>>.CreateFailure($"Failed to fetch employee sales: {ex.Message}");
             }
         }
         

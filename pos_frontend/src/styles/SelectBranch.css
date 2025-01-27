@@ -1,0 +1,90 @@
+.container {
+    text-align: center;
+    padding: 20px;
+}
+
+.header {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+}
+
+.branch-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* 3 คอลัมน์ */
+    gap: 20px; /* ช่องว่างระหว่างการ์ด */
+    justify-items: center; /* การจัดให้แต่ละการ์ดอยู่ตรงกลาง */
+}
+
+.branch-card {
+    width: 200px; /* กำหนดขนาดคงที่ */
+    height: 150px; /* กำหนดขนาดเท่ากัน */
+    background-color: #f9f9f9;
+    border: 1px solid gray;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.branch-card img {
+    width: 80px; /* ขนาดรูปภาพ */
+    height: 80px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.branch-card p {
+    margin: 0;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.branch-card:hover {
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    transform: translateY(-5px);
+}
+
+.branch-card.active {
+    border: 2px solid #5995fd; /* สีของการเน้น */
+}
+
+.buttons {
+    margin-top: 20px;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    border: none;
+    background-color: #4682B4;
+    color: white;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:disabled {
+    background-color: gray;
+    cursor: not-allowed;
+}
+
+.spinner {
+    border: 8px solid #f3f3f3; /* Light gray */
+    border-top: 8px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto; /* Center it */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

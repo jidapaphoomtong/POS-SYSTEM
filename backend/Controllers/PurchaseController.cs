@@ -79,5 +79,37 @@ namespace backend.Controllers
 
             return BadRequest(response);
         }
+
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
+        [HttpGet("sales-summary/{branchId}")]
+        public async Task<IActionResult> GetSalesSummary(string branchId)
+        {
+            var result = await _purchaseService.GetSalesSummary(branchId);
+            if (result.Success)
+            {
+                return Ok(result.Data);
+            }
+            return BadRequest(result.Message);
+        }
+
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
+        [HttpGet("yearly-sales/{branchId}/{year}")]
+        public async Task<IActionResult> GetYearlySales(string branchId, int year)
+        {
+            var response = await _purchaseService.GetYearlySales(branchId, year);
+            if (response.Success)
+                return Ok(response.Data);
+            return BadRequest(response);
+        }
+
+        [CustomAuthorizeRole("Admin, Manager, Employee")]
+        [HttpGet("employee-sales/{branchId}/{employeeId}")]
+        public async Task<IActionResult> GetSalesByEmployee(string branchId, string employeeId)
+        {
+            var response = await _purchaseService.GetSalesByEmployee(branchId, employeeId);
+            if (response.Success)
+                return Ok(response.Data);
+            return BadRequest(response);
+        }
     }
 }

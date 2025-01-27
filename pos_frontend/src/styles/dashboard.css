@@ -1,0 +1,107 @@
+/* src/components/Dashboard.css */
+.dashboard {
+    display: flex;
+    flex-direction: column;
+    height: 100vh; /* ใช้ความสูงเต็ม */
+    background-color: #f9f9f9; /* สีพื้นหลัง */
+}
+
+.content {
+    display: grid;
+    grid-template-columns: 80px auto; /* Sidebar 80px, Main content takes the remaining space */
+    height: 100%;
+}
+
+.main-content {
+    flex: 1; /* ใช้พื้นที่ของเนื้อหา */
+    padding: 20px; /* เว้นช่อง */
+    background-color: #fff; /* สีพื้นหลังของเนื้อหา */
+    border-radius: 8px; /* ขอบนุ่ม */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* เงา */
+}
+
+.sales-summary {
+    margin-bottom: 20px; /* เว้นช่องด้านล่าง */
+}
+
+.summary-cards {
+    margin-top: 20px;
+    display: flex; /* ใช้ Flexbox สำหรับการจัดการ */
+    justify-content: space-between; /* ช่องว่างระหว่างการ์ด */
+    margin-bottom: 20px;
+}
+
+.summary-card {
+    background-color: #fff; /* สีพื้นหลังการ์ด */
+    padding: 20px; /* ช่องห่างภายในการ์ด */
+    border-radius: 8px; /* ขอบนุ่ม */
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1); /* เงา */
+    flex: 1; /* ให้ทุกการ์ดขยายเต็มที่ */
+    margin-right: 10px; /* เว้นช่องขวา */
+}
+
+.summary-card:last-child {
+    margin-right: 0; /* ไม่มีช่องขวาสำหรับการ์ดสุดท้าย */
+}
+
+.sales-chart {
+    width: 100%; /* ลบระยะขอบที่ต้องการ เช่น 20px */
+    height: 60px;            /* กำหนดความสูงตามต้องการ */
+    box-sizing: border-box;   /* รวม padding และ border ในความกว้าง */
+}
+
+.chart-type-selector {
+    display: flex;
+    justify-content: flex-end; /* ให้จัดองค์ประกอบไปที่ด้านขวา */
+    gap: 10px; /* ห่างกัน */
+}
+
+.chart-icon {
+    font-size: 24px; /* ขนาดของไอคอน */
+    cursor: pointer; /* เปลี่ยนเคอร์เซอร์เมื่อวางไว้เหนือไอคอน */
+}
+
+.bar-icon {
+    color: #58c5f0; /* สีสำหรับไอคอน Bar Chart */
+}
+
+.line-icon {
+    color: #007BFF; /* สีน้ำเงินสำหรับไอคอน Line Chart */
+}
+.react-datepicker__day {
+    width: 25px; /* ปรับขนาดของวัน */
+    height: 25px; /* ปรับความสูงของวัน */
+}
+
+/* ปรับแต่งวันที่ถูกเลือก */
+.react-datepicker__day--selected {
+    background-color: #007BFF; /* สีพื้นหลัง */
+    color: white; /* เปลี่ยนสีข้อความ */
+}
+
+/* ปิดปีกปฏิทิน */
+.react-datepicker__triangle {
+    display: none; /* ซ่อนปีกปฏิทิน */
+}
+.react-datepicker__input-container {
+    display: flex;
+    align-items: center; /* จัดกลางให้กับปุ่ม */
+    justify-content: center; /* จัดกลางให้กับ input */
+    position: relative; 
+}
+
+.react-datepicker__close {
+    position: absolute;
+    right: 10px; /* ปรับให้ตรงกลาง */
+    top: 10px; /* ปรับตำแหน่งให้เข้าที่ */
+}
+
+input[type="text-dashboard"] {
+    width: 50px;
+    padding: 10px;
+    margin: 10px 0;
+    font-size: 1rem;
+    border: 2px solid lightblue;
+    border-radius: 10px;
+    box-sizing: border-box; /* ทำให้ padding ไม่กระทบกับขนาด */
+}
