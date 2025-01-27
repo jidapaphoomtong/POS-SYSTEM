@@ -49,9 +49,10 @@ const Dashboard = () => {
             if (response.data) {
                 const filteredData = response.data.filter(pur => {
                     const saleDate = new Date(pur.date);
-                    return saleDate.getFullYear() === selectedYear && 
-                           saleDate.getMonth() + 1 === selectedMonth && 
-                           (!employeeId || pur.seller === employeeId);
+                    const employeeIdLower = employeeId.toLowerCase(); // ทำให้ employeeId เป็นตัวพิมพ์เล็ก
+                    return saleDate.getFullYear() === selectedYear &&
+                           saleDate.getMonth() + 1 === selectedMonth &&
+                           (!employeeId || pur.seller.toLowerCase().startsWith(employeeIdLower)); // เปรียบเทียบให้เป็นตัวพิมพ์เล็ก
                 });
     
                 const hourlyData = Array(24).fill(0);
