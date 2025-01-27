@@ -35,8 +35,7 @@ const BranchList = () => {
                 setIsLoading(true);
                 const response = await axios.get(`/api/Branch/branches`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });
@@ -88,10 +87,9 @@ const BranchList = () => {
     //     try {
     //         const response = await axios.delete(`/api/Branch/branches/${deleteBranchId}`, {
     //             headers: {
-    //                 "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-    //                 Authorization: `Bearer ${token}`,
-    //             },
-    //             withCredentials: true,
+    //     Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
+    // },
+    // withCredentials: true,
     //         });
 
     //         if (response.status === 200) {

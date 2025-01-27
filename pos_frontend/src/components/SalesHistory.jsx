@@ -28,8 +28,7 @@ const SalesHistory = () => {
             try {
                 const response = await axios.get(`/api/Purchase/all-purchases/${branchId}`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });
@@ -112,8 +111,7 @@ const SalesHistory = () => {
             const token = Cookies.get("authToken");
             const response = await axios.get(`/api/Purchase/branches/${branchId}/purchases/${id}`, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                 },
                 withCredentials: true,
             });

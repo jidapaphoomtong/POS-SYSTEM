@@ -53,8 +53,7 @@ const ProductList = () => {
                 setIsLoading(true);
                 const response = await axios.get(`/api/Product/branches/${branchId}/products`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });
@@ -100,8 +99,7 @@ const ProductList = () => {
                 status: newStatus
             }, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                 },
                 withCredentials: true,
             });

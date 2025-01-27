@@ -27,32 +27,59 @@ const Dashboard = () => {
         try {
             const selectedYear = selectedDate.getFullYear();
             const selectedMonth = selectedDate.getMonth() + 1;
+            const selectedDateValue = selectedDate.getDate();
+
+            // เปลี่ยน selectedYear เป็นปี พ.ศ.
+            const yearInBC = selectedYear + 543; // แปลงเป็นปีพ.ศ.
     
-            const summaryResponse = await axios.get(`/api/Purchase/sales-summary/${branchId}?year=${selectedYear}&month=${selectedMonth}&employeeId=${employeeId}`, {
+            const summaryResponse = await axios.get(`/api/Purchase/sales-summary/${branchId}?year=${selectedYear}&month=${selectedMonth}&day=${selectedDateValue}`, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
     
-            setSummaryData(summaryResponse.data);
+            // คัดกรองข้อมูลตามวันที่และชื่อพนักงาน
+                const filteredSummaryData = Array.isArray(summaryResponse.data) 
+                ? summaryResponse.data.filter(sale => {
+                    const saleDate = new Date(sale.date);
+                    const employeeIdLower = employeeId.toLowerCase(); // แปลงเป็นตัวพิมพ์เล็ก
+                    
+                    return saleDate.getFullYear() === yearInBC &&
+                        saleDate.getMonth() + 1 === selectedMonth &&
+                        saleDate.getDate() === selectedDateValue &&
+                        (!employeeId || sale.seller.toLowerCase().startsWith(employeeIdLower)); // เช็คชื่อพนักงาน
+                })
+                : [];
+
+            // คำนวณยอดขายรวมและจำนวนบิลขาย
+            const totalSales = filteredSummaryData.reduce((acc, cur) => acc + cur.amount, 0);
+            const totalTransactions = filteredSummaryData.length;
+
+            setSummaryData({
+                totalSales,
+                totalTransactions,
+                dailySales: filteredSummaryData,
+            });
     
+            // ดึงข้อมูลยอดขายทั้งหมดสำหรับกราฟหรือตาราง
             const response = await axios.get(`/api/Purchase/all-purchases/${branchId}`, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
                     Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
     
             if (response.data) {
+                // นี่คือโค้ดการกรองข้อมูลตามวันที่
                 const filteredData = response.data.filter(pur => {
                     const saleDate = new Date(pur.date);
-                    const employeeIdLower = employeeId.toLowerCase(); // ทำให้ employeeId เป็นตัวพิมพ์เล็ก
+                    const employeeIdLower = employeeId.toLowerCase(); 
+    
                     return saleDate.getFullYear() === selectedYear &&
                            saleDate.getMonth() + 1 === selectedMonth &&
-                           (!employeeId || pur.seller.toLowerCase().startsWith(employeeIdLower)); // เปรียบเทียบให้เป็นตัวพิมพ์เล็ก
+                           saleDate.getDate() === selectedDateValue && // ตรวจสอบวันที่นี้
+                           (!employeeId || pur.seller.toLowerCase().startsWith(employeeIdLower));
                 });
     
                 const hourlyData = Array(24).fill(0);
@@ -77,12 +104,11 @@ const Dashboard = () => {
     
                 setSummaryData(prev => ({
                     ...prev,
-                    dailySales: Object.values(dailySalesSummary), // เก็บข้อมูลของวันที่มียอดขาย
+                    dailySales: Object.values(dailySalesSummary),
                 }));
             }
         } catch (error) {
-            setError('Error fetching sales data');
-            console.error('Error fetching sales data', error);
+            toast.error('Error fetching sales data');
         } finally {
             setLoading(false);
         }
@@ -102,65 +128,65 @@ const Dashboard = () => {
             <div className="content">
                 <Sidebar />
                 <div className="main-content">
-                    {loading && <div>Loading...</div>}
-                    {error && <div>{error}</div>}
+                {loading && <div>Loading...</div>}
+                {error && <div>{error}</div>}
 
-                    <div className="sales-summary">
-                        <h2>Sales Summary</h2>
-                        <div className="summary-cards">
-                            <div className="summary-card">
-                                <h3>ยอดขายรวม</h3>
-                                <p>฿{summaryData && summaryData.totalSales ? summaryData.totalSales : 'ไม่มีข้อมูล'}</p>
-                            </div>
-                            <div className="summary-card">
-                                <h3>จำนวนบิลขาย</h3>
-                                <p>{summaryData && summaryData.totalTransactions ? summaryData.totalTransactions : 'ไม่มีข้อมูล'}</p>
-                            </div>
-                            <div className="summary-card">
-                                <h3>เฉลี่ย/บิล</h3>
-                                <p>฿{summaryData && summaryData.totalTransactions ? (summaryData.totalSales / summaryData.totalTransactions).toFixed(2) : 'ไม่มีข้อมูล'}</p>
-                            </div>
+                <div className="sales-summary">
+                    <h2>Sales Summary</h2>
+                    <div className="summary-cards">
+                        <div className="summary-card">
+                            <h3>ยอดขายรวม</h3>
+                            <p>฿{summaryData && summaryData.totalSales ? summaryData.totalSales : 'ไม่มีข้อมูล'}</p>
+                        </div>
+                        <div className="summary-card">
+                            <h3>จำนวนบิลขาย</h3>
+                            <p>{summaryData && summaryData.totalTransactions ? summaryData.totalTransactions : 'ไม่มีข้อมูล'}</p>
+                        </div>
+                        <div className="summary-card">
+                            <h3>เฉลี่ย/บิล</h3>
+                            <p>฿{summaryData && summaryData.totalTransactions ? (summaryData.totalSales / summaryData.totalTransactions).toFixed(2) : 'ไม่มีข้อมูล'}</p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                            <label style={{ marginRight: "5px" }}>เลือกวันที่: </label>
+                            <DatePicker
+                                selected={selectedDate}
+                                onChange={(date) => setSelectedDate(date)}
+                                dateFormat="yyyy/MM/dd"
+                                isClearable={false} // ไม่ต้องแสดงปุ่มเคลียร์
+                            />
                         </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                                <label style={{ marginRight: "5px" }}>เลือกวันที่: </label>
-                                <DatePicker 
-                                    selected={selectedDate} 
-                                    onChange={(date) => setSelectedDate(date)} 
-                                    dateFormat="yyyy/MM/dd"
-                                    isClearable={true} // ไม่ต้องแสดงปุ่มเคลียร์
-                                />
-                            </div>
-                            
-                            <div>
-                                {/* ปรับสไตล์ให้กับการกรอกชื่อพนักงาน */}
-                                <label style={{ marginLeft: "30px" }}>กรอกชื่อพนักงาน: </label>
-                                <input 
-                                    type="text-dashboard" 
-                                    value={employeeId} 
-                                    onChange={(e) => setEmployeeId(e.target.value)} 
-                                    placeholder="กรอกชื่อพนักงาน" 
-                                    style={{ marginLeft: '5px', width: '200px' }} // เพิ่มความกว้างให้กับ input 
-                                />
-                            </div>
+                        <div>
+                            {/* ปรับสไตล์ให้กับการกรอกชื่อพนักงาน */}
+                            <label style={{ marginLeft: "30px" }}>กรอกชื่อพนักงาน: </label>
+                            <input
+                                type="text-dashboard"
+                                value={employeeId}
+                                onChange={(e) => setEmployeeId(e.target.value)}
+                                placeholder="กรอกชื่อพนักงาน"
+                                style={{ marginLeft: '5px', width: '200px' }} // เพิ่มความกว้างให้กับ input
+                            />
                         </div>
+                    </div>
 
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <h3>Daily Sales</h3>
-                            <div className="chart-type-selector">
-                                <FaChartLine 
-                                    className={`chart-icon line-icon ${viewType === 'line' ? 'active' : ''}`} 
-                                    onClick={() => setViewType('line')} 
-                                />
-                                <IoBarChart 
-                                    className={`chart-icon bar-icon ${viewType === 'bar' ? 'active' : ''}`} 
-                                    onClick={() => setViewType('bar')} 
-                                />
-                            </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <h3>Daily Sales</h3>
+                        <div className="chart-type-selector">
+                            <FaChartLine
+                                className={`chart-icon line-icon ${viewType === 'line' ? 'active' : ''}`}
+                                onClick={() => setViewType('line')}
+                            />
+                            <IoBarChart
+                                className={`chart-icon bar-icon ${viewType === 'bar' ? 'active' : ''}`}
+                                onClick={() => setViewType('bar')}
+                            />
                         </div>
+                    </div>
 
-                        <SalesChart dailySales={dailySales} hourlySalesData={hourlySalesData} viewType={viewType} />
+                    <SalesChart dailySales={dailySales} hourlySalesData={hourlySalesData} viewType={viewType} />
                     </div>
                 </div>
             </div>

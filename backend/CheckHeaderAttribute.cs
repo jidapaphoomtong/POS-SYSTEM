@@ -125,21 +125,21 @@ namespace backend.Filters
             }
 
             // Check required header
-            if (!headers.ContainsKey(_headerName) || headers[_headerName] != _expectedValue)
-            {
-                _logger.LogWarning("Missing or invalid required header.");
-                // Sign out
-                _ = context.HttpContext.SignOutAsync(); // Clear Authentication
+            // if (!headers.ContainsKey(_headerName) || headers[_headerName] != _expectedValue)
+            // {
+            //     _logger.LogWarning("Missing or invalid required header.");
+            //     // Sign out
+            //     _ = context.HttpContext.SignOutAsync(); // Clear Authentication
 
-                // Return 401 Unauthorized
-                context.Result = new UnauthorizedObjectResult(new
-                {
-                    Success = false,
-                    Message = "Invalid or missing required header. You have been logged out."
-                });
+            //     // Return 401 Unauthorized
+            //     context.Result = new UnauthorizedObjectResult(new
+            //     {
+            //         Success = false,
+            //         Message = "Invalid or missing required header. You have been logged out."
+            //     });
 
-                return;
-            }
+            //     return;
+            // }
 
             // Set the user claims from the validated token (if valid)
             if (principal != null)

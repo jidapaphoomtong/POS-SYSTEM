@@ -36,8 +36,7 @@ const EditProduct = () => {
                 setIsLoading(true);
                 const response = await axios.get(`/api/Product/branches/${branchId}/products/${productId}`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });
@@ -90,8 +89,7 @@ const EditProduct = () => {
             const token = Cookies.get("authToken"); // ใช้ Token จาก Cookies
             const response = await axios.put(`/api/Product/branches/${branchId}/products/${productId}`, formData, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                 },
                 withCredentials: true,
             });
