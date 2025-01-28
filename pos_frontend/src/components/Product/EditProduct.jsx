@@ -16,6 +16,7 @@ const EditProduct = () => {
         description: "",
         price: "",
         stock: "",
+        reorderPoint:"",
         categoryId: ""
     });
     const [isLoading, setIsLoading] = useState(false);
@@ -51,6 +52,7 @@ const EditProduct = () => {
                         description: response.data.description,
                         price: response.data.price,
                         stock: response.data.stock,
+                        reorderPoint: response.data.reorderPoint,
                         categoryId: response.data.categoryId,
                     });
                 } else {
@@ -77,27 +79,40 @@ const EditProduct = () => {
     // ฟังก์ชันจัดการการบันทึกข้อมูล
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!formData.productName || !formData.ImgUrl || !formData.price || !formData.stock) {
+        
+        // ตรวจสอบความถูกต้องของข้อมูล
+        if (!formData.productName || !formData.ImgUrl || !formData.price || !formData.stock || !formData.reorderPoint) {
             toast.error("Please fill out all fields!");
             return;
         }
-
+        
+        if (formData.reorderPoint < 0) {
+            toast.error("Reorder point cannot be negative.");
+            return;
+        }
+    
+        const productData = {
+            ...formData,
+            price: parseFloat(formData.price),
+            stock: parseInt(formData.stock),
+            reorderPoint: parseInt(formData.reorderPoint),
+        };
+    
         try {
             setIsLoading(true);
-            const token = Cookies.get("authToken"); // ใช้ Token จาก Cookies
-            const response = await axios.put(`/api/Product/branches/${branchId}/products/${productId}`, formData, {
+            const token = Cookies.get("authToken");
+            const response = await axios.put(`/api/Product/branches/${branchId}/products/${productId}`, productData, {
                 headers: {
-                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
+                    Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
-
+    
             if (response.data.message) {
                 toast.success(response.data.message); 
             }
-            navigate(`/${branchId}/ProductList`); // นำทางกลับไปที่ Product List
+            navigate(`/${branchId}/ProductList`); // นำทางกลับไปยัง Product List
         } catch (error) {
-            // console.error("Failed to update product:", error);
             toast.error(error.response ? error.response.data.message : "Failed to update product.");
         } finally {
             setIsLoading(false);
@@ -147,6 +162,14 @@ const EditProduct = () => {
                         name="stock"
                         placeholder="Stock"
                         value={formData.stock}
+                        onChange={handleChange}
+                        required
+                    />
+                    <input
+                        type="text"
+                        name="reorderPoint"
+                        placeholder="Reorder Point"
+                        value={formData.reorderPoint}
                         onChange={handleChange}
                         required
                     />

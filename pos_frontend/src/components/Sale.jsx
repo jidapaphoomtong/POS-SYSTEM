@@ -103,6 +103,11 @@ export default function Sale() {
     };
 
     const handleSelectItem = (item) => {
+        if (item.stock <= 0 || item.status === 'inactive') {
+            toast.error("Cannot order this product. It is out of stock.");
+            return; // ไม่ให้เลือกสินค้าเมื่อหมดสต๊อก
+        }
+    
         setSelectedItems((prevItems) => ({
             ...prevItems,
             [item.Id]: {
@@ -110,20 +115,30 @@ export default function Sale() {
                 quantity: (prevItems[item.Id] ? prevItems[item.Id].quantity : 0) + 1,
             }
         }));
-        
+    
         setShowOrderSummary(true);
     };
-
+    
     const handleIncreaseQuantity = (itemId) => {
-        setSelectedItems((prevItems) => ({
-            ...prevItems,
-            [itemId]: {
-                ...prevItems[itemId],
-                quantity: prevItems[itemId].quantity + 1,
+        setSelectedItems((prevItems) => {
+            const currentItem = prevItems[itemId];
+    
+            // ตรวจสอบให้แน่ใจว่าไม่สามารถเพิ่มเกินจำนวนสินค้าที่มีในสต๊อก
+            if (currentItem.quantity < currentItem.stock) {
+                return {
+                    ...prevItems,
+                    [itemId]: {
+                        ...currentItem,
+                        quantity: currentItem.quantity + 1,
+                    },
+                };
+            } else {
+                toast.error("Cannot increase quantity beyond available stock.");
+                return prevItems; // ไม่ทำการอัปเดต
             }
-        }));
+        });
     };
-
+    
     const handleDecreaseQuantity = (itemId) => {
         setSelectedItems((prevItems) => {
             const newItems = { ...prevItems };
@@ -294,7 +309,7 @@ export default function Sale() {
                 id: item.Id,
                 productName: item.productName,
                 price: item.price,
-                stock: item.quantity,
+                quantity: item.quantity,
                 categoryId: item.categoryId,
             })),
             total: calculateTotal(),
@@ -305,13 +320,10 @@ export default function Sale() {
             paymentMethod: type,
         };
     
-        // Debugging: แสดง Purchase Object ใน Console
-        // console.log("Purchase Object:", JSON.stringify(purchase, null, 2));
-    
         try {
             const response = await axios.post(`/api/Purchase/add-purchase/${branchId}`, purchase, {
                 headers: {
-                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
+                    Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
@@ -321,12 +333,13 @@ export default function Sale() {
                 for (const item of purchase.products) {
                     // ดึง productId ของ item
                     const productId = item.id; // ใช้ id จาก Purchase object
-    
+                    
+                    // Reduce quantity to update stock
                     await axios.put(`/api/Product/update-stock/${branchId}/${productId}`, {
-                        quantity: item.stock // ปรับปรุงจำนวน stock ที่ใช้งาน
+                        quantity: item.quantity // ปรับปรุงจำนวน stock ที่ใช้งาน
                     }, {
                         headers: {
-                            Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
+                            Authorization: `Bearer ${token}`,
                         },
                         withCredentials: true,
                     });
@@ -336,7 +349,6 @@ export default function Sale() {
             } else {
                 toast.error(`Request failed with status: ${response.status}`);
             }
-    
         } catch (error) {
             console.error("Error during purchase:", error);
             toast.error("Failed to save the purchase: " + error.message);

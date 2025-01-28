@@ -9,90 +9,118 @@ namespace backend.Services.NotificationService
 {
     public class NotificationService : INotificationService
     {
-        private readonly FirestoreDb _firestoreDb;
+        private readonly FirestoreDB _firestoreDb;
 
-        public NotificationService(FirestoreDb firestoreDb)
+        public NotificationService(FirestoreDB firestoreDb)
         {
             _firestoreDb = firestoreDb;
         }
         
-        public async Task<string> GetNextId(string sequenceName)
+        public async Task NotifyLowStock(string branchId, string productId)
         {
-            try
+            if (string.IsNullOrEmpty(branchId) || string.IsNullOrEmpty(productId))
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document(sequenceName);
-                var snapshot = await sequenceDoc.GetSnapshotAsync();
-
-                int counter = 1; // Default counter value
-
-                // If the sequence document exists, update the counter
-                if (snapshot.Exists && snapshot.TryGetValue("counter", out int currentCounter))
-                {
-                    counter = currentCounter;
-                }
-
-                // Increment the sequence counter
-                await sequenceDoc.SetAsync(new { counter = counter + 1 });
-
-                // Return the formatted ID as "001", "002", "003", etc.
-                return counter.ToString("D3");
+                Console.WriteLine("Branch ID or Product ID is null/empty.");
+                return; // หลีกเลี่ยงการทำงานต่อ
             }
-            catch (Exception ex)
+
+            var message = $"Stock for Product ID {productId} is low.";
+            var notification = new Notification
             {
-                throw new Exception($"Failed to generate ID for {sequenceName}: {ex.Message}");
-            }
+                Message = message,
+                Timestamp = DateTime.UtcNow,
+                BranchId = branchId,
+                ProductId = productId
+            };
+
+            // บันทึกการแจ้งเตือนใน Firestore
+            await _firestoreDb
+                .Collection("branches")
+                .Document(branchId)
+                .Collection("notifications")
+                .AddAsync(notification);
+            
+            Console.WriteLine($"Notification added: {message}"); // Log สำหรับตรวจสอบ
         }
 
-        // Method to create a notification
-        public async Task CreateNotification(Notification notification)
+        public async Task<List<Notification>> GetNotificationsAsync(string branchId)
         {
-            string notiId = await GetNextId($"noti-sequence-{notification.BranchId}"); 
-            notification.Id = notiId;
+            if (string.IsNullOrEmpty(branchId))
+                return new List<Notification>();  // ต้องแน่ใจว่ามี Branch ID
 
-            DocumentReference docRef = _firestoreDb.Collection("notifications").Document(notification.Id);
-            await docRef.SetAsync(notification);
-        }
+            var notifications = new List<Notification>();
+            
+            // ตรวจสอบการค้นหา
+            var query = _firestoreDb
+                .Collection("branches")
+                .Document(branchId)
+                .Collection("notifications"); // จำกัดเฉพาะ collection ของ notifications
 
-        public async Task<List<Notification>> GetNotifications(string branchId, string role)
-        {
-            Query query = _firestoreDb.Collection("notifications").WhereEqualTo("BranchId", branchId);
-
-            if (role != "Admin")
+            // สามารถเพิ่มการกรองเพิ่มเติมได้หากต้องการ
+            var querySnapshot = await query.GetSnapshotAsync();
+            
+            foreach (var document in querySnapshot.Documents)
             {
-                query = query.WhereEqualTo("Role", role);
-            }
-
-            QuerySnapshot snapshot = await query.GetSnapshotAsync();
-            List<Notification> notifications = new List<Notification>();
-
-            foreach (DocumentSnapshot document in snapshot.Documents)
-            {
-                if (document.Exists)
-                {
-                    Notification notification = document.ConvertTo<Notification>();
-                    notifications.Add(notification);
-                }
+                var notification = document.ConvertTo<Notification>();
+                notifications.Add(notification);
             }
 
             return notifications;
         }
 
-        public async Task MarkAllAsRead(string branchId)
+        public async Task<bool> DeleteAllNotificationsAsync(string branchId)
         {
-            var query = _firestoreDb.Collection("notifications").WhereEqualTo("BranchId", branchId);
-            QuerySnapshot snapshot = await query.GetSnapshotAsync();
-
-            foreach (DocumentSnapshot document in snapshot.Documents)
+            if (string.IsNullOrEmpty(branchId))
             {
-                if (document.Exists)
-                {
-                    var notification = document.ConvertTo<Notification>();
-                    notification.Read = true; 
+                return false; // ต้องแน่ใจว่ามี Branch ID
+            }
 
-                    DocumentReference docRef = _firestoreDb.Collection("notifications").Document(notification.Id);
-                    await docRef.SetAsync(notification, SetOptions.MergeAll);
-                }
+            try
+            {
+                var notificationsCollection = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("notifications");
+
+                var querySnapshot = await notificationsCollection.GetSnapshotAsync();
+                var deleteTasks = querySnapshot.Documents.Select(document => document.Reference.DeleteAsync());
+
+                await Task.WhenAll(deleteTasks); // รอจนกว่าการลบทั้งหมดเสร็จสิ้น
+
+                return true; // การลบทั้งหมดสำเร็จ
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting all notifications: {ex.Message}");
+                return false; // การลบล้มเหลว
             }
         }
+
+        // private readonly List<Notification> _temporaryNotifications = new List<Notification>();
+
+        // public Task NotifyLowStock(string branchId, string productId)
+        // {
+        //     var message = $"Stock for Product ID {productId} is low.";
+        //     var notification = new Notification
+        //     {
+        //         Message = message,
+        //         Timestamp = DateTime.UtcNow,
+        //         BranchId = branchId,
+        //         ProductId = productId
+        //     };
+            
+        //     // บันทึกการแจ้งเตือนชั่วคราว
+        //     _temporaryNotifications.Add(notification);
+        //     return Task.CompletedTask; // เนื่องจากเราไม่ต้องการรอคอยผลลัพธ์
+        // }
+
+        // public Task<List<Notification>> GetNotificationsAsync(string branchId)
+        // {
+        //     // คืนค่าการแจ้งเตือนที่เกี่ยวข้องกับ branchId
+        //     var notifications = _temporaryNotifications
+        //         .Where(n => n.BranchId == branchId)
+        //         .ToList();
+        //     return Task.FromResult(notifications); // คืนค่าการแจ้งเตือน
+        // }
     }
 }

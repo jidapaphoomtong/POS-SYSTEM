@@ -87,7 +87,6 @@ namespace backend.Controllers
         }
 
         [CustomAuthorizeRole("Admin, Manager, Employee")]
-        // Update stock endpoint
         [HttpPut("update-stock/{branchId}/{productId}")]
         public async Task<ActionResult<ServiceResponse<string>>> UpdateStock(string branchId, string productId, [FromBody] Products product)
         {
@@ -96,14 +95,15 @@ namespace backend.Controllers
                 return BadRequest("Invalid product data. Quantity must be greater than zero.");
             }
 
-            // เรียกใช้ UpdateStock โดยส่งค่า product แทนค่า quantity
-            var response = await _productService.UpdateStock(branchId, productId, product);
-            if (!response.Success)
+            // เช็คสถานะก่อนการอัปเดต
+            var currentProductResponse = await _productService.GetProductById(branchId, productId);
+            if (!currentProductResponse.Success || currentProductResponse.Data.status == "inactive")
             {
-                return BadRequest(response);
+                return BadRequest("Cannot order the product. The product is out of stock or inactive.");
             }
 
-            return Ok(response);
+            var response = await _productService.UpdateStock(branchId, productId, product);
+            return response.Success ? Ok(response) : BadRequest(response);
         }
 
         [CustomAuthorizeRole("Admin, Manager")]

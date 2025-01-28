@@ -128,7 +128,7 @@ const Dashboard = () => {
     const fetchMonthlySalesData = async () => {
         try {
             const selectedYear = selectedDate.getFullYear();
-            const selectedMonth = selectedDate.getMonth() + 1; // เดือนใน JavaScript จะเริ่มจาก 0
+            const selectedMonth = selectedDate.getMonth() + 1; 
     
             const monthlySalesResponse = await axios.get(`/api/Purchase/monthly-sales/${branchId}/${selectedYear}/${selectedMonth}`, {
                 headers: {
@@ -140,15 +140,20 @@ const Dashboard = () => {
             if (monthlySalesResponse.data) {
                 const monthlySales = monthlySalesResponse.data;
     
+                // ฟิลเตอร์ข้อมูลตามชื่อพนักงาน
+                const filteredMonthlySales = monthlySales.filter(purchase => 
+                    purchase.seller.toLowerCase().includes(employeeId.toLowerCase()) // ฟิลเตอร์ตามชื่อผู้ขาย
+                );
+    
                 // คำนวณยอดขายต่อวัน
                 const dailySalesData = Array(31).fill(0);
-                monthlySales.forEach(purchase => {
+                filteredMonthlySales.forEach(purchase => {
                     const purchaseDate = new Date(purchase.date);
                     const day = purchaseDate.getDate();
                     dailySalesData[day - 1] += purchase.total; // แสดงรวมยอดขาย
                 });
     
-                setMonthlySalesData(dailySalesData); // สร้าง state ใหม่สำหรับเก็บข้อมูลยอดขายรายเดือน
+                setMonthlySalesData(dailySalesData); // อัปเดตข้อมูลยอดขายรายเดือน
             }
         } catch (error) {
             toast.error('Error fetching monthly sales data');

@@ -11,7 +11,8 @@ namespace backend.Models
     [FirestoreData]
     public class User
     {
-        // public string userId { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public string Id { get; set; } = string.Empty;
         [FirestoreProperty]
         public string firstName { get; set; } = string.Empty;
         [FirestoreProperty]

@@ -25,18 +25,21 @@ const ProductList = () => {
     // const branchId = new URLSearchParams(window.location.search).get("branch") || Cookies.get("branchId");
     const categoryId = new URLSearchParams(window.location.search).get("category") || Cookies.get("categoryId");
 
-    const getProductStatus = (stock) => {
+    const getProductStatus = (stock, reorderPoint) => {
         const UNLIMITED_STOCK = Number.MAX_SAFE_INTEGER; // ใช้ค่านี้เป็นตัวแทนสำหรับ stock ที่ไม่มีวันหมด
-
-    if (stock === UNLIMITED_STOCK) {
-        return { text: "Ready to sell", color: "green", icon: "✅" };
-    }
+    
+        if (stock === UNLIMITED_STOCK) {
+            return { text: "Ready to sell", color: "green", icon: "✅" };
+        }
         if (stock <= 0) {
             return { text: "Out of stock", color: "red", icon: "❌" };
         }
-        if (stock < 50) {
+        if (stock < reorderPoint) { // ตรวจสอบว่าต่ำกว่าจุดรีสต๊อกไหม
             return { text: "Low stock", color: "orange", icon: "⚠️" };
         }
+        // if (stock < 50) {
+        //     return { text: "Low stock", color: "orange", icon: "⚠️" };
+        // }
         return { text: "Ready to sell", color: "green", icon: "✅" };
     };
 
@@ -113,7 +116,6 @@ const ProductList = () => {
                 toast.error("Failed to update product status.");
             }
         } catch (error) {
-            console.error("Failed to update product status:", error);
             toast.error("Failed to update product status: " + (error.response?.data?.message || "Unknown error"));
         } finally {
             setIsLoading(false);
@@ -184,8 +186,8 @@ const ProductList = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                {currentProducts.map(({ id, ImgUrl, productName, price, stock, productStatus }) => {
-                                    const status = getProductStatus(stock);
+                                {currentProducts.map(({ id, ImgUrl, productName, price, stock, reorderPoint, productStatus }) => {
+                                    const status = getProductStatus(stock, reorderPoint); // ส่ง reorderPoint ลงไปด้วย
                                     return (
                                         <tr key={id}>
                                             <td style={{ textAlign: 'center' }}>
@@ -196,7 +198,7 @@ const ProductList = () => {
                                             <td>{price}</td>
                                             <td>{stock}</td>
                                             <td style={{ color: status.color }}>{status.icon} {status.text}</td>
-                                            <td style={{ color: productStatus === "active" ? "green" : "red" }}>
+                                            <td>
                                                 <div className="row-product">
                                                     <button
                                                         className="icon-button"
