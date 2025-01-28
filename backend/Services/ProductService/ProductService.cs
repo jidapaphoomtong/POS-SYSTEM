@@ -215,9 +215,13 @@ namespace backend.Services.ProductService
         {
             try
             {
-                // สร้าง Product ID ใหม่
-                string productId = await GetNextId($"product-sequence-{branchId}"); // ลำดับเฉพาะต่อ Branch
+                // ตรวจสอบว่า stock ตรงตามข้อกำหนด หรือไม่
+                if (product.stock < product.reorderPoint)
+                {
+                    return ServiceResponse<string>.CreateFailure("Stock cannot be below the reorder point.");
+                }
 
+                string productId = await GetNextId($"product-sequence-{branchId}");
                 var productDoc = _firestoreDb.Collection("branches")
                     .Document(branchId)
                     .Collection("products")
@@ -331,7 +335,8 @@ namespace backend.Services.ProductService
                     { "productName", updatedProduct.productName },
                     { "description", updatedProduct.description },
                     { "price", updatedProduct.price },
-                    { "stock", updatedProduct.stock }
+                    { "stock", updatedProduct.stock },
+                    { "reorderPoint", updatedProduct.reorderPoint } // เพิ่มการอัปเดจจุดรีสต๊อก
                 };
 
                 await productDoc.SetAsync(productUpdate, SetOptions.MergeAll);
@@ -379,8 +384,7 @@ namespace backend.Services.ProductService
 
         public async Task<ServiceResponse<string>> UpdateStock(string branchId, string productId, Products product)
         {
-
-            int quantity = product.quantity; // เข้าถึง quantity จากโมเดลที่ส่งมา
+            int quantity = product.quantity;
 
             try
             {
@@ -390,7 +394,6 @@ namespace backend.Services.ProductService
                     .Collection("products")
                     .Document(productId);
 
-                // หาค่าสต็อกปัจจุบัน
                 var productSnap = await productDoc.GetSnapshotAsync();
                 if (!productSnap.Exists)
                 {
@@ -398,16 +401,21 @@ namespace backend.Services.ProductService
                 }
 
                 var existingStock = productSnap.GetValue<int>("stock");
-                var newStock = existingStock - quantity; // ลดสต็อกตามที่ได้รับมา
+                var newStock = existingStock - quantity;
 
-                // ตั้งค่าการอัปเดต
-                var productUpdate = new Dictionary<string, object>
+                // หาก stock ใหม่ต่ำกว่าจุดรีสต๊อก ให้เปลี่ยนสถานะเป็น inactive
+                var reorderPoint = productSnap.GetValue<int>("reorderPoint");
+                var updates = new Dictionary<string, object>
                 {
                     { "stock", newStock }
                 };
 
-                // อัปโหลดการอัปเดตลงไปใน Firestore
-                await productDoc.SetAsync(productUpdate, SetOptions.MergeAll);
+                if (newStock < reorderPoint)
+                {
+                    updates["status"] = "inactive"; // ตั้งสถานะเป็น inactive ถ้าต่ำกว่าจุดรีสต๊อก
+                }
+
+                await productDoc.SetAsync(updates, SetOptions.MergeAll);
                 return ServiceResponse<string>.CreateSuccess(productId, "Stock updated successfully!");
             }
             catch (Exception ex)

@@ -30,6 +30,8 @@ namespace backend.Models
         public int quantity { get; set; } // เพิ่มฟิลด์ quantity
         [FirestoreProperty]
         public string status { get; set; } = string.Empty;
+        [FirestoreProperty]
+        public int reorderPoint { get; set; } // จุดรีสต๊อก
     }
     public class ProductsResponse
     {

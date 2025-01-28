@@ -103,6 +103,11 @@ export default function Sale() {
     };
 
     const handleSelectItem = (item) => {
+        if (item.stock <= 0 || item.status === 'inactive') {
+            toast.error("Cannot order this product. It is out of stock.");
+            return; // ไม่ให้เลือกสินค้าเมื่อหมดสต๊อก
+        }
+    
         setSelectedItems((prevItems) => ({
             ...prevItems,
             [item.Id]: {
@@ -294,24 +299,18 @@ export default function Sale() {
                 id: item.Id,
                 productName: item.productName,
                 price: item.price,
-                stock: item.quantity,
-                categoryId: item.categoryId,
+                quantity: item.quantity, // มีการเพิ่ม quantity เพื่อการลดจำนวนสต๊อก
             })),
             total: calculateTotal(),
-            paidAmount: paidAmount,
-            change: change,
             date: new Date().toISOString(),
             seller: firstName,
             paymentMethod: type,
         };
     
-        // Debugging: แสดง Purchase Object ใน Console
-        // console.log("Purchase Object:", JSON.stringify(purchase, null, 2));
-    
         try {
             const response = await axios.post(`/api/Purchase/add-purchase/${branchId}`, purchase, {
                 headers: {
-                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
+                    Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
@@ -321,12 +320,13 @@ export default function Sale() {
                 for (const item of purchase.products) {
                     // ดึง productId ของ item
                     const productId = item.id; // ใช้ id จาก Purchase object
-    
+                    
+                    // Reduce quantity to update stock
                     await axios.put(`/api/Product/update-stock/${branchId}/${productId}`, {
-                        quantity: item.stock // ปรับปรุงจำนวน stock ที่ใช้งาน
+                        quantity: item.quantity // ปรับปรุงจำนวน stock ที่ใช้งาน
                     }, {
                         headers: {
-                            Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
+                            Authorization: `Bearer ${token}`,
                         },
                         withCredentials: true,
                     });
@@ -336,7 +336,6 @@ export default function Sale() {
             } else {
                 toast.error(`Request failed with status: ${response.status}`);
             }
-    
         } catch (error) {
             console.error("Error during purchase:", error);
             toast.error("Failed to save the purchase: " + error.message);

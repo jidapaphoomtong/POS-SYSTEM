@@ -12,12 +12,13 @@ const AddProduct = () => {
     // ปรับให้สอดคล้องกับ Products class ใน Backend
     const [formData, setFormData] = useState({
         productName: "",
-        ImgUrl: "", // เป็นตัวแปรใหม่สำหรับ URL ของภาพ
+        ImgUrl: "",
         description: "",
         price: "",
-        stock: "", // มีการเก็บข้อมูลจำนวนแยก
-        categoryId: "", // เพิ่มประเภทสินค้าถ้าจำเป็น
-        branchId: branchId // เพิ่ม branchId 
+        stock: "",
+        reorderPoint: "",
+        categoryId: "",
+        branchId: branchId
     });
     
     const [isLoading, setIsLoading] = useState(false);
@@ -115,6 +116,14 @@ const AddProduct = () => {
                     name="stock"
                     placeholder="Stock"
                     value={formData.stock}
+                    onChange={handleChange}
+                    required
+                />
+                <input
+                    type="text"
+                    name="reorderPoint"
+                    placeholder="Reorder Point" 
+                    value={formData.reorderPoint}
                     onChange={handleChange}
                     required
                 />
