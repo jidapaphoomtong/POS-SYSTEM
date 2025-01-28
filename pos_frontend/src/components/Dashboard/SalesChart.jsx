@@ -1,31 +1,39 @@
 import React from 'react';
-import { Line, Bar } from 'react-chartjs-2';
+import { Line, Bar } from 'react-chartjs-2'; // นำเข้า Line และ Bar
 import {
-Chart,
-CategoryScale,
-LinearScale,
-PointElement,
-LineElement,
-BarElement,
-Tooltip,
+    Chart,
+    CategoryScale,
+    LinearScale,
+    PointElement,
+    LineElement,
+    BarElement,
+    Tooltip,
+    Filler
 } from 'chart.js';
 
-Chart.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip);
+Chart.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, Tooltip, Filler);
 
-const SalesChart = ({ dailySales = [], hourlySalesData = [], viewType }) => {
-    const salesData = viewType === 'line' ? hourlySalesData : dailySales;
-    
+const SalesChart = ({ dailySales = [], hourlySalesData = [],  monthlySalesData = [], viewType }) => {
+    const salesData = viewType === 'line' ? hourlySalesData : hourlySalesData; // ใช้ hourlySalesData สำหรับทั้งสองกราฟ
+
+    const monthlyChartData = {
+        labels: Array.from({ length: 31 }, (_, i) => i + 1),
+        datasets: [
+            {
+                label: 'ยอดขายรายเดือน',
+                data: monthlySalesData,
+                backgroundColor: '#58c5f0',
+            },
+        ],
+    };
+
     const chartData = {
-        labels: viewType === 'line' 
-            ? hourlySalesData.map(sale => sale.hour) 
-            : dailySales.map(sale => sale.date), // ใช้ date จาก dailySales
+        labels: hourlySalesData.map(sale => sale.hour), // ใช้ชั่วโมงสำหรับ labels ทั้งกราฟ
         datasets: [
             {
                 label: 'ยอดขาย',
-                data: salesData.map(sale => viewType === 'line' ? sale.amount : sale.total || 0), // ใช้ total จาก dailySales
-                backgroundColor: viewType === 'line' 
-                    ? 'rgba(0, 123, 255, 0.5)' 
-                    : '#58c5f0', 
+                data: salesData.map(sale => sale.amount || 0), // แสดง amount สำหรับกราฟทั้งสองแบบ
+                backgroundColor: viewType === 'line' ? 'rgba(0, 123, 255, 0.5)' : '#58c5f0',
                 borderColor: '#9bc8f8',
                 borderWidth: 2,
                 fill: viewType === 'line',
@@ -41,7 +49,6 @@ const SalesChart = ({ dailySales = [], hourlySalesData = [], viewType }) => {
                 ticks: { font: { size: 14 } },
             },
             y: {
-                
                 beginAtZero: true,
                 ticks: { font: { size: 14 } },
             },
@@ -70,7 +77,10 @@ const SalesChart = ({ dailySales = [], hourlySalesData = [], viewType }) => {
             ) : (
                 <Bar data={chartData} options={options} />
             )}
+            <h3>Monthly Sales</h3>
+            <Bar data={monthlyChartData} options={options} />
         </div>
     );
 };
+
 export default SalesChart;

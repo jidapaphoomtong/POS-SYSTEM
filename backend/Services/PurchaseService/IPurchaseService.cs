@@ -15,5 +15,6 @@ namespace backend.Services.PurchaseService
         Task<ServiceResponse<IEnumerable<Purchase>>> GetYearlySales(string branchId, int year);
         Task<ServiceResponse<IEnumerable<Purchase>>> GetSalesByEmployee(string branchId, string employeeId);
         Task<ServiceResponse<bool>> DeleteAllPurchases(string branchId);
+        Task<ServiceResponse<List<DailySalesDto>>> GetDailySalesSummary(string branchId, int year, int month, int day);
     }
 }

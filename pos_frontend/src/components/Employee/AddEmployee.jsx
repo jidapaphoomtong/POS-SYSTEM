@@ -50,9 +50,7 @@ const AddEmployee = () => {
                 salt: formData.salt,
             }, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                 },
                 withCredentials: true,
             });

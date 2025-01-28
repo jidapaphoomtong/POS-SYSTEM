@@ -41,8 +41,7 @@ const EmployeeList = () => {
             try {
                 const response = await axios.get(`/api/Employee/branches/${branchId}/employees`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });
@@ -107,8 +106,7 @@ const EmployeeList = () => {
                     status: newStatus
                 }, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });

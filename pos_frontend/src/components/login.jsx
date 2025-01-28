@@ -135,9 +135,9 @@ const Login = () => {
                         {isLoading ? "Loading..." : "Login"}
                     </button>
                 </form>
-                <p>
+                {/* <p>
                     Don't have an account? <Link to="/register">Register here</Link>
-                </p>
+                </p> */}
             </div>
         </div>
     );

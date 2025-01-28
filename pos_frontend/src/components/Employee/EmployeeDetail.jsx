@@ -28,8 +28,7 @@ const EmployeeDetail = () => {
             try {
                 const response = await axios.get(`/api/Employee/branches/${branchId}/employees/${employeeId}`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });

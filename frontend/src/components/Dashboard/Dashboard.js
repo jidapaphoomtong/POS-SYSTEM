@@ -25,9 +25,9 @@ const Dashboard = () => {
             try {
                 const response = await axios.get(`/api/Purchase/sales-summary/${branchId}`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
-                    }
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
+                    },
+                    withCredentials: true,
                 });
                 setSummaryData(response.data);
             } catch (error) {

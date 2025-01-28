@@ -44,9 +44,8 @@ export default function Sale() {
             try {
                 // Fetch Products
                 const productResponse = await axios.get(`/api/Product/branches/${branchId}/products`, {
-                    headers: { 
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}` 
+                    headers: {
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });
@@ -71,11 +70,10 @@ export default function Sale() {
     
                 // Fetch Categories
                 const categoryResponse = await axios.get(`/api/Category/branches/${branchId}/getCategories`, {
-                    headers: { 
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}` 
+                    headers: {
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
-                    withCredentials: true,  
+                    withCredentials: true, 
                 });
                 
                 if (categoryResponse.data.success) {
@@ -309,9 +307,8 @@ export default function Sale() {
     
         try {
             const response = await axios.post(`/api/Purchase/add-purchase/${branchId}`, purchase, {
-                headers: { 
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}` 
+                headers: {
+                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                 },
                 withCredentials: true,
             });
@@ -325,9 +322,8 @@ export default function Sale() {
                     await axios.put(`/api/Product/update-stock/${branchId}/${productId}`, {
                         quantity: item.stock // ปรับปรุงจำนวน stock ที่ใช้งาน
                     }, {
-                        headers: { 
-                            "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                            Authorization: `Bearer ${token}` 
+                        headers: {
+                            Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                         },
                         withCredentials: true,
                     });

@@ -47,9 +47,7 @@ const AddProduct = () => {
             // ส่งข้อมูลไปยัง API
             const response = await axios.post(`/api/Product/add-product/${branchId}`, formData, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                 },
                 withCredentials: true,
             });
@@ -58,7 +56,7 @@ const AddProduct = () => {
         
             if (response.status === 200) {
                 toast.success("Product added successfully!");
-                navigate(`/ProductList?branch=${branchId}`);
+                navigate(`/${branchId}/ProductList`);
             } else {
                 toast.error(`Request failed with status: ${response.status}`);
             }
@@ -125,7 +123,7 @@ const AddProduct = () => {
                     onChange={handleChange}
                 />
                 <div className="form-buttons">
-                    <button type="button" onClick={() => navigate(`/ProductList?branch=${branchId}`)} disabled={isLoading}>
+                    <button type="button" onClick={() => navigate(`/${branchId}/ProductList`)} disabled={isLoading}>
                         Cancel
                     </button>
                     <button type="submit" disabled={isLoading}>

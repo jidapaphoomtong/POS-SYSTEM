@@ -33,8 +33,7 @@ const EditBranch = () => {
                 setIsLoading(true);
                 const response = await axios.get(`/api/Branch/branches/${branchId}`, {
                     headers: {
-                        "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                        Authorization: `Bearer ${token}`,
+                        Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                     },
                     withCredentials: true,
                 });
@@ -83,8 +82,7 @@ const EditBranch = () => {
                 iconUrl: formData.iconUrl,
             }, {
                 headers: {
-                    "x-posapp-header": "gi3hcSCTAuof5evF3uM3XF2D7JFN2DS",
-                    Authorization: `Bearer ${token}`, // ใช้ Cookies
+                    Authorization: `Bearer ${token}`, // ใช้แค่ Authorization
                 },
                 withCredentials: true,
             });
