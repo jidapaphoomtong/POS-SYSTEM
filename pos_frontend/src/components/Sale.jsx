@@ -115,20 +115,30 @@ export default function Sale() {
                 quantity: (prevItems[item.Id] ? prevItems[item.Id].quantity : 0) + 1,
             }
         }));
-        
+    
         setShowOrderSummary(true);
     };
-
+    
     const handleIncreaseQuantity = (itemId) => {
-        setSelectedItems((prevItems) => ({
-            ...prevItems,
-            [itemId]: {
-                ...prevItems[itemId],
-                quantity: prevItems[itemId].quantity + 1,
+        setSelectedItems((prevItems) => {
+            const currentItem = prevItems[itemId];
+    
+            // ตรวจสอบให้แน่ใจว่าไม่สามารถเพิ่มเกินจำนวนสินค้าที่มีในสต๊อก
+            if (currentItem.quantity < currentItem.stock) {
+                return {
+                    ...prevItems,
+                    [itemId]: {
+                        ...currentItem,
+                        quantity: currentItem.quantity + 1,
+                    },
+                };
+            } else {
+                toast.error("Cannot increase quantity beyond available stock.");
+                return prevItems; // ไม่ทำการอัปเดต
             }
-        }));
+        });
     };
-
+    
     const handleDecreaseQuantity = (itemId) => {
         setSelectedItems((prevItems) => {
             const newItems = { ...prevItems };
@@ -299,9 +309,12 @@ export default function Sale() {
                 id: item.Id,
                 productName: item.productName,
                 price: item.price,
-                quantity: item.quantity, // มีการเพิ่ม quantity เพื่อการลดจำนวนสต๊อก
+                quantity: item.quantity,
+                categoryId: item.categoryId,
             })),
             total: calculateTotal(),
+            paidAmount: paidAmount,
+            change: change,
             date: new Date().toISOString(),
             seller: firstName,
             paymentMethod: type,

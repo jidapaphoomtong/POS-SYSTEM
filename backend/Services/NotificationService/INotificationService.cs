@@ -8,8 +8,8 @@ namespace backend.Services.NotificationService
 {
     public interface INotificationService
     {
-        Task CreateNotification(Notification notification);
-        Task<List<Notification>> GetNotifications(string branchId, string role);
-        Task MarkAllAsRead(string branchId);
+        Task NotifyLowStock(string branchId, string productId);
+        Task<List<Notification>> GetNotificationsAsync(string branchId);
+        Task<bool> DeleteAllNotificationsAsync(string branchId);
     }
 }

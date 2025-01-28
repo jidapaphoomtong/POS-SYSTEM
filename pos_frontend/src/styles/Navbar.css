@@ -82,7 +82,7 @@
 /* Dropdown */
 .dropdown {
     position: absolute;
-    right: 10px; /* ขยับออกจากฝั่งขวา 10px */
+    right: 35px; /* ขยับออกจากฝั่งขวา 10px */
     left: auto; /* ยกเลิกการตั้งค่า left หากมี */
     background-color: #fff;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Increased shadow depth */
@@ -124,47 +124,40 @@
         transform: translateY(0);
     }
 }
-
-.notification-icon {
-  position: relative; /* ต้องใช้ position: relative เพื่อให้ notification badge อยู่ที่ตำแหน่งที่ถูกต้อง */
-  margin-right: -10.8px;
-  margin-top: 5.575px;
-  cursor: pointer;
-}
-
-.notification-badge {
-  position: absolute;
-  top: 0;
-  right: 0;
-  background-color: red;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 12px;
-}
-
 .notification-dropdown {
   position: absolute;
+  right: 150px; /* ขยับออกจากฝั่งขวา 10px */
+  left: auto; /* ยกเลิกการตั้งค่า left หากมี */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Increased shadow depth */
+  border-radius: 5px;
+  margin-top: 5.5px; /* Reduced space below the menu icon */
+  animation: fadeIn 0.2s; /* Add a simple fade-in effect */
   background-color: white;
-  border: 1px solid #ccc;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  z-index: 1000; /* ทำให้ dropdown อยู่ด้านบน */
-  margin-top: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  padding: 10px;
+  width: 250px; /* กำหนดความกว้าง */
 }
 
-.notification-dropdown ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
+.notification-item {
+    margin: 5px 0;
+    padding: 5px;
+    border-bottom: 1px solid #e0e0e0;
 }
 
-.notification-dropdown li {
-  padding: 8px 16px;
-  cursor: pointer;
+.notification-item:last-child {
+    border-bottom: none;
 }
 
-.notification-dropdown li:hover {
-  background-color: #f0f0f0; /* เปลี่ยนสีเมื่อ hover */
+.notification-count {
+    background-color: red;
+    color: white;
+    border-radius: 50%;
+    padding: 0 6px;
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-size: 12px;
 }
 
 .modal {

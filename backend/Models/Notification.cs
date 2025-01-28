@@ -9,19 +9,9 @@ namespace backend.Models
     [FirestoreData]
     public class Notification
     {
-        [FirestoreProperty]
-        public string Id { get; set; } = string.Empty; // ID ของการแจ้งเตือน
-        [FirestoreProperty]
-        public string Message { get; set; } = string.Empty;
-        [FirestoreProperty]
-        public bool Read { get; set; }
-        [FirestoreProperty]
-        public DateTime Timestamp { get; set; } = DateTime.Now; // Timestamp อัตโนมัติ
-        [FirestoreProperty]
-        public string BranchId { get; set; } = string.Empty; // ID ของสาขาที่เกี่ยวข้อง
-        [FirestoreProperty]
-        public string Role { get; set; } = string.Empty; // บทบาทของผู้ใช้ที่เกี่ยวข้อง
-        [FirestoreProperty]
-        public bool IsVisible { get; set; } = true; // เพื่อกำหนดการเข้าถึง
+        public string Message { get; set; }
+        public DateTime Timestamp { get; set; }
+        public string BranchId { get; set; }
+        public string ProductId { get; set; }
     }
 }

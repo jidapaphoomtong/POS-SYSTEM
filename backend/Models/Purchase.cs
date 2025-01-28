@@ -18,11 +18,11 @@ namespace backend.Models
         [FirestoreProperty]
         public double Total { get; set; }
 
-        // [FirestoreProperty]
-        // public double PaidAmount { get; set; }
+        [FirestoreProperty]
+        public double PaidAmount { get; set; }
 
-        // [FirestoreProperty]
-        // public double Change { get; set; }
+        [FirestoreProperty]
+        public double Change { get; set; }
 
         [FirestoreProperty]
         public DateTime Date { get; set; }
