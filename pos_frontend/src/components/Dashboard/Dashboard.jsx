@@ -20,6 +20,7 @@ const Dashboard = () => {
         averagePerTransaction: 0
     });
     const [hourlySalesData, setHourlySalesData] = useState([]);
+    const [monthlySalesData, setMonthlySalesData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [viewType, setViewType] = useState('line'); // 'line' or 'bar'
@@ -116,6 +117,7 @@ const Dashboard = () => {
                     dailySales: Object.values(dailySalesSummary),
                 }));
             }
+
         } catch (error) {
             toast.error('Error fetching sales data');
         } finally {
@@ -123,9 +125,40 @@ const Dashboard = () => {
         }
     };
 
+    const fetchMonthlySalesData = async () => {
+        try {
+            const selectedYear = selectedDate.getFullYear();
+            const selectedMonth = selectedDate.getMonth() + 1; // เดือนใน JavaScript จะเริ่มจาก 0
+    
+            const monthlySalesResponse = await axios.get(`/api/Purchase/monthly-sales/${branchId}/${selectedYear}/${selectedMonth}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+                withCredentials: true,
+            });
+    
+            if (monthlySalesResponse.data) {
+                const monthlySales = monthlySalesResponse.data;
+    
+                // คำนวณยอดขายต่อวัน
+                const dailySalesData = Array(31).fill(0);
+                monthlySales.forEach(purchase => {
+                    const purchaseDate = new Date(purchase.date);
+                    const day = purchaseDate.getDate();
+                    dailySalesData[day - 1] += purchase.total; // แสดงรวมยอดขาย
+                });
+    
+                setMonthlySalesData(dailySalesData); // สร้าง state ใหม่สำหรับเก็บข้อมูลยอดขายรายเดือน
+            }
+        } catch (error) {
+            toast.error('Error fetching monthly sales data');
+        }
+    };
+
     useEffect(() => {
         setHourlySalesData([]);
         fetchSalesData();
+        fetchMonthlySalesData();
     }, [branchId, token, selectedDate, employeeId]);
 
     const dailySales = summaryData.dailySales;
@@ -193,7 +226,7 @@ const Dashboard = () => {
                             </div>
                         </div>
 
-                        <SalesChart dailySales={dailySales} hourlySalesData={hourlySalesData} viewType={viewType} />
+                        <SalesChart dailySales={dailySales} hourlySalesData={hourlySalesData} monthlySalesData={monthlySalesData} viewType={viewType} />
                     </div>
                 </div>
             </div>
