@@ -119,6 +119,7 @@ namespace backend.Services.PurchaseService
 
         public async Task<ServiceResponse<SalesSummaryDto>> GetSalesSummary(string branchId)
         {
+            // ดึงข้อมูลและคำนวณสรุปยอดขาย
             try
             {
                 var purchasesQuery = _firestoreDb
@@ -138,13 +139,13 @@ namespace backend.Services.PurchaseService
                 var totalTransactions = purchases.Count;
 
                 var dailySales = purchases
-                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd")) // GroupBy ตามวันที่ในรูปปี ค.ศ.
+                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd"))
                     .Select(g => new DailySalesDto
                     {
-                        Date = g.Key, // ที่นี่จะเก็บเป็นปี ค.ศ
+                        Date = g.Key,
                         Amount = g.Sum(p => p.Total),
-                        // นี่คือการเรียกคืนเวลาที่ขายโดยอิงจากเอกสารแรกในกลุ่ม
-                        Time = g.Select(p => p.Date.ToString("HH:mm:ss")).FirstOrDefault()
+                        TransactionCount = g.Count(),
+                        AveragePerTransaction = g.Sum(p => p.Total) / (g.Count() > 0 ? g.Count() : 1)
                     })
                     .ToList();
 
@@ -160,6 +161,46 @@ namespace backend.Services.PurchaseService
             catch (Exception ex)
             {
                 return ServiceResponse<SalesSummaryDto>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
+            }
+        }
+
+        public async Task<ServiceResponse<List<DailySalesDto>>> GetDailySalesSummary(string branchId, int year, int month, int day)
+        {
+            // ดึงข้อมูลยอดขายรายวัน
+            try
+            {
+                var purchasesQuery = _firestoreDb
+                    .Collection("branches")
+                    .Document(branchId)
+                    .Collection("purchases")
+                    .WhereEqualTo("Year", year)
+                    .WhereEqualTo("Month", month)
+                    .WhereEqualTo("Day", day);
+
+                var snapshot = await purchasesQuery.GetSnapshotAsync();
+                var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
+
+                if (!purchases.Any())
+                {
+                    return ServiceResponse<List<DailySalesDto>>.CreateFailure("Don't have purchase data in this branch.");
+                }
+
+                var dailySales = purchases
+                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd"))
+                    .Select(g => new DailySalesDto
+                    {
+                        Date = g.Key,
+                        Amount = g.Sum(p => p.Total),
+                        TransactionCount = g.Count(),
+                        AveragePerTransaction = g.Sum(p => p.Total) / (g.Count() > 0 ? g.Count() : 1)
+                    })
+                    .ToList();
+
+                return ServiceResponse<List<DailySalesDto>>.CreateSuccess(dailySales, "สรุปยอดขายได้รับแล้ว!");
+            }
+            catch (Exception ex)
+            {
+                return ServiceResponse<List<DailySalesDto>>.CreateFailure($"Failed to fetch purchase: {ex.Message}");
             }
         }
 

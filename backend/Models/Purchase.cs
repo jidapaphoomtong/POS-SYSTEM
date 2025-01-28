@@ -43,8 +43,9 @@ namespace backend.Models
 
     public class DailySalesDto
     {
-        public string Date { get; set; }
-        public double Amount { get; set; }
-        public string Time { get; set; }
+        public string Date { get; set; }              // วันที่ในรูปแบบ "yyyy-MM-dd"
+        public double Amount { get; set; }             // ยอดขายรวมในแต่ละวัน
+        public int TransactionCount { get; set; }      // จำนวนบิลในแต่ละวัน
+        public double AveragePerTransaction { get; set; } // เฉลี่ยยอดขายต่อบิล
     }
 }

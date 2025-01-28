@@ -13,7 +13,12 @@ import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 
 const Dashboard = () => {
-    const [summaryData, setSummaryData] = useState(null);
+    const [summaryData, setSummaryData] = useState({
+        dailySales: [],
+        totalSales: 0,
+        totalTransactions: 0,
+        averagePerTransaction: 0
+    });
     const [hourlySalesData, setHourlySalesData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
@@ -28,40 +33,44 @@ const Dashboard = () => {
             const selectedYear = selectedDate.getFullYear();
             const selectedMonth = selectedDate.getMonth() + 1;
             const selectedDateValue = selectedDate.getDate();
-
-            // เปลี่ยน selectedYear เป็นปี พ.ศ.
-            const yearInBC = selectedYear + 543; // แปลงเป็นปีพ.ศ.
-    
+            
             const summaryResponse = await axios.get(`/api/Purchase/sales-summary/${branchId}?year=${selectedYear}&month=${selectedMonth}&day=${selectedDateValue}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
                 withCredentials: true,
             });
-    
-            // คัดกรองข้อมูลตามวันที่และชื่อพนักงาน
-                const filteredSummaryData = Array.isArray(summaryResponse.data) 
-                ? summaryResponse.data.filter(sale => {
+            
+            // คัดกรองข้อมูลตามวันที่
+            const filteredSummaryData = Array.isArray(summaryResponse.data.dailySales) 
+                ? summaryResponse.data.dailySales.filter(sale => {
                     const saleDate = new Date(sale.date);
-                    const employeeIdLower = employeeId.toLowerCase(); // แปลงเป็นตัวพิมพ์เล็ก
-                    
-                    return saleDate.getFullYear() === yearInBC &&
+                    return (
+                        saleDate.getFullYear() === selectedYear &&
                         saleDate.getMonth() + 1 === selectedMonth &&
-                        saleDate.getDate() === selectedDateValue &&
-                        (!employeeId || sale.seller.toLowerCase().startsWith(employeeIdLower)); // เช็คชื่อพนักงาน
-                })
+                        saleDate.getDate() === selectedDateValue)
+                }) 
                 : [];
-
-            // คำนวณยอดขายรวมและจำนวนบิลขาย
-            const totalSales = filteredSummaryData.reduce((acc, cur) => acc + cur.amount, 0);
-            const totalTransactions = filteredSummaryData.length;
-
-            setSummaryData({
-                totalSales,
-                totalTransactions,
-                dailySales: filteredSummaryData,
-            });
-    
+                
+            // ตรวจสอบข้อมูล
+            if (filteredSummaryData.length > 0) {
+                const dailySalesData = filteredSummaryData[0];
+                setSummaryData({
+                    dailySales: [dailySalesData],
+                    totalSales: dailySalesData.amount,
+                    totalTransactions: dailySalesData.transactionCount,
+                    averagePerTransaction: dailySalesData.averagePerTransaction
+                });
+            } else {
+                // ไม่มีข้อมูล
+                setSummaryData({
+                    dailySales: [],
+                    totalSales: 0,
+                    totalTransactions: 0,
+                    averagePerTransaction: 0
+                });
+            }
+        
             // ดึงข้อมูลยอดขายทั้งหมดสำหรับกราฟหรือตาราง
             const response = await axios.get(`/api/Purchase/all-purchases/${branchId}`, {
                 headers: {
@@ -69,30 +78,30 @@ const Dashboard = () => {
                 },
                 withCredentials: true,
             });
-    
+        
             if (response.data) {
                 // นี่คือโค้ดการกรองข้อมูลตามวันที่
                 const filteredData = response.data.filter(pur => {
                     const saleDate = new Date(pur.date);
                     const employeeIdLower = employeeId.toLowerCase(); 
-    
+
                     return saleDate.getFullYear() === selectedYear &&
-                           saleDate.getMonth() + 1 === selectedMonth &&
-                           saleDate.getDate() === selectedDateValue && // ตรวจสอบวันที่นี้
-                           (!employeeId || pur.seller.toLowerCase().startsWith(employeeIdLower));
+                        saleDate.getMonth() + 1 === selectedMonth &&
+                        saleDate.getDate() === selectedDateValue &&
+                        (!employeeId || pur.seller.toLowerCase().startsWith(employeeIdLower));
                 });
-    
+
                 const hourlyData = Array(24).fill(0);
                 filteredData.forEach(pur => {
                     const saleHour = new Date(pur.date).getHours();
                     hourlyData[saleHour] += pur.total;
                 });
-    
+
                 setHourlySalesData(hourlyData.map((amount, hour) => ({
                     hour: `${hour}:00`,
                     amount,
                 })));
-    
+
                 const dailySalesSummary = {};
                 filteredData.forEach(pur => {
                     const saleDate = new Date(pur.date).toISOString().split('T')[0];
@@ -101,7 +110,7 @@ const Dashboard = () => {
                     }
                     dailySalesSummary[saleDate].total += pur.total;
                 });
-    
+
                 setSummaryData(prev => ({
                     ...prev,
                     dailySales: Object.values(dailySalesSummary),
@@ -116,11 +125,10 @@ const Dashboard = () => {
 
     useEffect(() => {
         setHourlySalesData([]);
-        setSummaryData(null);
         fetchSalesData();
     }, [branchId, token, selectedDate, employeeId]);
 
-    const dailySales = summaryData ? summaryData.dailySales : [];
+    const dailySales = summaryData.dailySales;
 
     return (
         <div className="dashboard">
@@ -128,65 +136,64 @@ const Dashboard = () => {
             <div className="content">
                 <Sidebar />
                 <div className="main-content">
-                {loading && <div>Loading...</div>}
-                {error && <div>{error}</div>}
+                    {loading && <div>Loading...</div>}
+                    {error && <div>{error}</div>}
 
-                <div className="sales-summary">
-                    <h2>Sales Summary</h2>
-                    <div className="summary-cards">
-                        <div className="summary-card">
-                            <h3>ยอดขายรวม</h3>
-                            <p>฿{summaryData && summaryData.totalSales ? summaryData.totalSales : 'ไม่มีข้อมูล'}</p>
-                        </div>
-                        <div className="summary-card">
-                            <h3>จำนวนบิลขาย</h3>
-                            <p>{summaryData && summaryData.totalTransactions ? summaryData.totalTransactions : 'ไม่มีข้อมูล'}</p>
-                        </div>
-                        <div className="summary-card">
-                            <h3>เฉลี่ย/บิล</h3>
-                            <p>฿{summaryData && summaryData.totalTransactions ? (summaryData.totalSales / summaryData.totalTransactions).toFixed(2) : 'ไม่มีข้อมูล'}</p>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div>
-                            <label style={{ marginRight: "5px" }}>เลือกวันที่: </label>
-                            <DatePicker
-                                selected={selectedDate}
-                                onChange={(date) => setSelectedDate(date)}
-                                dateFormat="yyyy/MM/dd"
-                                isClearable={false} // ไม่ต้องแสดงปุ่มเคลียร์
-                            />
+                    <div className="sales-summary">
+                        <h2>Sales Summary</h2>
+                        <div className="summary-cards">
+                            <div className="summary-card">
+                                <h3>ยอดขายรวม</h3>
+                                <p>฿{summaryData.totalSales.toFixed(2) || 'ไม่มีข้อมูล'}</p>
+                            </div>
+                            <div className="summary-card">
+                                <h3>จำนวนบิลขาย</h3>
+                                <p>{summaryData.totalTransactions || 'ไม่มีข้อมูล'}</p>
+                            </div>
+                            <div className="summary-card">
+                                <h3>เฉลี่ย/บิล</h3>
+                                <p>฿{summaryData.averagePerTransaction.toFixed(2) || 'ไม่มีข้อมูล'}</p>
+                            </div>
                         </div>
 
-                        <div>
-                            {/* ปรับสไตล์ให้กับการกรอกชื่อพนักงาน */}
-                            <label style={{ marginLeft: "30px" }}>กรอกชื่อพนักงาน: </label>
-                            <input
-                                type="text-dashboard"
-                                value={employeeId}
-                                onChange={(e) => setEmployeeId(e.target.value)}
-                                placeholder="กรอกชื่อพนักงาน"
-                                style={{ marginLeft: '5px', width: '200px' }} // เพิ่มความกว้างให้กับ input
-                            />
-                        </div>
-                    </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <div>
+                                <label style={{ marginRight: "5px" }}>เลือกวันที่: </label>
+                                <DatePicker
+                                    selected={selectedDate}
+                                    onChange={(date) => setSelectedDate(date)}
+                                    dateFormat="yyyy/MM/dd"
+                                    isClearable={false} // ไม่ต้องแสดงปุ่มเคลียร์
+                                />
+                            </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <h3>Daily Sales</h3>
-                        <div className="chart-type-selector">
-                            <FaChartLine
-                                className={`chart-icon line-icon ${viewType === 'line' ? 'active' : ''}`}
-                                onClick={() => setViewType('line')}
-                            />
-                            <IoBarChart
-                                className={`chart-icon bar-icon ${viewType === 'bar' ? 'active' : ''}`}
-                                onClick={() => setViewType('bar')}
-                            />
+                            <div>
+                                <label style={{ marginLeft: "30px" }}>กรอกชื่อพนักงาน: </label>
+                                <input
+                                    type="text"
+                                    value={employeeId}
+                                    onChange={(e) => setEmployeeId(e.target.value)}
+                                    placeholder="กรอกชื่อพนักงาน"
+                                    style={{ marginLeft: '5px', width: '200px' }} // เพิ่มความกว้างให้กับ input
+                                />
+                            </div>
                         </div>
-                    </div>
 
-                    <SalesChart dailySales={dailySales} hourlySalesData={hourlySalesData} viewType={viewType} />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <h3>Daily Sales</h3>
+                            <div className="chart-type-selector">
+                                <FaChartLine
+                                    className={`chart-icon line-icon ${viewType === 'line' ? 'active' : ''}`}
+                                    onClick={() => setViewType('line')}
+                                />
+                                <IoBarChart
+                                    className={`chart-icon bar-icon ${viewType === 'bar' ? 'active' : ''}`}
+                                    onClick={() => setViewType('bar')}
+                                />
+                            </div>
+                        </div>
+
+                        <SalesChart dailySales={dailySales} hourlySalesData={hourlySalesData} viewType={viewType} />
                     </div>
                 </div>
             </div>

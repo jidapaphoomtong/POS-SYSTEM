@@ -82,14 +82,25 @@ namespace backend.Controllers
 
         [CustomAuthorizeRole("Admin, Manager, Employee")]
         [HttpGet("sales-summary/{branchId}")]
-        public async Task<IActionResult> GetSalesSummary(string branchId)
+        public async Task<ActionResult<ServiceResponse<SalesSummaryDto>>> GetSalesSummary(string branchId)
         {
-            var result = await _purchaseService.GetSalesSummary(branchId);
-            if (result.Success)
+            var response = await _purchaseService.GetSalesSummary(branchId);
+            if (response.Success)
             {
-                return Ok(result.Data);
+                return Ok(response.Data);
             }
-            return BadRequest(result.Message);
+            return BadRequest(response.Message);
+        }
+
+        [HttpGet("daily-sales-summary/{branchId}")]
+        public async Task<ActionResult<ServiceResponse<List<DailySalesDto>>>> GetDailySalesSummary(string branchId, int year, int month, int day)
+        {
+            var response = await _purchaseService.GetDailySalesSummary(branchId, year, month, day);
+            if (response.Success)
+            {
+                return Ok(response.Data);
+            }
+            return BadRequest(response.Message);
         }
 
         [CustomAuthorizeRole("Admin, Manager, Employee")]
