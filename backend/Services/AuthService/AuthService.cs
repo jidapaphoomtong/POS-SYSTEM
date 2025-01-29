@@ -60,14 +60,14 @@ namespace backend.Services.AuthService
         {
             if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be null or whitespace.", nameof(email));
 
-            var userCollection = _firestoreDb.Collection("users");
+            var userCollection = _firestoreDb.Collection(FirestoreCollections.Users);
             var snapshot = await userCollection.WhereEqualTo("email", email).GetSnapshotAsync();
             return snapshot.Documents.Any();
         }
 
         public async Task<string> GetNextUserId()
         {
-            var sequenceDoc = _firestoreDb.Collection("config").Document("sequence");
+            var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document("sequence");
             var snapshot = await sequenceDoc.GetSnapshotAsync();
 
             int counter = 1;
@@ -88,7 +88,7 @@ namespace backend.Services.AuthService
         {
             if (string.IsNullOrWhiteSpace(email)) throw new ArgumentException("Email cannot be null or whitespace.", nameof(email));
 
-            var userCollection = _firestoreDb.Collection("users");
+            var userCollection = _firestoreDb.Collection(FirestoreCollections.Users);
             var snapshot = await userCollection.WhereEqualTo("email", email).GetSnapshotAsync();
             return snapshot.Documents.FirstOrDefault();
         }
@@ -105,7 +105,7 @@ namespace backend.Services.AuthService
             if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(hashedPassword))
                 throw new ArgumentException("UserId, email, and password hash cannot be null or empty.");
 
-            var userCollection = _firestoreDb.Collection("users");
+            var userCollection = _firestoreDb.Collection(FirestoreCollections.Users);
             var userDoc = userCollection.Document(userId); // สร้าง/อ้างอิง Document โดยใช้ userId
 
             // เพิ่มข้อมูล Role และ Field ต่าง ๆ ลงในเอกสาร
@@ -131,7 +131,7 @@ namespace backend.Services.AuthService
 
         public async Task<List<Dictionary<string, object>>> GetAllUsers()
         {
-            var userCollection = _firestoreDb.Collection("users");
+            var userCollection = _firestoreDb.Collection(FirestoreCollections.Users);
             var snapshot = await userCollection.GetSnapshotAsync();
 
             return snapshot.Documents.Select(doc =>
@@ -151,7 +151,7 @@ namespace backend.Services.AuthService
             Console.WriteLine($"Attempting to update user with ID: {userId}");
 
             // อ้างอิง Document ใน Firestore
-            var userDoc = _firestoreDb.Collection("users").Document(userId);
+            var userDoc = _firestoreDb.Collection(FirestoreCollections.Users).Document(userId);
             var snapshot = await userDoc.GetSnapshotAsync();
 
             if (!snapshot.Exists)
@@ -200,7 +200,7 @@ namespace backend.Services.AuthService
         // ลบผู้ใช้ตาม Id
         public async Task<bool> DeleteUserAsync(string userId)
         {
-            var userDoc = _firestoreDb.Collection("users").Document(userId);
+            var userDoc = _firestoreDb.Collection(FirestoreCollections.Users).Document(userId);
 
             var snapshot = await userDoc.GetSnapshotAsync();
             if (!snapshot.Exists)
@@ -215,7 +215,7 @@ namespace backend.Services.AuthService
         // ลบผู้ใช้ทั้งหมด
         public async Task<bool> DeleteAllUsersAsync()
         {
-            var userDocs = await _firestoreDb.Collection("users").GetSnapshotAsync();
+            var userDocs = await _firestoreDb.Collection(FirestoreCollections.Users).GetSnapshotAsync();
             foreach (var doc in userDocs.Documents)
             {
                 await doc.Reference.DeleteAsync();
@@ -227,7 +227,7 @@ namespace backend.Services.AuthService
         // Your existing AuthService
         public async Task<DocumentSnapshot> GetUserById(string userId)
         {
-            var userRef = _firestoreDb.Collection("users").Document(userId);
+            var userRef = _firestoreDb.Collection(FirestoreCollections.Users).Document(userId);
             var snapshot = await userRef.GetSnapshotAsync();
             return snapshot.Exists ? snapshot : null;
         }

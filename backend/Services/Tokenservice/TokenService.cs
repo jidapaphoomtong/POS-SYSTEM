@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using backend.Models;
 using Google.Cloud.Firestore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -166,7 +167,7 @@ namespace backend.Services.Tokenservice
             var userId = principal.Identity?.Name;
 
             // Get user document
-            var userSnapshot = await firestoreDb.Collection("users").Document(userId).GetSnapshotAsync();
+            var userSnapshot = await firestoreDb.Collection(FirestoreCollections.Users).Document(userId).GetSnapshotAsync();
             if (!userSnapshot.Exists)
             {
                 throw new UnauthorizedAccessException("User not found.");
@@ -193,7 +194,7 @@ namespace backend.Services.Tokenservice
         public async Task RevokeToken(string userId, FirestoreDB firestoreDb)
         {
             // Get user document
-            var userSnapshot = await firestoreDb.Collection("users").Document(userId).GetSnapshotAsync();
+            var userSnapshot = await firestoreDb.Collection(FirestoreCollections.Users).Document(userId).GetSnapshotAsync();
             if (!userSnapshot.Exists)
             {
                 throw new UnauthorizedAccessException("User not found.");

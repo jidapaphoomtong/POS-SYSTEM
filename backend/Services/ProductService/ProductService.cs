@@ -8,6 +8,7 @@ using backend.Services.NotificationService;
 using Google.Cloud.Firestore;
 using Microsoft.AspNetCore.Cryptography.KeyDerivation;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace backend.Services.ProductService
 {
@@ -26,7 +27,7 @@ namespace backend.Services.ProductService
         {
             try
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document(sequenceName);
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document(sequenceName);
                 var snapshot = await sequenceDoc.GetSnapshotAsync();
 
                 int counter = 1;
@@ -59,9 +60,10 @@ namespace backend.Services.ProductService
                 }
 
                 string productId = await GetNextId($"product-sequence-{branchId}");
-                var productDoc = _firestoreDb.Collection("branches")
+                var productDoc = _firestoreDb
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("products")
+                    .Collection(FirestoreCollections.Products)
                     .Document(productId);
 
                 product.Id = productId;
@@ -80,9 +82,9 @@ namespace backend.Services.ProductService
             try
             {
                 CollectionReference products = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("products");
+                    .Collection(FirestoreCollections.Products);
 
                 QuerySnapshot snapshot = await products.GetSnapshotAsync();
                 var productsList = snapshot.Documents.Select(doc => new
@@ -104,9 +106,9 @@ namespace backend.Services.ProductService
             try
             {
                 DocumentReference productDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("products")
+                    .Collection(FirestoreCollections.Products)
                     .Document(productId);
 
                 DocumentSnapshot snapshot = await productDoc.GetSnapshotAsync();
@@ -130,13 +132,14 @@ namespace backend.Services.ProductService
             try
             {
                 CollectionReference products = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("products");
+                    .Collection(FirestoreCollections.Products);
 
-                var categoryDoc = _firestoreDb.Collection("branches")
+                var categoryDoc = _firestoreDb
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("categories")
+                    .Collection(FirestoreCollections.Categories)
                     .Document(categoryId);
                 var categorySnapshot = await categoryDoc.GetSnapshotAsync();
 
@@ -162,21 +165,28 @@ namespace backend.Services.ProductService
             try
             {
                 DocumentReference productDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("products")
+                    .Collection(FirestoreCollections.Categories)
                     .Document(productId);
+                
+                var currentProduct = await productDoc.GetSnapshotAsync();
+                if (!currentProduct.Exists) return ServiceResponse<string>.CreateFailure("Product not found");
 
-                var productUpdate = new Dictionary<string, object>
+                var currentStock = currentProduct.GetValue<int>("stock");
+                var updates = new Dictionary<string, object>
                 {
                     { "productName", updatedProduct.productName },
                     { "description", updatedProduct.description },
                     { "price", updatedProduct.price },
                     { "stock", updatedProduct.stock },
-                    { "reorderPoint", updatedProduct.reorderPoint } // เพิ่มการอัปเดจจุดรีสต๊อก
+                    { "reorderPoint", updatedProduct.reorderPoint }
                 };
 
-                await productDoc.SetAsync(productUpdate, SetOptions.MergeAll);
+                // ตรวจสอบ Stock และ Trigger Notifications
+                await CheckStockAndNotify(branchId, productId, updatedProduct.stock, currentStock, updatedProduct.reorderPoint);
+
+                await productDoc.SetAsync(updates, SetOptions.MergeAll);
                 return ServiceResponse<string>.CreateSuccess(productId, "Product updated successfully!");
             }
             catch (Exception ex)
@@ -185,12 +195,29 @@ namespace backend.Services.ProductService
             }
         }
 
+        private async Task CheckStockAndNotify(string branchId, string productId, int newStock, int currentStock, int reorderPoint)
+        {
+            if (newStock < reorderPoint && currentStock >= reorderPoint)
+            {
+                await _notificationService.NotifyLowStock(branchId, productId, newStock);
+            }
+            if (newStock <= 0)
+            {
+                await UpdateProductStatusAsync(branchId, productId, "inactive");
+                await _notificationService.NotifyLowStock(branchId, productId, newStock);
+            }
+            else if (newStock > 0)
+            {
+                await UpdateProductStatusAsync(branchId, productId, "active");
+            }
+        }
+
         public async Task<bool> UpdateProductStatusAsync(string branchId, string productId, string status)
         {
             var productRef = _firestoreDb
-                .Collection("branches")
+                .Collection(FirestoreCollections.Branches)
                 .Document(branchId)
-                .Collection("products")
+                .Collection(FirestoreCollections.Categories)
                 .Document(productId);
 
             var productSnapshot = await productRef.GetSnapshotAsync();
@@ -226,9 +253,9 @@ namespace backend.Services.ProductService
             try
             {
                 DocumentReference productDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("products")
+                    .Collection(FirestoreCollections.Categories)
                     .Document(productId);
 
                 var productSnap = await productDoc.GetSnapshotAsync();
@@ -246,17 +273,20 @@ namespace backend.Services.ProductService
                     { "stock", newStock }
                 };
 
-                // การจัดการการแจ้งเตือนสำหรับสินค้าต่ำกว่า reorder point
-                if (newStock < reorderPoint)
+                // ตรวจสอบและส่งการแจ้งเตือน
+                if (newStock < reorderPoint && existingStock >= reorderPoint)
                 {
-                    await _notificationService.NotifyLowStock(branchId, productId);
+                    await _notificationService.NotifyLowStock(branchId, productId, newStock);
                 }
 
-                // การจัดการการแจ้งเตือนสำหรับสินค้าหมด
                 if (newStock <= 0)
                 {
                     updates["status"] = "inactive"; // ตั้งสถานะเป็น inactive
-                    await _notificationService.NotifyLowStock(branchId, productId);
+                    await _notificationService.NotifyLowStock(branchId, productId, newStock);
+                }
+                else
+                {
+                    await UpdateProductStatusAsync(branchId, productId, "active"); // เปลี่ยนสถานะเป็น active
                 }
 
                 await productDoc.SetAsync(updates, SetOptions.MergeAll);
@@ -273,9 +303,9 @@ namespace backend.Services.ProductService
             try
             {
                 DocumentReference productDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("products")
+                    .Collection(FirestoreCollections.Categories)
                     .Document(productId);
 
                 await productDoc.DeleteAsync();
@@ -292,9 +322,9 @@ namespace backend.Services.ProductService
             try
             {
                 var productsCollection = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("products");
+                    .Collection(FirestoreCollections.Categories);
 
                 var snapshots = await productsCollection.GetSnapshotAsync();
                 var deleteTasks = snapshots.Documents.Select(doc => doc.Reference.DeleteAsync());

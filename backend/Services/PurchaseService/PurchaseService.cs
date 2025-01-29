@@ -19,7 +19,7 @@ namespace backend.Services.PurchaseService
         {
             try
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document(sequenceName);
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document(sequenceName);
                 var snapshot = await sequenceDoc.GetSnapshotAsync();
 
                 int counter = snapshot.Exists && snapshot.TryGetValue("counter", out int currentCounter)
@@ -47,10 +47,12 @@ namespace backend.Services.PurchaseService
                     return ServiceResponse<string>.CreateFailure("Purchase data is null.");
                 }
 
+                //ดึงข้อมูล product : price และคำนวณ
+
                 var purchaseDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .Document(purchaseId);
 
                 await purchaseDoc.SetAsync(purchase);
@@ -67,9 +69,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases");
+                    .Collection(FirestoreCollections.Purchases);
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
@@ -93,9 +95,9 @@ namespace backend.Services.PurchaseService
             {
                 // เข้าถึงคำสั่งซื้อเฉพาะจาก Firestore
                 var purchaseDocRef = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .Document(purchaseId);
 
                 var snapshot = await purchaseDocRef.GetSnapshotAsync();
@@ -123,9 +125,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases");
+                    .Collection(FirestoreCollections.Purchases);
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
@@ -170,9 +172,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .WhereEqualTo("Year", year)
                     .WhereEqualTo("Month", month)
                     .WhereEqualTo("Day", day);
@@ -213,9 +215,9 @@ namespace backend.Services.PurchaseService
                 var endDate = new DateTime(year, month + 1, 1, 0, 0, 0, DateTimeKind.Utc);
                 
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .WhereGreaterThan("Date", startDate)
                     .WhereLessThan("Date", endDate);
 
@@ -239,9 +241,9 @@ namespace backend.Services.PurchaseService
                 var endDate = new DateTime(year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .WhereGreaterThan("Date", startDate)
                     .WhereLessThan("Date", endDate);
 
@@ -261,9 +263,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .WhereEqualTo("Seller", employeeId); // สมมุติว่า field ของพนักงานคือ "Seller"
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
@@ -287,9 +289,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases");
+                    .Collection(FirestoreCollections.Purchases);
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 if (snapshot.Documents.Count == 0)

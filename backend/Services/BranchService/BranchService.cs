@@ -99,7 +99,7 @@ namespace backend.Services.BranchService
                 string branchId = await GetNextId("branch-sequence");
 
                 // สร้าง Document ID โดยใช้ไอดีที่กำหนดเอง
-                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                DocumentReference branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId);
 
                 // เพิ่มไอดีเข้าไปใน Branch Object
                 branch.Id = branchId; // เก็บไอดีในฟิลด์ "Id" แบบ string
@@ -116,7 +116,7 @@ namespace backend.Services.BranchService
         public async Task<ServiceResponse<List<BranchResponse>>> GetBranches()
         {
             try {
-                CollectionReference branches = _firestoreDb.Collection("branches");
+                CollectionReference branches = _firestoreDb.Collection(FirestoreCollections.Branches);
                 QuerySnapshot snapshot = await branches.GetSnapshotAsync();
 
                 var branchesList = snapshot.Documents.Select(doc => new BranchResponse
@@ -139,7 +139,7 @@ namespace backend.Services.BranchService
         {
             try
             {
-                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                DocumentReference branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId);
                 Console.WriteLine($"Fetching branch with ID: {branchId}");
 
                 // ตรวจสอบว่า Document มีอยู่
@@ -167,7 +167,7 @@ namespace backend.Services.BranchService
         {
             try
             {
-                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                DocumentReference branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId);
                 
                 // ตรวจสอบว่า Document มีอยู่
                 var branchDocSnapshot = await branchDoc.GetSnapshotAsync();
@@ -196,7 +196,7 @@ namespace backend.Services.BranchService
 
         public async Task<bool> UpdateBranchStatusAsync(string branchId, string status)
     {
-        DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+        DocumentReference branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId);
 
         var branchSnapshot = await branchDoc.GetSnapshotAsync();
 
@@ -229,7 +229,7 @@ namespace backend.Services.BranchService
 //             try
 //             {
 //                 // ดึง snapshot ของ branches
-//                 var branchesSnapshot = await _firestoreDb.Collection("branches").GetSnapshotAsync();
+//                 var branchesSnapshot = await _firestoreDb.Collection(FirestoreCollections.Branches).GetSnapshotAsync();
 
 //                 // หากไม่มี documents ให้ส่งกลับข้อความที่เหมาะสม
 //                 if (branchesSnapshot.Count == 0)
@@ -271,7 +271,7 @@ namespace backend.Services.BranchService
             try
             {
                 DocumentReference branch = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId);
 
                 await branch.DeleteAsync();
