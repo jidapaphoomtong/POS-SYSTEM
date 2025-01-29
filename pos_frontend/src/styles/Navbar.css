@@ -67,6 +67,8 @@
   
   .user-icon {
     color: #2a83cf; /* สีฟ้าอวาตาร์ */
+    font-size: 22px;
+    margin-right: 10px;
   }
   
   .user-info span {
@@ -159,6 +161,8 @@
     right: 0;
     font-size: 12px;
 }
+
+
 
 .modal {
   display: flex;

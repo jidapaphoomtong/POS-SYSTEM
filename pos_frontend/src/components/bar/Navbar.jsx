@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import "../../styles/Navbar.css";
 import { FaBell, FaUser, FaBars } from "react-icons/fa";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import axios from "axios";
-import { useRef } from "react";
 
 const Navbar = () => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -14,11 +13,43 @@ const Navbar = () => {
     const [notifications, setNotifications] = useState([]);
     const [isNotificationOpen, setNotificationOpen] = useState(false);
     const notificationRef = useRef(null);
-    const userRef = useRef(null); // สำหรับ User Info เมนูถ้าต้องการ
+    const userRef = useRef(null);
+
+    // ฟังก์ชันดึงการแจ้งเตือนจาก API
+    const fetchNotifications = async () => {
+        const token = Cookies.get("authToken");
+        const branchId = userData ? userData.branchId : "";
+        if (!token || !branchId) {
+            return;
+        }
+
+        try {
+            const response = await axios.get(`/api/Notification/notification/${branchId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            console.log(response)
+
+            if (response.data.success) {
+                setNotifications(response.data.data);
+            } else {
+                toast.error("ไม่สามารถดึงการแจ้งเตือนได้.");
+            }
+        } catch (error) {
+            console.error("Error fetching notifications:", error);
+            toast.error("เกิดข้อผิดพลาดในการดึงการแจ้งเตือน.");
+        }
+    };
+
+    useEffect(() => {
+        console.log("Current notifications:", notifications);
+    }, [notifications]);
 
     useEffect(() => {
         const token = Cookies.get("authToken");
-        
+
         if (token) {
             try {
                 const decodedToken = jwtDecode(token);
@@ -47,34 +78,7 @@ const Navbar = () => {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-
     }, []);
-
-    // ฟังก์ชันดึงการแจ้งเตือนจาก API
-    const fetchNotifications = async () => {
-        const token = Cookies.get("authToken");
-        const branchId = userData ? userData.branchId : ""; // สมมุติว่า branchId อยู่ใน token
-        if (!token || !branchId) {
-            return;
-        }
-
-        try {
-            const response = await axios.get(`/api/notification/${branchId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-
-            if (response.data.success) {
-                setNotifications(response.data.data);
-            } else {
-                toast.error("ไม่สามารถดึงการแจ้งเตือนได้.");
-            }
-        } catch (error) {
-            console.error("Error fetching notifications:", error);
-            toast.error("เกิดข้อผิดพลาดในการดึงการแจ้งเตือน.");
-        }
-    };
 
     const handleToggleNotifications = () => {
         setNotificationOpen(!isNotificationOpen);
@@ -92,29 +96,23 @@ const Navbar = () => {
         setIsModalOpen(false);
     };
 
-    const deleteNotification = async (notificationId) => {
+    const markNotificationAsRead = async (notificationId) => {
         const token = Cookies.get("authToken");
-        const branchId = userData ? userData.branchId : ""; // สมมุติว่า branchId อยู่ใน token
-    
+        const branchId = userData ? userData.branchId : "";
+
         if (!token || !branchId) return;
-    
+
         try {
-            const response = await axios.delete(`/api/notification/delete-notification/${branchId}/${notificationId}`, {
+            await axios.put(`/api/Notification/read-notification/${branchId}/${notificationId}`, {}, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-    
-            if (response.data.success) {
-                // ลบการแจ้งเตือนจาก state
-                setNotifications(notifications.filter(notification => notification.productId !== notificationId));
-                toast.success("Notification deleted successfully.");
-            } else {
-                toast.error("Failed to delete notification.");
-            }
+            setNotifications(notifications.map(notification => 
+                notification.productId === notificationId ? { ...notification, IsRead: true } : notification
+            ));
         } catch (error) {
-            console.error("Error deleting notification:", error);
-            toast.error("Failed to delete notification.");
+            console.error("Error marking notification as read:", error);
         }
     };
 
@@ -124,19 +122,17 @@ const Navbar = () => {
                 <div className="navbar-icons">
                     <div className="notification-icon" onClick={handleToggleNotifications} ref={notificationRef}>
                         <FaBell className="icon bell-icon" />
-                        {notifications.length > 0 && (
-                            <span className="notification-count">{notifications.length}</span>
+                        {notifications.some(notif => !notif.IsRead) && (
+                            <span className="notification-dot"></span>
                         )}
                         {/* Notification Dropdown */}
                         {isNotificationOpen && (
                             <div className="notification-dropdown">
                                 {notifications.length > 0 ? (
                                     notifications.map((notification) => (
-                                        <div className="notification-item" key={notification.productId}>
+                                        <div className={`notification-item ${notification.IsRead ? '' : 'unread'}`} key={notification.productId}>
                                             <p>{notification.message}</p>
-                                            <button onClick={() => deleteNotification(notification.productId)}>
-                                                Delete
-                                            </button>
+                                            <button onClick={() => markNotificationAsRead(notification.productId)}>Mark as Read</button>
                                         </div>
                                     ))
                                 ) : (
@@ -146,9 +142,9 @@ const Navbar = () => {
                         )}
                     </div>
                     <div className="user-info" ref={userRef}>
-                        <FaUser className="icon user-icon" />
-                        <span>{userData ? userData.firstName : "Guest"}</span>
-                        <div className="menu-icon" onClick={handleToggleDropdown}>
+                        <FaUser className="user-icon" />
+                        <span style={{marginRight:"10px", fontSize:"20", marginTop:"3.3px"}}>{userData ? userData.firstName : "Guest"}</span>
+                        <div className="icon menu-icon" onClick={handleToggleDropdown}>
                             <FaBars />
                             {isDropdownOpen && (
                                 <div className="dropdown">

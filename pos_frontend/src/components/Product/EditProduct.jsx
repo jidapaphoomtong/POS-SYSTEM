@@ -86,8 +86,8 @@ const EditProduct = () => {
             return;
         }
         
-        if (formData.reorderPoint < 0) {
-            toast.error("Reorder point cannot be negative.");
+        if (formData.stock < 0 || formData.reorderPoint < 0) {
+            toast.error("Stock and point cannot be negative.");
             return;
         }
     

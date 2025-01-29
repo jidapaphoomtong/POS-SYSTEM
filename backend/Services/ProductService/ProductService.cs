@@ -167,7 +167,7 @@ namespace backend.Services.ProductService
                 DocumentReference productDoc = _firestoreDb
                     .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection(FirestoreCollections.Categories)
+                    .Collection(FirestoreCollections.Products)
                     .Document(productId);
                 
                 var currentProduct = await productDoc.GetSnapshotAsync();
@@ -217,7 +217,7 @@ namespace backend.Services.ProductService
             var productRef = _firestoreDb
                 .Collection(FirestoreCollections.Branches)
                 .Document(branchId)
-                .Collection(FirestoreCollections.Categories)
+                .Collection(FirestoreCollections.Products)
                 .Document(productId);
 
             var productSnapshot = await productRef.GetSnapshotAsync();
@@ -255,7 +255,7 @@ namespace backend.Services.ProductService
                 DocumentReference productDoc = _firestoreDb
                     .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection(FirestoreCollections.Categories)
+                    .Collection(FirestoreCollections.Products)
                     .Document(productId);
 
                 var productSnap = await productDoc.GetSnapshotAsync();
@@ -305,7 +305,7 @@ namespace backend.Services.ProductService
                 DocumentReference productDoc = _firestoreDb
                     .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection(FirestoreCollections.Categories)
+                    .Collection(FirestoreCollections.Products)
                     .Document(productId);
 
                 await productDoc.DeleteAsync();
@@ -324,7 +324,7 @@ namespace backend.Services.ProductService
                 var productsCollection = _firestoreDb
                     .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection(FirestoreCollections.Categories);
+                    .Collection(FirestoreCollections.Products);
 
                 var snapshots = await productsCollection.GetSnapshotAsync();
                 var deleteTasks = snapshots.Documents.Select(doc => doc.Reference.DeleteAsync());
@@ -343,7 +343,7 @@ namespace backend.Services.ProductService
         {
             try
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document($"product-sequence-{branchId}");
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document($"product-sequence-{branchId}");
                 await sequenceDoc.SetAsync(new { counter = 1 }); // รีเซ็ตค่าเป็น 1
 
                 return ServiceResponse<string>.CreateSuccess("Branch ID sequence reset successfully!", "Reset done");

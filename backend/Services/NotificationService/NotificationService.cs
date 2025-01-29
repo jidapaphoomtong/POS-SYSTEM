@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 using Google.Cloud.Firestore;
+using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 
 namespace backend.Services.NotificationService
 {
@@ -16,7 +18,7 @@ namespace backend.Services.NotificationService
             _firestoreDb = firestoreDb;
         }
         
-        public async Task NotifyLowStock(string branchId, string productId)
+        public async Task NotifyLowStock(string branchId, string productId, int newStock)
         {
             if (string.IsNullOrEmpty(branchId) || string.IsNullOrEmpty(productId))
             {
@@ -33,11 +35,13 @@ namespace backend.Services.NotificationService
                 ProductId = productId
             };
 
+            Console.WriteLine(JsonConvert.SerializeObject(notification));
+
             // บันทึกการแจ้งเตือนใน Firestore
             await _firestoreDb
-                .Collection("branches")
+                .Collection(FirestoreCollections.Branches)
                 .Document(branchId)
-                .Collection("notifications")
+                .Collection(FirestoreCollections.Notifications)
                 .AddAsync(notification);
             
             Console.WriteLine($"Notification added: {message}"); // Log สำหรับตรวจสอบ
@@ -46,26 +50,62 @@ namespace backend.Services.NotificationService
         public async Task<List<Notification>> GetNotificationsAsync(string branchId)
         {
             if (string.IsNullOrEmpty(branchId))
-                return new List<Notification>();  // ต้องแน่ใจว่ามี Branch ID
+            {
+                Console.WriteLine("Branch ID is null or empty.");
+                return new List<Notification>();
+            }
 
             var notifications = new List<Notification>();
-            
-            // ตรวจสอบการค้นหา
-            var query = _firestoreDb
-                .Collection("branches")
-                .Document(branchId)
-                .Collection("notifications"); // จำกัดเฉพาะ collection ของ notifications
+            Console.WriteLine($"Fetching notifications for branch ID: {branchId}");
 
-            // สามารถเพิ่มการกรองเพิ่มเติมได้หากต้องการ
+            var query = _firestoreDb
+                .Collection(FirestoreCollections.Branches)
+                .Document(branchId)
+                .Collection(FirestoreCollections.Notifications);
+
             var querySnapshot = await query.GetSnapshotAsync();
-            
+
+            if (querySnapshot.Count == 0)
+            {
+                Console.WriteLine($"No notifications found for branch ID: {branchId}");
+                return notifications;
+            }
+
             foreach (var document in querySnapshot.Documents)
             {
                 var notification = document.ConvertTo<Notification>();
-                notifications.Add(notification);
+                // Console.WriteLine($"Fetched notification: {JsonConvert.SerializeObject(notification)}");
+
+                if (notification != null)
+                {
+                    notifications.Add(notification);
+                }
+                else
+                {
+                    Console.WriteLine($"Notification from document {document.Id} is null.");
+                }
             }
 
             return notifications;
+        }
+
+        public async Task<IActionResult> MarkAsRead(string branchId, string notificationId)
+        {
+            try
+            {
+                var notificationRef = _firestoreDb
+                .Collection(FirestoreCollections.Branches)
+                .Document(branchId)
+                .Collection(FirestoreCollections.Notifications)
+                .Document(notificationId);
+                    
+                await notificationRef.SetAsync(new { IsRead = true }, SetOptions.MergeAll);
+                return new OkObjectResult(new { Success = true, Message = "Notification marked as read." });
+            }
+            catch (Exception ex)
+            {
+                return new ObjectResult(new { Message = ex.Message }) { StatusCode = 500 };
+            }
         }
 
         public async Task<bool> DeleteAllNotificationsAsync(string branchId)
@@ -78,9 +118,9 @@ namespace backend.Services.NotificationService
             try
             {
                 var notificationsCollection = _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId)
-                    .Collection("notifications");
+                .Collection(FirestoreCollections.Branches)
+                .Document(branchId)
+                .Collection(FirestoreCollections.Notifications);
 
                 var querySnapshot = await notificationsCollection.GetSnapshotAsync();
                 var deleteTasks = querySnapshot.Documents.Select(document => document.Reference.DeleteAsync());

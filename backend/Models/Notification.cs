@@ -9,9 +9,15 @@ namespace backend.Models
     [FirestoreData]
     public class Notification
     {
+        [FirestoreProperty]
         public string Message { get; set; }
+        [FirestoreProperty]
         public DateTime Timestamp { get; set; }
+        [FirestoreProperty]
         public string BranchId { get; set; }
+        [FirestoreProperty]
         public string ProductId { get; set; }
+        [FirestoreProperty]
+        public bool IsRead { get; set; } // เพิ่มฟิลด์นี้
     }
 }
