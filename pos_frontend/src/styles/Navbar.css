@@ -192,3 +192,20 @@
   cursor: pointer;
   font-size: 20px;
 }
+
+.custom-dropdown {
+  border: 1px solid #B0C4DE; /* ใช้สีน้ำเงินอ่อนเหมือน DatePicker */
+  border-radius: 5px;
+  padding: 10px;
+  width: 200px; /* ขนาดตามที่ต้องการ */
+  background-color: white; /* สีพื้นหลัง */
+  font-size: 16px;
+  color: #333; /* สีตัวอักษร */
+  appearance: none; /* ทำให้ dropdown ไม่มีรูปแบบพื้นฐาน */
+}
+
+.custom-dropdown:focus {
+  outline: none; /* ปิดการแสดงเส้น ๆ เมื่อ focus */
+  border-color: #5B9BD5; /* เปลี่ยนสีเมื่ออยู่ใน focus */
+  box-shadow: 0 0 5px rgba(91, 155, 213, 0.5); /* เพิ่มเงา */
+}

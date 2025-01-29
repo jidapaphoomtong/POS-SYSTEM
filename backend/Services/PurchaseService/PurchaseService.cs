@@ -121,7 +121,6 @@ namespace backend.Services.PurchaseService
 
         public async Task<ServiceResponse<SalesSummaryDto>> GetSalesSummary(string branchId)
         {
-            // ดึงข้อมูลและคำนวณสรุปยอดขาย
             try
             {
                 var purchasesQuery = _firestoreDb
@@ -141,13 +140,14 @@ namespace backend.Services.PurchaseService
                 var totalTransactions = purchases.Count;
 
                 var dailySales = purchases
-                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd"))
+                    .GroupBy(p => new { Date = p.Date.ToString("yyyy-MM-dd"), p.Seller }) // กลุ่มตามวันที่และชื่อพนักงาน
                     .Select(g => new DailySalesDto
                     {
-                        Date = g.Key,
+                        Date = g.Key.Date,
                         Amount = g.Sum(p => p.Total),
                         TransactionCount = g.Count(),
-                        AveragePerTransaction = g.Sum(p => p.Total) / (g.Count() > 0 ? g.Count() : 1)
+                        AveragePerTransaction = g.Sum(p => p.Total) / (g.Count() > 0 ? g.Count() : 1),
+                        Seller = g.Key.Seller // นำชื่อพนักงานมาเก็บใน DailySalesDto
                     })
                     .ToList();
 
