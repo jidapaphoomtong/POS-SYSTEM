@@ -273,16 +273,17 @@ namespace backend.Services.ProductService
                     { "stock", newStock }
                 };
 
-                // ตรวจสอบและส่งการแจ้งเตือน
+                // ตรวจสอบและส่งการแจ้งเตือนสำหรับระดับต่ำ
                 if (newStock < reorderPoint && existingStock >= reorderPoint)
                 {
                     await _notificationService.NotifyLowStock(branchId, productId, newStock);
                 }
 
+                // ตรวจสอบการหมดสต็อก
                 if (newStock <= 0)
                 {
                     updates["status"] = "inactive"; // ตั้งสถานะเป็น inactive
-                    await _notificationService.NotifyLowStock(branchId, productId, newStock);
+                    await _notificationService.NotifyOutOfStock(branchId, productId); // ไม่ต้องส่ง newStock เพราะไม่ได้ใช้
                 }
                 else
                 {

@@ -13,5 +13,7 @@ namespace backend.Services.NotificationService
         Task<List<Notification>> GetNotificationsAsync(string branchId);
         Task<bool> DeleteAllNotificationsAsync(string branchId);
         Task<IActionResult> MarkAsRead(string branchId, string notificationId);
+        Task<IActionResult> MarkAllAsRead(string branchId);
+        Task NotifyOutOfStock(string branchId, string productId);
     }
 }

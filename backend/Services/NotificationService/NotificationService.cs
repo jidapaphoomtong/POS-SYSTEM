@@ -17,22 +17,85 @@ namespace backend.Services.NotificationService
         {
             _firestoreDb = firestoreDb;
         }
+
+        public async Task<string> GetNextId(string sequenceName)
+        {
+            try
+            {
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document(sequenceName);
+                var snapshot = await sequenceDoc.GetSnapshotAsync();
+
+                int counter = 1;
+
+                if (snapshot.Exists && snapshot.TryGetValue<int>("counter", out var currentCounter))
+                {
+                    counter = currentCounter;
+                }
+
+                // Increment ลำดับ
+                await sequenceDoc.SetAsync(new { counter = counter + 1 });
+
+                // คืนค่า ID ในรูปแบบ "001", "002", "003"
+                return counter.ToString("D3");
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to generate ID for {sequenceName}: {ex.Message}");
+            }
+        }
         
         public async Task NotifyLowStock(string branchId, string productId, int newStock)
         {
             if (string.IsNullOrEmpty(branchId) || string.IsNullOrEmpty(productId))
             {
                 Console.WriteLine("Branch ID or Product ID is null/empty.");
-                return; // หลีกเลี่ยงการทำงานต่อ
+                return; 
             }
 
             var message = $"Stock for Product ID {productId} is low.";
+            
+            // สร้าง ID ใหม่
+            var notificationId = await GetNextId($"notification-sequence-{branchId}");
+
             var notification = new Notification
             {
+                Id = notificationId,
                 Message = message,
                 Timestamp = DateTime.UtcNow,
                 BranchId = branchId,
-                ProductId = productId
+                ProductId = productId,
+                IsRead = false // กำหนดค่าตั้งต้นเป็น false
+            };
+
+            Console.WriteLine(JsonConvert.SerializeObject(notification));
+
+            await _firestoreDb
+                .Collection(FirestoreCollections.Branches)
+                .Document(branchId)
+                .Collection(FirestoreCollections.Notifications)
+                .Document(notificationId) // ใช้ ID ที่สร้างมา
+                .SetAsync(notification); // บันทึกการแจ้งเตือน
+
+            Console.WriteLine($"Notification added: {message}");
+        }
+
+        public async Task NotifyOutOfStock(string branchId, string productId)
+        {
+            if (string.IsNullOrEmpty(branchId) || string.IsNullOrEmpty(productId))
+            {
+                Console.WriteLine("Branch ID or Product ID is null/empty.");
+                return;
+            }
+
+            var message = $"Product ID {productId} is out of stock.";
+            var notification = new Notification
+            {
+                Id = await GetNextId($"notification-sequence-{branchId}"),
+                Message = message,
+                Timestamp = DateTime.UtcNow,
+                BranchId = branchId,
+                ProductId = productId,
+                IsRead = false
             };
 
             Console.WriteLine(JsonConvert.SerializeObject(notification));
@@ -42,9 +105,10 @@ namespace backend.Services.NotificationService
                 .Collection(FirestoreCollections.Branches)
                 .Document(branchId)
                 .Collection(FirestoreCollections.Notifications)
-                .AddAsync(notification);
-            
-            Console.WriteLine($"Notification added: {message}"); // Log สำหรับตรวจสอบ
+                .Document(notification.Id)
+                .SetAsync(notification);
+
+            Console.WriteLine($"Notification added: {message}");
         }
 
         public async Task<List<Notification>> GetNotificationsAsync(string branchId)
@@ -94,13 +158,40 @@ namespace backend.Services.NotificationService
             try
             {
                 var notificationRef = _firestoreDb
-                .Collection(FirestoreCollections.Branches)
-                .Document(branchId)
-                .Collection(FirestoreCollections.Notifications)
-                .Document(notificationId);
-                    
+                    .Collection(FirestoreCollections.Branches)
+                    .Document(branchId)
+                    .Collection(FirestoreCollections.Notifications)
+                    .Document(notificationId);
+
+                // อัปเดต IsRead เป็น true
                 await notificationRef.SetAsync(new { IsRead = true }, SetOptions.MergeAll);
                 return new OkObjectResult(new { Success = true, Message = "Notification marked as read." });
+            }
+            catch (Exception ex)
+            {
+                return new ObjectResult(new { Message = ex.Message }) { StatusCode = 500 };
+            }
+        }
+
+        public async Task<IActionResult> MarkAllAsRead(string branchId)
+        {
+            try
+            {
+                // ดึงการแจ้งเตือนทั้งหมด
+                var notificationsCollection = _firestoreDb
+                    .Collection(FirestoreCollections.Branches)
+                    .Document(branchId)
+                    .Collection(FirestoreCollections.Notifications);
+
+                var querySnapshot = await notificationsCollection.GetSnapshotAsync();
+
+                // อัปเดตเป็นอ่านสำหรับการแจ้งเตือนทั้งหมด
+                foreach (var document in querySnapshot.Documents)
+                {
+                    await document.Reference.SetAsync(new { IsRead = true }, SetOptions.MergeAll);
+                }
+
+                return new OkObjectResult(new { Success = true, Message = "All notifications marked as read." });
             }
             catch (Exception ex)
             {

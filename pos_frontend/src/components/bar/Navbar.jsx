@@ -5,6 +5,7 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import { toast } from "react-toastify";
 import axios from "axios";
+import { useParams } from "react-router-dom";
 
 const Navbar = () => {
     const [isDropdownOpen, setDropdownOpen] = useState(false);
@@ -14,26 +15,42 @@ const Navbar = () => {
     const [isNotificationOpen, setNotificationOpen] = useState(false);
     const notificationRef = useRef(null);
     const userRef = useRef(null);
+    const { branchId } = useParams();
+    const [unreadCount, setUnreadCount] = useState(0);
 
-    // ฟังก์ชันดึงการแจ้งเตือนจาก API
+    useEffect(() => {
+        const token = Cookies.get("authToken");
+        if (token) {
+            try {
+                const decodedToken = jwtDecode(token);
+                setUserData(decodedToken);
+                fetchNotifications();
+            } catch (error) {
+                console.error("Invalid token:", error);
+                toast.error("มีบางอย่างผิดพลาด");
+            }
+        }
+    }, []);
+
     const fetchNotifications = async () => {
         const token = Cookies.get("authToken");
-        const branchId = userData ? userData.branchId : "";
-        if (!token || !branchId) {
+        const currentBranchId = branchId;
+        if (!token || !currentBranchId) {
+            console.error("Token or branchId is missing.");
             return;
         }
 
         try {
-            const response = await axios.get(`/api/Notification/notification/${branchId}`, {
+            const response = await axios.get(`/api/Notification/notification/${currentBranchId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
 
-            console.log(response)
-
             if (response.data.success) {
                 setNotifications(response.data.data);
+                const unreadCount = response.data.data.filter(notif => !notif.IsRead).length;
+                setUnreadCount(unreadCount);
             } else {
                 toast.error("ไม่สามารถดึงการแจ้งเตือนได้.");
             }
@@ -44,36 +61,16 @@ const Navbar = () => {
     };
 
     useEffect(() => {
-    }, [notifications]);
-
-    useEffect(() => {
-        const token = Cookies.get("authToken");
-
-        if (token) {
-            try {
-                const decodedToken = jwtDecode(token);
-                setUserData(decodedToken);
-                fetchNotifications(); // ดึงการแจ้งเตือนตอนโหลด
-            } catch (error) {
-                console.error("Invalid token:", error);
-                toast.error("มีบางอย่างผิดพลาด");
-            }
-        }
-
         const handleClickOutside = (event) => {
-            if (
-                notificationRef.current && 
-                !notificationRef.current.contains(event.target)
-            ) {
+            if (notificationRef.current && !notificationRef.current.contains(event.target)) {
                 setNotificationOpen(false);
             }
             if (userRef.current && !userRef.current.contains(event.target)) {
                 setDropdownOpen(false);
             }
         };
-    
+
         document.addEventListener("mousedown", handleClickOutside);
-        
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
@@ -81,6 +78,35 @@ const Navbar = () => {
 
     const handleToggleNotifications = () => {
         setNotificationOpen(!isNotificationOpen);
+        
+        // เมื่อเปิดดรอปดาวน์การแจ้งเตือนให้ทำเครื่องหมายทุกการแจ้งเตือนว่าอ่าน
+        if (!isNotificationOpen) {
+            markAllNotificationsAsRead();
+        }
+    };
+
+    const markAllNotificationsAsRead = async () => {
+        const token = Cookies.get("authToken");
+        const branchId = userData ? userData.branchId : "";
+        if (!token || !branchId) return;
+
+        try {
+            await axios.put(`/api/Notification/read-all-notifications/${branchId}`, {}, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+
+            const updatedNotifications = notifications.map(notification => ({
+                ...notification,
+                IsRead: true // ตั้งค่า IsRead เป็น true
+            }));
+
+            setNotifications(updatedNotifications);
+            setUnreadCount(0); // อัปเดตจำนวนแจ้งเตือนที่ยังไม่ได้อ่าน
+        } catch (error) {
+            console.error("Error marking all notifications as read:", error);
+        }
     };
 
     const handleToggleDropdown = () => {
@@ -95,60 +121,39 @@ const Navbar = () => {
         setIsModalOpen(false);
     };
 
-    const markNotificationAsRead = async (notificationId) => {
-        const token = Cookies.get("authToken");
-        const branchId = userData ? userData.branchId : "";
-
-        if (!token || !branchId) return;
-
-        try {
-            await axios.put(`/api/Notification/read-notification/${branchId}/${notificationId}`, {}, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            setNotifications(notifications.map(notification => 
-                notification.productId === notificationId ? { ...notification, IsRead: true } : notification
-            ));
-        } catch (error) {
-            console.error("Error marking notification as read:", error);
-        }
-    };
-
     return (
         <nav className="navbar">
             <div className="navbar-container">
                 <div className="navbar-icons">
                     <div className="notification-icon" onClick={handleToggleNotifications} ref={notificationRef}>
                         <FaBell className="icon bell-icon" />
-                        {notifications.some(notif => !notif.IsRead) && (
-                            <span className="notification-dot"></span>
+                        {unreadCount > 0 && (
+                            <span className="notification-dot">
+                                {unreadCount} {/* จำนวนแจ้งเตือนที่ยังไม่ได้อ่าน */}
+                            </span>
                         )}
-                        {/* Notification Dropdown */}
                         {isNotificationOpen && (
                             <div className="notification-dropdown">
-                                {notifications.length > 0 ? (
-                                    notifications.map((notification) => (
-                                        <div className={`notification-item ${notification.IsRead ? '' : 'unread'}`} key={notification.productId}>
-                                            <p>{notification.message}</p>
-                                            <button onClick={() => markNotificationAsRead(notification.productId)}>Mark as Read</button>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <p>No notifications.</p>
-                                )}
+                                {notifications.map((notification) => (
+                                    <div className={`notification-item ${notification.IsRead ? 'read' : 'unread'}`} key={notification.productId}>
+                                        <p>{notification.message}</p>
+                                        {notification.IsRead && <span>✅</span>} {/* แสดงเครื่องหมายถูกถ้ามีการอ่าน */}
+                                    </div>
+                                ))}
                             </div>
                         )}
                     </div>
                     <div className="user-info" ref={userRef}>
                         <FaUser className="user-icon" />
-                        <span style={{marginRight:"10px", fontSize:"20", marginTop:"3.3px"}}>{userData ? userData.firstName : "Guest"}</span>
+                        <span style={{marginRight:"10px", marginTop:"3.3px"}}>
+                            {userData ? userData.firstName : "Guest"}
+                        </span>
                         <div className="icon menu-icon" onClick={handleToggleDropdown}>
                             <FaBars />
                             {isDropdownOpen && (
                                 <div className="dropdown">
                                     <ul>
-                                        <li onClick={showUserInfoModal}>User Info</li>
+                                        <li style={{fontSize:"16"}} onClick={showUserInfoModal}>User Info</li>
                                     </ul>
                                 </div>
                             )}
@@ -157,7 +162,6 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* Modal สำหรับแสดงข้อมูลผู้ใช้ */}
             {isModalOpen && (
                 <div className="modal">
                     <div className="modal-content">

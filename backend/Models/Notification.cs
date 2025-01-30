@@ -10,6 +10,8 @@ namespace backend.Models
     public class Notification
     {
         [FirestoreProperty]
+        public string Id { get; set; }
+        [FirestoreProperty]
         public string Message { get; set; }
         [FirestoreProperty]
         public DateTime Timestamp { get; set; }

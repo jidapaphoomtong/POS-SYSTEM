@@ -70,6 +70,12 @@ namespace backend.Controllers
             return result;
         }
 
+        [HttpPut("read-all-notifications/{branchId}")]
+        public async Task<IActionResult> MarkAllAsRead(string branchId)
+        {
+            return await _notificationService.MarkAllAsRead(branchId);
+        }
+
         [HttpDelete("delete-all-notifications/{branchId}")]
         public async Task<IActionResult> DeleteAllNotifications(string branchId)
         {
