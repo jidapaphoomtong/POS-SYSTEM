@@ -44,7 +44,6 @@ const Navbar = () => {
     };
 
     useEffect(() => {
-        console.log("Current notifications:", notifications);
     }, [notifications]);
 
     useEffect(() => {

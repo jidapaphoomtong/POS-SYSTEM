@@ -59,28 +59,37 @@ const Dashboard = () => {
                 withCredentials: true,
             });
 
-            const filteredSummaryData = Array.isArray(summaryResponse.data.dailySales) 
-            ? summaryResponse.data.dailySales.filter(sale => {
-                const saleDate = new Date(sale.date);
-                
-                const isSameDay = saleDate.getFullYear() === startDate.getFullYear() &&
-                                  saleDate.getMonth() === startDate.getMonth() &&
-                                  saleDate.getDate() === startDate.getDate();
-            
-                return (
-                    isSameDay &&
-                    (employeeId === '' || pur.seller.toLowerCase().includes(employeeIdLower))
-                );
-            }) 
-            : [];
-
             const dailySalesData = summaryResponse.data.dailySales || [];
             
+            // ฟิลเตอร์ข้อมูลตามวันและพนักงานที่เลือก
+            const filteredDailySalesData = dailySalesData.filter(sale => {
+                const saleDate = new Date(sale.date);
+                const employeeIdLower = employeeId.toLowerCase();
+                
+                // เอาเวลาออกแล้วเพียงแค่ตรวจสอบปี เดือน วัน
+                const isSameDay = saleDate.getFullYear() === startDate.getFullYear() &&
+                                saleDate.getMonth() === startDate.getMonth() &&
+                                saleDate.getDate() === startDate.getDate();
+                
+                return (
+                    isSameDay &&
+                    (employeeId === '' || sale.seller.toLowerCase().includes(employeeIdLower))
+                );
+            });
+
+            // คำนวณข้อมูลสรุปจากข้อมูลที่กรองแล้ว
+            const totalSales = filteredDailySalesData.reduce((sum, sale) => sum + sale.amount, 0);
+            const totalTransactions = filteredDailySalesData.reduce((sum, sale) => sum + sale.transactionCount, 0);
+            const averagePerTransaction = totalTransactions > 0 
+                ? totalSales / totalTransactions 
+                : 0;
+
+            // อัปเดต summaryData state
             setSummaryData({
-                dailySales: dailySalesData,
-                totalSales: dailySalesData.reduce((sum, sale) => sum + sale.amount, 0),
-                totalTransactions: dailySalesData.reduce((sum, sale) => sum + sale.transactionCount, 0),
-                averagePerTransaction: dailySalesData.length > 0 ? dailySalesData.reduce((sum, sale) => sum + sale.averagePerTransaction, 0) / dailySalesData.length : 0,
+                dailySales: filteredDailySalesData, // ใช้ข้อมูลที่กรองแล้ว
+                totalSales: totalSales,
+                totalTransactions: totalTransactions,
+                averagePerTransaction: averagePerTransaction,
             });
 
             const response = await axios.get(`/api/Purchase/all-purchases/${branchId}`, {
