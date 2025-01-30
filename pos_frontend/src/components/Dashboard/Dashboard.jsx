@@ -59,6 +59,21 @@ const Dashboard = () => {
                 withCredentials: true,
             });
 
+            const filteredSummaryData = Array.isArray(summaryResponse.data.dailySales) 
+            ? summaryResponse.data.dailySales.filter(sale => {
+                const saleDate = new Date(sale.date);
+                
+                const isSameDay = saleDate.getFullYear() === startDate.getFullYear() &&
+                                  saleDate.getMonth() === startDate.getMonth() &&
+                                  saleDate.getDate() === startDate.getDate();
+            
+                return (
+                    isSameDay &&
+                    (employeeId === '' || pur.seller.toLowerCase().includes(employeeIdLower))
+                );
+            }) 
+            : [];
+
             const dailySalesData = summaryResponse.data.dailySales || [];
             
             setSummaryData({

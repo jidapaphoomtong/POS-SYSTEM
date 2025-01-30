@@ -53,7 +53,7 @@ const PurchaseDetail = () => {
             <p>Items:</p>
             <ul>
                 {purchase.products.map(item => (
-                    <li key={item.id}>{item.productName} - ฿{item.price} x {item.stock}</li>
+                    <li key={item.id}>{item.productName} - ฿{item.price} x {item.quantity}</li>
                 ))}
             </ul>
             <p>Total: ฿{purchase.total}</p>

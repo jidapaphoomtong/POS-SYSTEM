@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 using Google.Cloud.Firestore;
+using Newtonsoft.Json;
 
 namespace backend.Services.PurchaseService
 {
@@ -47,14 +48,45 @@ namespace backend.Services.PurchaseService
                     return ServiceResponse<string>.CreateFailure("Purchase data is null.");
                 }
 
-                //ดึงข้อมูล product : price และคำนวณ
+                // คำนวณราคาสินค้า
+                double total = 0;
+                
+                foreach (var product in purchase.Products)
+                {
+                    // สมมุติว่าเราดึงข้อมูลสินค้าโดยใช้ product.Id
+                    var productDoc = await _firestoreDb
+                        .Collection(FirestoreCollections.Branches)
+                        .Document(branchId)
+                        .Collection(FirestoreCollections.Products)
+                        .Document(product.Id)
+                        .GetSnapshotAsync();
+
+                    if (productDoc.Exists)
+                    {
+                        var fetchedProduct = productDoc.ConvertTo<Products>();
+                        if (fetchedProduct != null)
+                        {
+                            // คำนวณราคาของสินค้า
+                            double price = fetchedProduct.price; // ดึงราคา
+                            total += price * product.quantity; // คำนวณราคารวม
+                            
+                            // อัปเดตราคาใน Products
+                            product.price = price; // ตั้งค่า price ใน product ที่ซื้อ
+                        }
+                    }
+                }
+
+                // ตั้งค่าข้อมูลใน purchase
+                purchase.Total = total;
+                purchase.PaidAmount = purchase.PaidAmount; // สามารถตั้งค่าที่นี่ตามที่ต้องการ
+                purchase.Change = purchase.PaidAmount - purchase.Total;
 
                 var purchaseDoc = _firestoreDb
                     .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
                     .Collection(FirestoreCollections.Purchases)
                     .Document(purchaseId);
-
+                    
                 await purchaseDoc.SetAsync(purchase);
                 return ServiceResponse<string>.CreateSuccess(purchaseId, "Purchase Data added successfully!");
             }
