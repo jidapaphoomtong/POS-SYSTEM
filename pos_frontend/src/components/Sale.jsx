@@ -308,13 +308,10 @@ export default function Sale() {
             products: Object.values(selectedItems).map(item => ({
                 id: item.Id,
                 productName: item.productName,
-                price: item.price,
                 quantity: item.quantity,
                 categoryId: item.categoryId,
             })),
-            total: calculateTotal(),
             paidAmount: paidAmount,
-            change: change,
             date: new Date().toISOString(),
             seller: firstName,
             paymentMethod: type,

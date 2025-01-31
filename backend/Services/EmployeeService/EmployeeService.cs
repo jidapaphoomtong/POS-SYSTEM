@@ -68,7 +68,7 @@ namespace backend.Services.EmployeeService
         {
             try
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document(sequenceName);
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document(sequenceName);
                 var snapshot = await sequenceDoc.GetSnapshotAsync();
 
                 int counter = 1;
@@ -101,7 +101,7 @@ namespace backend.Services.EmployeeService
                 //     throw new ArgumentException("BranchId, Employee object, email, and password cannot be null or empty.");
                 // }
 
-                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                DocumentReference branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId);
                 DocumentSnapshot branchSnapshot = await branchDoc.GetSnapshotAsync();
                 if (!branchSnapshot.Exists)
                 {
@@ -135,7 +135,7 @@ namespace backend.Services.EmployeeService
                     branchId = employee.branchId
                 };
 
-                DocumentReference employeeDoc = branchDoc.Collection("employees").Document(employeeId);
+                DocumentReference employeeDoc = branchDoc.Collection(FirestoreCollections.Employees).Document(employeeId);
                 await employeeDoc.SetAsync(data);
 
                 return ServiceResponse<string>.CreateSuccess(employeeId, "Employee added successfully!");
@@ -153,9 +153,9 @@ namespace backend.Services.EmployeeService
             try
             {
                 CollectionReference employees = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("employees");
+                    .Collection(FirestoreCollections.Employees);
 
                 QuerySnapshot snapshot = await employees.GetSnapshotAsync();
 
@@ -187,8 +187,8 @@ namespace backend.Services.EmployeeService
                 }
 
                 // อ้างอิงไปยังคอลเลกชันของพนักงาน
-                var branchDoc = _firestoreDb.Collection("branches").Document(branchId); // ใส่ branchId ที่ต้องการ
-                var employeesQuery = branchDoc.Collection("employees")
+                var branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId); // ใส่ branchId ที่ต้องการ
+                var employeesQuery = branchDoc.Collection(FirestoreCollections.Employees)
                     .WhereEqualTo("email", email);
 
                 QuerySnapshot querySnapshot = await employeesQuery.GetSnapshotAsync();
@@ -224,8 +224,8 @@ namespace backend.Services.EmployeeService
                     throw new ArgumentException("Employee ID cannot be null or empty.", nameof(employeeId));
                 }
 
-                var branchDoc = _firestoreDb.Collection("branches").Document(branchId);
-                var employeeDoc = branchDoc.Collection("employees").Document(employeeId);
+                var branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId);
+                var employeeDoc = branchDoc.Collection(FirestoreCollections.Employees).Document(employeeId);
 
                 DocumentSnapshot snapshot = await employeeDoc.GetSnapshotAsync();
 
@@ -255,9 +255,9 @@ namespace backend.Services.EmployeeService
 
                 // Reference the employee document in Firestore
                 DocumentReference employeeDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("employees")
+                    .Collection(FirestoreCollections.Employees)
                     .Document(employeeId);
 
                 var snapshot = await employeeDoc.GetSnapshotAsync();
@@ -308,9 +308,9 @@ namespace backend.Services.EmployeeService
         public async Task<bool> UpdateEmployeeStatusAsync(string branchId, string employeeId, string status)
         {
             DocumentReference employeeDoc = _firestoreDb
-                .Collection("branches")
+                .Collection(FirestoreCollections.Branches)
                 .Document(branchId)
-                .Collection("employees")
+                .Collection(FirestoreCollections.Employees)
                 .Document(employeeId);
 
             var employeeSnapshot = await employeeDoc.GetSnapshotAsync();
@@ -344,9 +344,9 @@ namespace backend.Services.EmployeeService
             try
             {
                 DocumentReference employeeDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("employees")
+                    .Collection(FirestoreCollections.Employees)
                     .Document(employeeId);
 
                 await employeeDoc.DeleteAsync();
@@ -364,7 +364,7 @@ namespace backend.Services.EmployeeService
             try
             {
                 // ตรวจสอบว่า Branch มีอยู่ใน Firestore หรือไม่
-                DocumentReference branchDoc = _firestoreDb.Collection("branches").Document(branchId);
+                DocumentReference branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId);
                 DocumentSnapshot branchSnapshot = await branchDoc.GetSnapshotAsync();
                 if (!branchSnapshot.Exists)
                 {
@@ -372,7 +372,7 @@ namespace backend.Services.EmployeeService
                 }
 
                 // อ้างอิงไปยัง Sub-Collection ของ Employees
-                var employeesRef = branchDoc.Collection("employees");
+                var employeesRef = branchDoc.Collection(FirestoreCollections.Employees);
                 var employeeSnapshot = await employeesRef.GetSnapshotAsync();
 
                 // ลบพนักงานทั้งหมด
@@ -394,7 +394,7 @@ namespace backend.Services.EmployeeService
         {
             try
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document($"employee-sequence-{branchId}");
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document($"employee-sequence-{branchId}");
                 await sequenceDoc.SetAsync(new { counter = 1 }); // รีเซ็ตค่าเป็น 1
 
                 return ServiceResponse<string>.CreateSuccess("Branch ID sequence reset successfully!", "Reset done");
@@ -409,9 +409,9 @@ namespace backend.Services.EmployeeService
         {
             try
             {
-                var employeesQuery = _firestoreDb.Collection("branches")
+                var employeesQuery = _firestoreDb.Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("employees")
+                    .Collection(FirestoreCollections.Employees)
                     .WhereEqualTo("firstName", firstName);
 
                 var snapshot = await employeesQuery.GetSnapshotAsync();

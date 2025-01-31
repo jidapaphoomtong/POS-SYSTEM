@@ -67,6 +67,8 @@
   
   .user-icon {
     color: #2a83cf; /* สีฟ้าอวาตาร์ */
+    font-size: 22px;
+    margin-right: 10px;
   }
   
   .user-info span {
@@ -124,19 +126,21 @@
         transform: translateY(0);
     }
 }
+
 .notification-dropdown {
   position: absolute;
-  right: 150px; /* ขยับออกจากฝั่งขวา 10px */
-  left: auto; /* ยกเลิกการตั้งค่า left หากมี */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2); /* Increased shadow depth */
+  right: 150px; /* ขยับออกจากฝั่งขวา */
+  left: auto;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   border-radius: 5px;
-  margin-top: 5.5px; /* Reduced space below the menu icon */
-  animation: fadeIn 0.2s; /* Add a simple fade-in effect */
+  margin-top: 5.5px;
+  animation: fadeIn 0.2s;
   background-color: white;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   padding: 10px;
   width: 250px; /* กำหนดความกว้าง */
+  max-height: 300px; /* ความสูงสูงสุด */
+  overflow-y: auto; /* ใช้เลื่อนถ้ามีข้อมูลมาก */
 }
 
 .notification-item {
@@ -158,6 +162,20 @@
     top: 0;
     right: 0;
     font-size: 12px;
+}
+
+.notification-dot {
+  position: absolute;
+  top: 0;
+  height: 20px; /* ขนาดที่เพิ่มขึ้น */
+  width: 20px; /* ขนาดที่เพิ่มขึ้น */
+  background-color: red;
+  border-radius: 50%;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px; /* ขนาดข้อความ */
 }
 
 .modal {
@@ -187,4 +205,21 @@
   top: 10px;
   cursor: pointer;
   font-size: 20px;
+}
+
+.custom-dropdown {
+  border: 1px solid #B0C4DE; /* ใช้สีน้ำเงินอ่อนเหมือน DatePicker */
+  border-radius: 5px;
+  padding: 10px;
+  width: 200px; /* ขนาดตามที่ต้องการ */
+  background-color: white; /* สีพื้นหลัง */
+  font-size: 16px;
+  color: #333; /* สีตัวอักษร */
+  appearance: none; /* ทำให้ dropdown ไม่มีรูปแบบพื้นฐาน */
+}
+
+.custom-dropdown:focus {
+  outline: none; /* ปิดการแสดงเส้น ๆ เมื่อ focus */
+  border-color: #5B9BD5; /* เปลี่ยนสีเมื่ออยู่ใน focus */
+  box-shadow: 0 0 5px rgba(91, 155, 213, 0.5); /* เพิ่มเงา */
 }

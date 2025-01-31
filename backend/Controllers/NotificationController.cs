@@ -23,7 +23,7 @@ namespace backend.Controllers
         }
 
         [HttpPost("notify-low-stock")]
-        public async Task<IActionResult> NotifyLowStock(string branchId, string productId)
+        public async Task<IActionResult> NotifyLowStock(string branchId, string productId, int newStock)
         {
             // ตรวจสอบให้แน่ใจว่า branchId และ productId ไม่ว่างเปล่า
             if (string.IsNullOrEmpty(branchId) || string.IsNullOrEmpty(productId))
@@ -34,7 +34,7 @@ namespace backend.Controllers
             try
             {
                 // เรียกใช้บริการเพื่อส่งการแจ้งเตือน
-                await _notificationService.NotifyLowStock(branchId, productId);
+                await _notificationService.NotifyLowStock(branchId, productId, newStock);
                 return Ok(new { success = true, message = "Notification sent successfully." });
             }
             catch (Exception ex)
@@ -49,18 +49,31 @@ namespace backend.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(branchId))
+                var notifications = await _notificationService.GetNotificationsAsync(branchId);
+                if (!notifications.Any())
                 {
-                    return BadRequest(new { success = false, message = "Branch ID is required." });
+                    return NotFound(new { Message = $"No notifications found for branch ID: {branchId}" });
                 }
 
-                var notifications = await _notificationService.GetNotificationsAsync(branchId);
-                return Ok(new { success = true, data = notifications });
+                return Ok(new { Success = true, Data = notifications });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = $"Error fetching notifications: {ex.Message}" });
+                return StatusCode(500, new { Message = ex.Message });
             }
+        }
+
+        [HttpPut("read-notification/{branchId}/{notificationId}")]
+        public async Task<IActionResult> MarkAsRead(string branchId, string notificationId)
+        {
+            var result = await _notificationService.MarkAsRead(branchId, notificationId);
+            return result;
+        }
+
+        [HttpPut("read-all-notifications/{branchId}")]
+        public async Task<IActionResult> MarkAllAsRead(string branchId)
+        {
+            return await _notificationService.MarkAllAsRead(branchId);
         }
 
         [HttpDelete("delete-all-notifications/{branchId}")]

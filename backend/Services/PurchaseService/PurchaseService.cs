@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using backend.Models;
 using Google.Cloud.Firestore;
+using Newtonsoft.Json;
 
 namespace backend.Services.PurchaseService
 {
@@ -19,7 +20,7 @@ namespace backend.Services.PurchaseService
         {
             try
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document(sequenceName);
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document(sequenceName);
                 var snapshot = await sequenceDoc.GetSnapshotAsync();
 
                 int counter = snapshot.Exists && snapshot.TryGetValue("counter", out int currentCounter)
@@ -47,12 +48,45 @@ namespace backend.Services.PurchaseService
                     return ServiceResponse<string>.CreateFailure("Purchase data is null.");
                 }
 
-                var purchaseDoc = _firestoreDb
-                    .Collection("branches")
-                    .Document(branchId)
-                    .Collection("purchases")
-                    .Document(purchaseId);
+                // คำนวณราคาสินค้า
+                double total = 0;
+                
+                foreach (var product in purchase.Products)
+                {
+                    // สมมุติว่าเราดึงข้อมูลสินค้าโดยใช้ product.Id
+                    var productDoc = await _firestoreDb
+                        .Collection(FirestoreCollections.Branches)
+                        .Document(branchId)
+                        .Collection(FirestoreCollections.Products)
+                        .Document(product.Id)
+                        .GetSnapshotAsync();
 
+                    if (productDoc.Exists)
+                    {
+                        var fetchedProduct = productDoc.ConvertTo<Products>();
+                        if (fetchedProduct != null)
+                        {
+                            // คำนวณราคาของสินค้า
+                            double price = fetchedProduct.price; // ดึงราคา
+                            total += price * product.quantity; // คำนวณราคารวม
+                            
+                            // อัปเดตราคาใน Products
+                            product.price = price; // ตั้งค่า price ใน product ที่ซื้อ
+                        }
+                    }
+                }
+
+                // ตั้งค่าข้อมูลใน purchase
+                purchase.Total = total;
+                purchase.PaidAmount = purchase.PaidAmount; // สามารถตั้งค่าที่นี่ตามที่ต้องการ
+                purchase.Change = purchase.PaidAmount - purchase.Total;
+
+                var purchaseDoc = _firestoreDb
+                    .Collection(FirestoreCollections.Branches)
+                    .Document(branchId)
+                    .Collection(FirestoreCollections.Purchases)
+                    .Document(purchaseId);
+                    
                 await purchaseDoc.SetAsync(purchase);
                 return ServiceResponse<string>.CreateSuccess(purchaseId, "Purchase Data added successfully!");
             }
@@ -67,9 +101,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases");
+                    .Collection(FirestoreCollections.Purchases);
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
@@ -93,9 +127,9 @@ namespace backend.Services.PurchaseService
             {
                 // เข้าถึงคำสั่งซื้อเฉพาะจาก Firestore
                 var purchaseDocRef = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .Document(purchaseId);
 
                 var snapshot = await purchaseDocRef.GetSnapshotAsync();
@@ -119,13 +153,12 @@ namespace backend.Services.PurchaseService
 
         public async Task<ServiceResponse<SalesSummaryDto>> GetSalesSummary(string branchId)
         {
-            // ดึงข้อมูลและคำนวณสรุปยอดขาย
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases");
+                    .Collection(FirestoreCollections.Purchases);
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 var purchases = snapshot.Documents.Select(doc => doc.ConvertTo<Purchase>()).ToList();
@@ -139,13 +172,14 @@ namespace backend.Services.PurchaseService
                 var totalTransactions = purchases.Count;
 
                 var dailySales = purchases
-                    .GroupBy(p => p.Date.ToString("yyyy-MM-dd"))
+                    .GroupBy(p => new { Date = p.Date.ToString("yyyy-MM-dd"), p.Seller }) // กลุ่มตามวันที่และชื่อพนักงาน
                     .Select(g => new DailySalesDto
                     {
-                        Date = g.Key,
+                        Date = g.Key.Date,
                         Amount = g.Sum(p => p.Total),
                         TransactionCount = g.Count(),
-                        AveragePerTransaction = g.Sum(p => p.Total) / (g.Count() > 0 ? g.Count() : 1)
+                        AveragePerTransaction = g.Sum(p => p.Total) / (g.Count() > 0 ? g.Count() : 1),
+                        Seller = g.Key.Seller // นำชื่อพนักงานมาเก็บใน DailySalesDto
                     })
                     .ToList();
 
@@ -170,9 +204,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .WhereEqualTo("Year", year)
                     .WhereEqualTo("Month", month)
                     .WhereEqualTo("Day", day);
@@ -213,9 +247,9 @@ namespace backend.Services.PurchaseService
                 var endDate = new DateTime(year, month + 1, 1, 0, 0, 0, DateTimeKind.Utc);
                 
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .WhereGreaterThan("Date", startDate)
                     .WhereLessThan("Date", endDate);
 
@@ -239,9 +273,9 @@ namespace backend.Services.PurchaseService
                 var endDate = new DateTime(year + 1, 1, 1, 0, 0, 0, DateTimeKind.Utc);
 
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .WhereGreaterThan("Date", startDate)
                     .WhereLessThan("Date", endDate);
 
@@ -261,9 +295,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases")
+                    .Collection(FirestoreCollections.Purchases)
                     .WhereEqualTo("Seller", employeeId); // สมมุติว่า field ของพนักงานคือ "Seller"
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
@@ -287,9 +321,9 @@ namespace backend.Services.PurchaseService
             try
             {
                 var purchasesQuery = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("purchases");
+                    .Collection(FirestoreCollections.Purchases);
 
                 var snapshot = await purchasesQuery.GetSnapshotAsync();
                 if (snapshot.Documents.Count == 0)

@@ -32,6 +32,16 @@
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* เงาเบา ๆ */
 }
 
+.order-summary {
+    width: 300px; /* ขนาดที่ต้องการสำหรับ Order Summary */
+    background-color: #fff; /* เพิ่มพื้นหลังให้มองเห็นได้ชัด */
+    padding: 15px; /* เพิ่มการ padding รอบๆ */
+    border-radius: 10px; /* ขอบมน */
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1); /* เงาเบา ๆ */
+    max-height: 600px; /* สูงสุดที่ตั้งไว้ */
+    overflow-y: auto; /* เพิ่มการเลื่อนแนวตั้ง */
+}
+
 .items-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); /* สินค้าในรูปแบบกริด */

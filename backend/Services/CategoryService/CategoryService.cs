@@ -21,7 +21,7 @@ namespace backend.Services.CategoryService
         {
             try
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document(sequenceName);
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document(sequenceName);
                 var snapshot = await sequenceDoc.GetSnapshotAsync();
 
                 int counter = 1;
@@ -55,9 +55,9 @@ namespace backend.Services.CategoryService
                 string categoryId = await GetNextId($"category-sequence-{branchId}"); // ลำดับเฉพาะต่อ Branch
 
                 DocumentReference categoryDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("categories")
+                    .Collection(FirestoreCollections.Categories)
                     .Document(categoryId);
 
                 category.Id = categoryId;
@@ -81,9 +81,9 @@ namespace backend.Services.CategoryService
             {
                 var categories = new List<Category>();
                 var snapshot = await _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("categories")
+                    .Collection(FirestoreCollections.Categories)
                     .GetSnapshotAsync();
 
                 foreach (var categoryDoc in snapshot.Documents)
@@ -116,8 +116,8 @@ namespace backend.Services.CategoryService
             try
             {
                 // สร้าง DocumentReference สำหรับ branch และ category
-                var branchDoc = _firestoreDb.Collection("branches").Document(branchId);
-                var categoryDoc = branchDoc.Collection("categories").Document(categoryId);
+                var branchDoc = _firestoreDb.Collection(FirestoreCollections.Branches).Document(branchId);
+                var categoryDoc = branchDoc.Collection(FirestoreCollections.Categories).Document(categoryId);
 
                 // ดึงเอกสารหมวดหมู่จาก Firestore
                 DocumentSnapshot snapshot = await categoryDoc.GetSnapshotAsync();
@@ -149,9 +149,9 @@ namespace backend.Services.CategoryService
             try
             {
                 var categoryDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("categories")
+                    .Collection(FirestoreCollections.Categories)
                     .Document(category.Id);
 
                 await categoryDoc.SetAsync(category, SetOptions.MergeAll);
@@ -168,9 +168,9 @@ namespace backend.Services.CategoryService
             try
             {
                 var categoryDoc = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("categories")
+                    .Collection(FirestoreCollections.Categories)
                     .Document(categoryId);
 
                 await categoryDoc.DeleteAsync();
@@ -191,9 +191,9 @@ namespace backend.Services.CategoryService
             try
             {
                 var categoriesCollection = _firestoreDb
-                    .Collection("branches")
+                    .Collection(FirestoreCollections.Branches)
                     .Document(branchId)
-                    .Collection("categories");
+                    .Collection(FirestoreCollections.Categories);
 
                 var snapshots = await categoriesCollection.GetSnapshotAsync();
                 var deleteTasks = snapshots.Documents.Select(doc => doc.Reference.DeleteAsync());
@@ -217,7 +217,7 @@ namespace backend.Services.CategoryService
 
             try
             {
-                var sequenceDoc = _firestoreDb.Collection("config").Document($"category-sequence-{branchId}");
+                var sequenceDoc = _firestoreDb.Collection(FirestoreCollections.Config).Document($"category-sequence-{branchId}");
                 await sequenceDoc.SetAsync(new { counter = 1 }); // รีเซ็ตค่าเป็น 1
 
                 return ServiceResponse<string>.CreateSuccess("Category ID reset already!", "Reset done");

@@ -131,7 +131,7 @@ const ProductList = () => {
                 const roleFromToken = decodedToken["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || 'No role found';
                 setUserRole(roleFromToken);
             }
-            console.log(setUserRole);
+            // console.log(setUserRole);
         };
 
         fetchUserRole();

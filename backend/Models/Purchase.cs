@@ -47,5 +47,6 @@ namespace backend.Models
         public double Amount { get; set; }             // ยอดขายรวมในแต่ละวัน
         public int TransactionCount { get; set; }      // จำนวนบิลในแต่ละวัน
         public double AveragePerTransaction { get; set; } // เฉลี่ยยอดขายต่อบิล
+        public string Seller { get; set; }
     }
 }
