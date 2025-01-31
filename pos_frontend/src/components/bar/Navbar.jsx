@@ -78,6 +78,7 @@ const Navbar = () => {
 
     const handleToggleNotifications = () => {
         setNotificationOpen(!isNotificationOpen);
+        console.log(setNotificationOpen)
         
         // เมื่อเปิดดรอปดาวน์การแจ้งเตือนให้ทำเครื่องหมายทุกการแจ้งเตือนว่าอ่าน
         if (!isNotificationOpen) {
@@ -87,8 +88,7 @@ const Navbar = () => {
 
     const markAllNotificationsAsRead = async () => {
         const token = Cookies.get("authToken");
-        const branchId = userData ? userData.branchId : "";
-        if (!token || !branchId) return;
+        if (!token) return;
 
         try {
             await axios.put(`/api/Notification/read-all-notifications/${branchId}`, {}, {
@@ -103,6 +103,7 @@ const Navbar = () => {
             }));
 
             setNotifications(updatedNotifications);
+            console.log(setNotifications)
             setUnreadCount(0); // อัปเดตจำนวนแจ้งเตือนที่ยังไม่ได้อ่าน
         } catch (error) {
             console.error("Error marking all notifications as read:", error);
@@ -127,7 +128,8 @@ const Navbar = () => {
                 <div className="navbar-icons">
                     <div className="notification-icon" onClick={handleToggleNotifications} ref={notificationRef}>
                         <FaBell className="icon bell-icon" />
-                        {unreadCount > 0 && (
+                        {/* ปรับการแสดงจำนวนการแจ้งเตือนที่ยังไม่ได้อ่าน */}
+                        {notifications.some(notification => !notification.IsRead) && (
                             <span className="notification-dot">
                                 {unreadCount} {/* จำนวนแจ้งเตือนที่ยังไม่ได้อ่าน */}
                             </span>
@@ -137,7 +139,7 @@ const Navbar = () => {
                                 {notifications.map((notification) => (
                                     <div className={`notification-item ${notification.IsRead ? 'read' : 'unread'}`} key={notification.productId}>
                                         <p>{notification.message}</p>
-                                        {notification.IsRead && <span>✅</span>} {/* แสดงเครื่องหมายถูกถ้ามีการอ่าน */}
+                                        {notification.IsRead && <span>✅</span>}
                                     </div>
                                 ))}
                             </div>
@@ -145,7 +147,7 @@ const Navbar = () => {
                     </div>
                     <div className="user-info" ref={userRef}>
                         <FaUser className="user-icon" />
-                        <span style={{marginRight:"10px", marginTop:"3.3px"}}>
+                        <span style={{ marginRight: "10px", marginTop: "3.3px" }}>
                             {userData ? userData.firstName : "Guest"}
                         </span>
                         <div className="icon menu-icon" onClick={handleToggleDropdown}>
@@ -153,7 +155,7 @@ const Navbar = () => {
                             {isDropdownOpen && (
                                 <div className="dropdown">
                                     <ul>
-                                        <li style={{fontSize:"16"}} onClick={showUserInfoModal}>User Info</li>
+                                        <li style={{ fontSize: "16" }} onClick={showUserInfoModal}>User Info</li>
                                     </ul>
                                 </div>
                             )}
@@ -161,7 +163,7 @@ const Navbar = () => {
                     </div>
                 </div>
             </div>
-
+    
             {isModalOpen && (
                 <div className="modal">
                     <div className="modal-content">
